@@ -40,6 +40,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
 /* Custom subtle scrollbars for chapter lists and navigator grids */
 ::-webkit-scrollbar {
   width: 6px;

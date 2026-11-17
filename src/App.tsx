@@ -86,7 +86,7 @@ export const App: React.FC = () => {
           onOpenSyncModal={() => setIsSyncOpen(true)}
         />
 
-        <main className="mx-auto w-full max-w-[1380px] flex-1 px-6 py-8 lg:px-10">
+        <main className="mx-auto w-full max-w-[1380px] flex-1 px-3.5 py-3.5 pb-24 sm:px-6 md:py-8 md:pb-8 lg:px-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={`${subject}-${mode}`}
@@ -125,7 +125,7 @@ export const App: React.FC = () => {
           </AnimatePresence>
         </main>
 
-        <footer className="mt-12 border-t border-[#D5E3EC] bg-white py-6 text-center text-xs text-[#64748B] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#94A3B8]">
+        <footer className="mt-6 border-t border-[#D5E3EC] bg-white py-5 pb-24 text-center text-xs text-[#64748B] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#94A3B8] md:mt-12 md:py-6 md:pb-6">
           <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-center gap-2 px-6 lg:px-10">
             <span>Ôn thi trắc nghiệm MLN131 &amp; VNR202 • Tự động lưu tiến độ</span>
             <span className="inline-flex items-center rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">

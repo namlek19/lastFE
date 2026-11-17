@@ -28,11 +28,12 @@ export interface HeaderProps {
 const MODE_TABS: {
   id: StudyMode;
   label: string;
+  mobileLabel: string;
   Icon: React.ComponentType<{ className?: string }>;
 }[] = [
-  { id: 'chapter', label: 'Học theo chương', Icon: BookOpen },
-  { id: 'rolling', label: 'Học cuốn chiếu', Icon: Layers },
-  { id: 'exam', label: 'Thi thử trộn đề', Icon: ClipboardCheck },
+  { id: 'chapter', label: 'Học theo chương', mobileLabel: 'Theo chương', Icon: BookOpen },
+  { id: 'rolling', label: 'Học cuốn chiếu', mobileLabel: 'Cuốn chiếu', Icon: Layers },
+  { id: 'exam', label: 'Thi thử trộn đề', mobileLabel: 'Thi thử', Icon: ClipboardCheck },
 ];
 
 const SUBJECT_ORDER: SubjectId[] = ['mln131', 'vnr202'];
@@ -89,17 +90,17 @@ export const Header: React.FC<HeaderProps> = ({
   }, [isShortcutOpen]);
 
   return (
-    <header className="sticky top-0 z-40 mb-8 border-b border-[#D5E3EC] bg-white shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.6)]">
-      <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
-        {/* Top Row: Brand, Subject Switcher & Utility Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-3 py-3">
-          <div className="flex flex-wrap items-center gap-3.5">
+    <header className="z-40 mb-3.5 border-b border-[#D5E3EC] bg-white shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.6)] md:sticky md:top-0 md:mb-8">
+      <div className="mx-auto max-w-[1380px] px-3.5 sm:px-6 lg:px-10">
+        {/* Top Row: Compact Brand, Subject Switcher & Utility Actions */}
+        <div className="flex items-center justify-between gap-2 py-2.5 md:py-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3.5">
             {/* Brand Title */}
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0284C7] text-white shadow-sm dark:border dark:border-[#38BDF8]/40">
-                <GraduationCap className="h-5 w-5" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#0284C7] text-white shadow-sm dark:border dark:border-[#38BDF8]/40 sm:h-9 sm:w-9">
+                <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <div className="leading-tight">
+              <div className="hidden leading-tight sm:block">
                 <span className="block text-sm font-bold tracking-tight text-[#0F172A] dark:text-[#F8FAFC] sm:text-base">
                   Ôn thi Trắc nghiệm
                 </span>
@@ -114,7 +115,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div
               role="group"
               aria-label="Chọn môn học"
-              className="inline-flex items-center gap-1 rounded-xl border border-[#D5E3EC] bg-[#F1F6F9] p-1 dark:border-[#334155] dark:bg-[#0B1120]"
+              className="inline-flex items-center gap-0.5 rounded-xl border border-[#D5E3EC] bg-[#F1F6F9] p-0.5 dark:border-[#334155] dark:bg-[#0B1120] sm:gap-1 sm:p-1"
             >
               {SUBJECT_ORDER.map((subjId) => {
                 const meta = SUBJECTS[subjId];
@@ -125,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({
                     type="button"
                     onClick={() => onSelectSubject(subjId)}
                     aria-pressed={isActive}
-                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition sm:px-3 ${
+                    className={`inline-flex cursor-pointer items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition sm:gap-1.5 sm:px-3 sm:py-1.5 ${
                       isActive
                         ? 'bg-[#0284C7] text-white shadow-sm hover:bg-[#0369A1] dark:border dark:border-[#38BDF8]/50'
                         : 'text-[#1E293B] hover:bg-[#E0F2FE] hover:text-[#0284C7] dark:text-[#E2E8F0] dark:hover:bg-[#0284C7]/20 dark:hover:text-[#38BDF8]'
@@ -133,7 +134,7 @@ export const Header: React.FC<HeaderProps> = ({
                   >
                     <span>{meta.code}</span>
                     <span
-                      className={`tabular-nums text-[11px] font-medium ${
+                      className={`hidden tabular-nums text-[11px] font-medium sm:inline ${
                         isActive ? 'text-sky-100' : 'text-[#64748B] dark:text-[#94A3B8]'
                       }`}
                     >
@@ -145,21 +146,22 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Right Cluster: Mastery Badge, Shortcuts Popover, Theme Toggle, Sync Modal Button */}
-          <div className="flex items-center gap-2.5">
-            {/* Overall Mastery Badge (Solid Cold Teal) */}
+          {/* Right Cluster: Mastery Badge, Shortcuts Popover (Desktop only), Sync Modal Button, Theme Toggle */}
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+            {/* Overall Mastery Badge */}
             <div
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-3 py-1 text-xs font-semibold text-[#115E59] tabular-nums dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF] sm:px-3.5"
+              className="inline-flex items-center gap-1 rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2.5 py-1 text-[11px] font-semibold text-[#115E59] tabular-nums dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF] sm:gap-1.5 sm:px-3.5 sm:text-xs"
               title={`Đã thuộc ${masteredCount} trên ${activeQuestions.length} câu môn ${SUBJECTS[subject].code}`}
             >
               <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#0D9488] dark:text-[#14B8A6]" />
               <span>
-                {masteredCount} / {activeQuestions.length} Đã thuộc
+                {masteredCount}/{activeQuestions.length}
+                <span className="hidden sm:inline"> Đã thuộc</span>
               </span>
             </div>
 
-            {/* Keyboard Shortcuts Popover */}
-            <div ref={shortcutContainerRef} className="relative">
+            {/* Keyboard Shortcuts Popover — Desktop Only */}
+            <div ref={shortcutContainerRef} className="relative hidden md:block">
               <button
                 type="button"
                 onClick={() => setIsShortcutOpen((prev) => !prev)}
@@ -173,7 +175,7 @@ export const Header: React.FC<HeaderProps> = ({
                 }`}
               >
                 <Keyboard className="h-3.5 w-3.5 shrink-0" />
-                <span className="hidden md:inline">Phím tắt</span>
+                <span>Phím tắt</span>
               </button>
 
               {isShortcutOpen && (
@@ -224,6 +226,18 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
+            {/* Progress Sync Button */}
+            <button
+              type="button"
+              onClick={onOpenSyncModal}
+              aria-label="Đồng bộ tiến độ"
+              title="Đồng bộ tiến độ"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#BAE6FD] bg-[#E0F2FE] p-1.5 text-xs font-semibold text-[#0284C7] transition hover:border-[#0284C7] hover:bg-[#BAE6FD]/60 dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/25 sm:px-3 sm:py-1.5"
+            >
+              <Cloud className="h-4 w-4 shrink-0 text-[#0284C7] dark:text-[#38BDF8] sm:h-3.5 sm:w-3.5" />
+              <span className="hidden sm:inline">Đồng bộ tiến độ</span>
+            </button>
+
             {/* Light / Dark Mode Toggle */}
             <button
               type="button"
@@ -239,25 +253,15 @@ export const Header: React.FC<HeaderProps> = ({
                 <Moon className="h-4 w-4 text-[#0284C7]" />
               )}
             </button>
-
-            {/* Progress Sync Button */}
-            <button
-              type="button"
-              onClick={onOpenSyncModal}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-1.5 text-xs font-semibold text-[#0284C7] transition hover:border-[#0284C7] hover:bg-[#BAE6FD]/60 dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/25 sm:px-3"
-            >
-              <Cloud className="h-3.5 w-3.5 shrink-0 text-[#0284C7] dark:text-[#38BDF8]" />
-              <span>Đồng bộ tiến độ</span>
-            </button>
           </div>
         </div>
 
-        {/* Bottom Row: 3 Study Mode Tabs */}
+        {/* Bottom Row: 3 Study Mode Tabs (grid-cols-3 full width on Mobile, flex tabs on Desktop) */}
         <nav
           aria-label="Chế độ học tập"
-          className="-mx-1 flex items-center gap-2 overflow-x-auto border-t border-[#D5E3EC]/70 px-1 py-2.5 dark:border-[#1E293B]"
+          className="grid grid-cols-3 gap-1.5 border-t border-[#D5E3EC]/70 py-2 dark:border-[#1E293B] md:flex md:items-center md:gap-2 md:py-2.5"
         >
-          {MODE_TABS.map(({ id, label, Icon }) => {
+          {MODE_TABS.map(({ id, label, mobileLabel, Icon }) => {
             const isActive = mode === id;
             return (
               <button
@@ -265,14 +269,15 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={() => onSelectMode(id)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-xl border px-4 py-1.5 text-xs font-semibold transition sm:text-sm ${
+                className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-2 py-1.5 text-xs font-semibold transition md:shrink-0 md:gap-2 md:px-4 md:text-sm ${
                   isActive
                     ? 'border-[#0284C7] bg-[#0284C7] text-white shadow-sm hover:bg-[#0369A1] dark:border-[#38BDF8]/60'
-                    : 'border-transparent bg-transparent text-[#64748B] hover:border-[#D5E3EC] hover:bg-[#E0F2FE] hover:text-[#0284C7] dark:text-[#94A3B8] dark:hover:border-[#334155] dark:hover:bg-[#0284C7]/15 dark:hover:text-[#38BDF8]'
+                    : 'border-transparent bg-[#F1F6F9]/70 text-[#64748B] hover:border-[#D5E3EC] hover:bg-[#E0F2FE] hover:text-[#0284C7] dark:bg-[#1E293B]/40 dark:text-[#94A3B8] dark:hover:border-[#334155] dark:hover:bg-[#0284C7]/15 dark:hover:text-[#38BDF8] md:bg-transparent dark:md:bg-transparent'
                 }`}
               >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span>{label}</span>
+                <Icon className="h-3.5 w-3.5 shrink-0 md:h-4 md:w-4" />
+                <span className="truncate md:hidden">{mobileLabel}</span>
+                <span className="hidden md:inline">{label}</span>
               </button>
             );
           })}

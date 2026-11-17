@@ -12,7 +12,7 @@ export const RichExplanation: React.FC<RichExplanationProps> = ({ question, clas
 
   return (
     <div
-      className={`rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] p-5 text-[15px] leading-relaxed text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120]/80 dark:text-[#E2E8F0] ${className}`}
+      className={`rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] p-3.5 text-[14px] leading-relaxed text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120]/80 dark:text-[#E2E8F0] sm:p-5 sm:text-[15px] ${className}`}
     >
       <div className="mb-2 flex items-center gap-2 font-semibold text-[#0284C7] dark:text-[#38BDF8]">
         <BookOpen className="h-4 w-4 shrink-0 text-[#0284C7] dark:text-[#38BDF8]" />
