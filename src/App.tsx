@@ -111,7 +111,7 @@ export const App: React.FC = () => {
           </AnimatePresence>
         </main>
 
-        <footer className="mt-12 border-t border-[#CBD5E1] bg-white/80 py-6 text-center text-xs text-slate-600">
+        <footer className="mt-12 border-t border-[#D5E3EC] bg-white py-6 text-center text-xs text-[#64748B]">
           <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-center gap-2 px-6 lg:px-10">
             <span>Ôn thi trắc nghiệm MLN131 &amp; VNR202 • Tự động lưu tiến độ</span>
             <span className="inline-flex items-center rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold text-[#0369A1]">

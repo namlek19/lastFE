@@ -343,12 +343,12 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
     return (
       <div className="mx-auto max-w-3xl space-y-6">
         {/* Session Header */}
-        <div className="rounded-2xl border border-[#CBD5E1] bg-white p-5 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.06)]">
+        <div className="rounded-2xl border border-[#D5E3EC] bg-white p-5 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
               onClick={handleExitSession}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] px-3.5 py-1.5 text-sm font-medium text-[#1E293B] transition hover:border-[#0284C7] hover:bg-[#E0F2FE] hover:text-[#0369A1]"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#D5E3EC] bg-[#F1F6F9] px-3.5 py-1.5 text-sm font-medium text-[#1E293B] transition hover:border-[#0369A1] hover:bg-[#E0F2FE] hover:text-[#0369A1]"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Danh sách chặng</span>
@@ -359,18 +359,18 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 Chương {selectedChapter}
               </span>
               <span>{activeStage.title}</span>
-              <span className="text-slate-400">·</span>
-              <span className="font-normal text-slate-500 tabular-nums">
+              <span className="text-[#64748B]">·</span>
+              <span className="font-normal text-[#64748B] tabular-nums">
                 {activeStage.questions.length} câu
               </span>
             </div>
 
             {currentQuestion ? (
-              <div className="rounded-full border border-[#F59E0B]/30 bg-[#FEF3C7] px-3 py-1 text-xs font-semibold text-[#D97706] tabular-nums">
+              <div className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-3 py-1 text-xs font-semibold text-[#0369A1] tabular-nums">
                 Còn {queue.length} câu
               </div>
             ) : (
-              <div className="rounded-full border border-[#10B981]/30 bg-[#ECFDF5] px-3 py-1 text-xs font-semibold text-[#065F46]">
+              <div className="rounded-full border border-[#A7F3D0] bg-[#ECFDF5] px-3 py-1 text-xs font-semibold text-[#059669]">
                 Hoàn thành
               </div>
             )}
@@ -378,18 +378,16 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
           {/* Stage mastery progress bar */}
           <div className="mt-3.5">
-            <div className="mb-1.5 flex items-center justify-between text-xs text-slate-500">
+            <div className="mb-1.5 flex items-center justify-between text-xs text-[#64748B]">
               <span>Tiến độ chặng</span>
-              <span className="font-semibold text-[#D97706] tabular-nums">
+              <span className="font-semibold text-[#059669] tabular-nums">
                 Đã thuộc {stageStats.mastered}/{stageStats.total} ({stageStats.percent}%)
               </span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
               <div
                 className={`h-full rounded-full transition-all duration-300 ${
-                  stageStats.percent === 100
-                    ? 'bg-[#10B981]'
-                    : 'bg-gradient-to-r from-[#F59E0B] to-[#D97706]'
+                  stageStats.percent === 100 ? 'bg-[#059669]' : 'bg-[#0D9488]'
                 }`}
                 style={{ width: `${stageStats.percent}%` }}
               />
@@ -399,34 +397,34 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
         {/* Stage Completion Card */}
         {!currentQuestion ? (
-          <div className="rounded-2xl border border-[#CBD5E1] bg-white p-8 text-center shadow-[0_8px_24px_-4px_rgba(15,23,42,0.06)]">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#10B981]/30 bg-[#ECFDF5] text-[#10B981]">
+          <div className="rounded-2xl border border-[#D5E3EC] bg-white p-8 text-center shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)]">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#A7F3D0] bg-[#ECFDF5] text-[#059669]">
               <Trophy className="h-8 w-8" />
             </div>
             <h2 className="text-2xl font-bold text-[#0F172A]">Hoàn thành chặng!</h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-[#64748B]">
               Bạn đã hoàn thành {activeStage.title} (Chương {selectedChapter} —{' '}
               {activeStage.questions.length} câu hỏi).
             </p>
 
             <div className="mx-auto mt-6 grid max-w-md grid-cols-3 gap-3">
-              <div className="rounded-xl border border-[#10B981]/30 bg-[#ECFDF5] p-3">
-                <div className="text-lg font-bold text-[#065F46] tabular-nums">
+              <div className="rounded-xl border border-[#A7F3D0] bg-[#ECFDF5] p-3">
+                <div className="text-lg font-bold text-[#059669] tabular-nums">
                   {stageStats.mastered}
                 </div>
-                <div className="text-xs font-medium text-[#065F46]">Đã thuộc</div>
+                <div className="text-xs font-medium text-[#059669]">Đã thuộc</div>
               </div>
-              <div className="rounded-xl border border-[#F59E0B]/30 bg-[#FFFBEB] p-3">
-                <div className="text-lg font-bold text-[#92400E] tabular-nums">
+              <div className="rounded-xl border border-[#C7D2FE] bg-[#EEF2FF] p-3">
+                <div className="text-lg font-bold text-[#4F46E5] tabular-nums">
                   {stageStats.hesitant}
                 </div>
-                <div className="text-xs font-medium text-[#92400E]">Phân vân</div>
+                <div className="text-xs font-medium text-[#4F46E5]">Phân vân</div>
               </div>
-              <div className="rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] p-3">
+              <div className="rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] p-3">
                 <div className="text-lg font-bold text-[#0F172A] tabular-nums">
                   {stageStats.unlearned}
                 </div>
-                <div className="text-xs font-medium text-slate-600">Chưa thuộc</div>
+                <div className="text-xs font-medium text-[#64748B]">Chưa thuộc</div>
               </div>
             </div>
 
@@ -455,7 +453,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 <button
                   type="button"
                   onClick={handleResetAndRestartStage}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[#CBD5E1] bg-white px-4 py-2.5 text-sm font-medium text-[#1E293B] transition hover:bg-[#F8FAFC]"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#D5E3EC] bg-white px-4 py-2.5 text-sm font-medium text-[#1E293B] transition hover:bg-[#F8FAFC]"
                 >
                   <span>Học lại chặng</span>
                 </button>
@@ -464,7 +462,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
               <button
                 type="button"
                 onClick={handleExitSession}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#CBD5E1] bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-[#F8FAFC]"
+                className="inline-flex items-center gap-2 rounded-xl border border-[#D5E3EC] bg-white px-4 py-2.5 text-sm font-medium text-[#64748B] transition hover:bg-[#F8FAFC]"
               >
                 <span>Quay lại danh sách</span>
               </button>
@@ -474,7 +472,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
           /* Question Card */
           <div
             key={`${currentQuestion.id}-${turnCounter}`}
-            className="rounded-2xl border border-[#CBD5E1] bg-white p-7 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.06)] sm:p-9"
+            className="rounded-2xl border border-[#D5E3EC] bg-white p-7 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] sm:p-9"
           >
             {/* Card top badges + Phân vân toggle */}
             <div className="mb-5 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
@@ -484,30 +482,30 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   const displayState = turnFlagged ? 'hesitant' : baseState;
                   if (displayState === 'mastered') {
                     return (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#10B981]/40 bg-[#ECFDF5] px-2.5 py-1 text-xs font-semibold text-[#065F46]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#A7F3D0] bg-[#ECFDF5] px-2.5 py-1 text-xs font-semibold text-[#059669]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#059669]" />
                         Đã thuộc
                       </span>
                     );
                   }
                   if (displayState === 'hesitant') {
                     return (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F59E0B] bg-[#FFFBEB] px-2.5 py-1 text-xs font-semibold text-[#92400E]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]" />
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#C7D2FE] bg-[#EEF2FF] px-2.5 py-1 text-xs font-semibold text-[#4F46E5]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#4F46E5]" />
                         Phân vân
                       </span>
                     );
                   }
                   return (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F59E0B]/30 bg-[#FEF3C7]/70 px-2.5 py-1 text-xs font-semibold text-[#D97706]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D5E3EC] bg-[#F1F6F9] px-2.5 py-1 text-xs font-semibold text-[#64748B]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#64748B]" />
                       Chưa thuộc
                     </span>
                   );
                 })()}
 
                 {currentQuestion.isMultiSelect && (
-                  <span className="inline-flex items-center rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-xs font-semibold text-[#0891B2]">
+                  <span className="inline-flex items-center rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-1 text-xs font-semibold text-[#0369A1]">
                     Chọn nhiều đáp án
                   </span>
                 )}
@@ -519,21 +517,21 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 aria-pressed={turnFlagged}
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                   turnFlagged
-                    ? 'border-[#F59E0B] bg-[#FFFBEB] text-[#92400E] shadow-xs'
-                    : 'border-[#CBD5E1] bg-white text-slate-600 hover:border-[#F59E0B] hover:bg-[#FFFBEB] hover:text-[#92400E]'
+                    ? 'border-[#C7D2FE] bg-[#EEF2FF] text-[#4F46E5] shadow-xs'
+                    : 'border-[#D5E3EC] bg-white text-[#64748B] hover:border-[#C7D2FE] hover:bg-[#EEF2FF] hover:text-[#4F46E5]'
                 }`}
               >
                 <Flag
                   className={`h-3.5 w-3.5 ${
-                    turnFlagged ? 'fill-[#F59E0B] text-[#F59E0B]' : 'text-slate-400'
+                    turnFlagged ? 'fill-[#4F46E5] text-[#4F46E5]' : 'text-[#64748B]'
                   }`}
                 />
                 <span>Phân vân</span>
                 <kbd
                   className={`ml-0.5 rounded px-1 py-0.5 font-mono text-[10px] ${
                     turnFlagged
-                      ? 'border border-[#F59E0B]/40 bg-white text-[#92400E]'
-                      : 'border border-slate-200 bg-slate-50 text-slate-500'
+                      ? 'border border-[#C7D2FE] bg-white text-[#4F46E5]'
+                      : 'border border-[#D5E3EC] bg-[#F1F6F9] text-[#64748B]'
                   }`}
                 >
                   F
@@ -556,23 +554,23 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 const isGraded = gradedState !== null;
 
                 let containerCls =
-                  'border-[#CBD5E1] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] hover:translate-x-1';
-                let badgeCls = 'border-[#CBD5E1] bg-[#F8FAFC] text-[#1E293B]';
+                  'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#0369A1] hover:bg-[#E0F2FE] hover:translate-x-1';
+                let badgeCls = 'border-[#D5E3EC] bg-[#F1F6F9] text-[#1E293B]';
 
                 if (!isGraded && isSelected) {
                   containerCls =
-                    'border-[#0369A1] bg-[#E0F2FE]/70 text-[#0F172A] ring-1 ring-[#0369A1]';
+                    'border-[#0369A1] bg-[#E0F2FE] text-[#0F172A] ring-1 ring-[#0369A1]';
                   badgeCls = 'border-[#0369A1] bg-[#0369A1] text-white';
                 } else if (isGraded) {
                   if (isCorrectOption) {
-                    containerCls = 'border-[#10B981] bg-[#ECFDF5] text-[#065F46]';
-                    badgeCls = 'border-[#10B981] bg-[#10B981] text-white';
+                    containerCls = 'border-[#A7F3D0] bg-[#ECFDF5] text-[#059669]';
+                    badgeCls = 'border-[#059669] bg-[#059669] text-white';
                   } else if (isSelected && !isCorrectOption) {
-                    containerCls = 'border-[#F43F5E] bg-[#FFF1F2] text-[#9F1239]';
-                    badgeCls = 'border-[#F43F5E] bg-[#F43F5E] text-white';
+                    containerCls = 'border-[#FECDD3] bg-[#FFF1F2] text-[#E11D48]';
+                    badgeCls = 'border-[#E11D48] bg-[#E11D48] text-white';
                   } else {
-                    containerCls = 'border-slate-200 bg-[#F8FAFC] text-slate-500';
-                    badgeCls = 'border-slate-200 bg-slate-100 text-slate-400';
+                    containerCls = 'border-slate-200 bg-[#F8FAFC] text-[#64748B]';
+                    badgeCls = 'border-slate-200 bg-slate-100 text-[#64748B]';
                   }
                 }
 
@@ -598,15 +596,15 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
                     <span className="mt-1 flex shrink-0 items-center gap-1.5">
                       {!isGraded && (
-                        <kbd className="hidden rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-400 sm:inline-block">
+                        <kbd className="hidden rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[10px] text-[#64748B] sm:inline-block">
                           {idx + 1}
                         </kbd>
                       )}
                       {isGraded && isCorrectOption && (
-                        <Check className="h-4 w-4 text-[#10B981]" />
+                        <Check className="h-4 w-4 text-[#059669]" />
                       )}
                       {isGraded && isSelected && !isCorrectOption && (
-                        <X className="h-4 w-4 text-[#F43F5E]" />
+                        <X className="h-4 w-4 text-[#E11D48]" />
                       )}
                     </span>
                   </button>
@@ -638,18 +636,18 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   <div
                     className={`inline-flex items-center gap-2 rounded-lg border px-3.5 py-1.5 text-sm font-semibold ${
                       gradedState.isCorrect
-                        ? 'border-[#10B981] bg-[#ECFDF5] text-[#065F46]'
-                        : 'border-[#F43F5E] bg-[#FFF1F2] text-[#9F1239]'
+                        ? 'border-[#A7F3D0] bg-[#ECFDF5] text-[#059669]'
+                        : 'border-[#FECDD3] bg-[#FFF1F2] text-[#E11D48]'
                     }`}
                   >
                     {gradedState.isCorrect ? (
                       <>
-                        <CheckCircle2 className="h-4 w-4 text-[#10B981]" />
+                        <CheckCircle2 className="h-4 w-4 text-[#059669]" />
                         <span>Chính xác!</span>
                       </>
                     ) : (
                       <>
-                        <X className="h-4 w-4 text-[#F43F5E]" />
+                        <X className="h-4 w-4 text-[#E11D48]" />
                         <span>
                           Chưa chính xác · Đáp án đúng:{' '}
                           {currentQuestion.correctAnswers.join(', ')}
@@ -659,8 +657,8 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   </div>
 
                   {turnFlagged && (
-                    <span className="inline-flex items-center gap-1 rounded-lg border border-[#F59E0B] bg-[#FFFBEB] px-2.5 py-1 text-xs font-medium text-[#92400E]">
-                      <Flag className="h-3.5 w-3.5 text-[#F59E0B]" />
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-[#C7D2FE] bg-[#EEF2FF] px-2.5 py-1 text-xs font-medium text-[#4F46E5]">
+                      <Flag className="h-3.5 w-3.5 text-[#4F46E5]" />
                       Đang đánh dấu phân vân
                     </span>
                   )}
@@ -727,7 +725,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
   return (
     <div>
       {/* Header Banner */}
-      <div className="mb-8 rounded-2xl border border-[#CBD5E1] bg-white p-6 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.06)] sm:p-7">
+      <div className="mb-8 rounded-2xl border border-[#D5E3EC] bg-white p-6 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#BAE6FD] bg-[#E0F2FE] text-[#0369A1]">
@@ -740,7 +738,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   {subjectMeta.code}
                 </span>
               </div>
-              <p className="mt-0.5 text-sm text-slate-500">
+              <p className="mt-0.5 text-sm text-[#64748B]">
                 Chia nhỏ câu hỏi theo từng chặng để học chắc từng phần.
               </p>
             </div>
@@ -748,8 +746,8 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
           <div className="flex items-center gap-4 text-sm">
             <div className="text-right">
-              <div className="text-xs text-slate-500">Tiến độ chương đang chọn</div>
-              <div className="font-bold text-[#D97706] tabular-nums">
+              <div className="text-xs text-[#64748B]">Tiến độ chương đang chọn</div>
+              <div className="font-bold text-[#059669] tabular-nums">
                 {chapterStats.mastered}/{chapterStats.total} câu đã thuộc ({chapterStats.percent}%)
               </div>
             </div>
@@ -771,17 +769,13 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 className={`flex items-center gap-2 rounded-xl border px-3.5 py-2 text-left text-sm transition ${
                   isSelected
                     ? 'border-[#0369A1] bg-[#0369A1] text-white shadow-sm hover:bg-[#075985]'
-                    : 'border-[#CBD5E1] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE]/60'
+                    : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#0369A1] hover:bg-[#E0F2FE]'
                 }`}
               >
                 <span className="font-semibold">Chương {ch.chapter}</span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
-                    stats.percent === 100
-                      ? 'bg-[#ECFDF5] text-[#065F46]'
-                      : isSelected
-                        ? 'bg-[#FEF3C7] text-[#D97706]'
-                        : 'bg-[#FEF3C7]/80 text-[#D97706]'
+                  className={`rounded-full border border-[#A7F3D0] bg-[#ECFDF5] px-2 py-0.5 text-xs font-semibold tabular-nums ${
+                    stats.percent === 100 ? 'text-[#059669]' : 'text-[#0D9488]'
                   }`}
                 >
                   {stats.percent}%
@@ -793,22 +787,22 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
         {/* Overall Chapter Progress Bar */}
         {currentChapterMeta && (
-          <div className="mt-5 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] p-4">
+          <div className="mt-5 rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="text-sm font-semibold text-[#0369A1]">
                 Chương {currentChapterMeta.chapter}: {currentChapterMeta.title}
               </div>
               <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
-                <span className="inline-flex items-center gap-1.5 text-[#065F46] tabular-nums">
-                  <span className="h-2 w-2 rounded-full bg-[#10B981]" />
+                <span className="inline-flex items-center gap-1.5 text-[#059669] tabular-nums">
+                  <span className="h-2 w-2 rounded-full bg-[#059669]" />
                   Đã thuộc: {chapterStats.mastered}
                 </span>
-                <span className="inline-flex items-center gap-1.5 text-[#92400E] tabular-nums">
-                  <span className="h-2 w-2 rounded-full bg-[#F59E0B]" />
+                <span className="inline-flex items-center gap-1.5 text-[#4F46E5] tabular-nums">
+                  <span className="h-2 w-2 rounded-full bg-[#4F46E5]" />
                   Phân vân: {chapterStats.hesitant}
                 </span>
-                <span className="inline-flex items-center gap-1.5 text-slate-600 tabular-nums">
-                  <span className="h-2 w-2 rounded-full bg-slate-400" />
+                <span className="inline-flex items-center gap-1.5 text-[#64748B] tabular-nums">
+                  <span className="h-2 w-2 rounded-full bg-[#64748B]" />
                   Chưa thuộc: {chapterStats.unlearned}
                 </span>
               </div>
@@ -817,9 +811,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
             <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-slate-200/80">
               <div
                 className={`h-full rounded-full transition-all duration-300 ${
-                  chapterStats.percent === 100
-                    ? 'bg-[#10B981]'
-                    : 'bg-gradient-to-r from-[#F59E0B] to-[#D97706]'
+                  chapterStats.percent === 100 ? 'bg-[#059669]' : 'bg-[#0D9488]'
                 }`}
                 style={{ width: `${chapterStats.percent}%` }}
               />
@@ -839,10 +831,10 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
               key={stage.index}
               type="button"
               onClick={() => startStageSession(stage.index)}
-              className={`group flex flex-col justify-between rounded-2xl border bg-white p-6 text-left shadow-[0_8px_24px_-4px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-md ${
+              className={`group flex flex-col justify-between rounded-2xl border bg-white p-6 text-left shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-md ${
                 isCompleted
-                  ? 'border-[#10B981]/60 hover:border-[#10B981]'
-                  : 'border-[#CBD5E1] hover:border-[#0369A1]'
+                  ? 'border-[#A7F3D0] hover:border-[#059669]'
+                  : 'border-[#D5E3EC] hover:border-[#0369A1]'
               }`}
             >
               <div>
@@ -851,7 +843,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     <span
                       className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold ${
                         isCompleted
-                          ? 'bg-[#ECFDF5] text-[#065F46]'
+                          ? 'bg-[#ECFDF5] text-[#059669]'
                           : 'bg-[#E0F2FE] text-[#0369A1]'
                       }`}
                     >
@@ -859,17 +851,15 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     </span>
                     <div>
                       <div className="font-bold text-[#0F172A]">{stage.title}</div>
-                      <div className="text-xs text-slate-500 tabular-nums">
+                      <div className="text-xs text-[#64748B] tabular-nums">
                         {stage.questions.length} câu · Câu {stage.startIndex}–{stage.endIndex}
                       </div>
                     </div>
                   </div>
 
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-bold tabular-nums ${
-                      isCompleted
-                        ? 'border border-[#10B981]/30 bg-[#ECFDF5] text-[#065F46]'
-                        : 'border border-[#F59E0B]/30 bg-[#FEF3C7] text-[#D97706]'
+                    className={`rounded-full border border-[#A7F3D0] bg-[#ECFDF5] px-2.5 py-0.5 text-xs font-bold tabular-nums ${
+                      isCompleted ? 'text-[#059669]' : 'text-[#0D9488]'
                     }`}
                   >
                     {stats.percent}%
@@ -878,18 +868,16 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
                 {/* Stage progress bar */}
                 <div className="mt-4">
-                  <div className="mb-1.5 flex items-center justify-between text-xs text-slate-500">
+                  <div className="mb-1.5 flex items-center justify-between text-xs text-[#64748B]">
                     <span>Đã thuộc</span>
-                    <span className="font-semibold text-[#D97706] tabular-nums">
+                    <span className="font-semibold text-[#059669] tabular-nums">
                       {stats.mastered}/{stats.total}
                     </span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${
-                        isCompleted
-                          ? 'bg-[#10B981]'
-                          : 'bg-gradient-to-r from-[#F59E0B] to-[#D97706]'
+                        isCompleted ? 'bg-[#059669]' : 'bg-[#0D9488]'
                       }`}
                       style={{ width: `${stats.percent}%` }}
                     />
@@ -898,31 +886,31 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
                 {/* 3 Status counts */}
                 <div className="mt-4 grid grid-cols-3 gap-2">
-                  <div className="rounded-lg bg-[#ECFDF5] px-2 py-1.5 text-center">
-                    <div className="text-sm font-bold text-[#065F46] tabular-nums">
+                  <div className="rounded-lg border border-[#A7F3D0] bg-[#ECFDF5] px-2 py-1.5 text-center">
+                    <div className="text-sm font-bold text-[#059669] tabular-nums">
                       {stats.mastered}
                     </div>
-                    <div className="text-[11px] font-medium text-[#065F46]">Đã thuộc</div>
+                    <div className="text-[11px] font-medium text-[#059669]">Đã thuộc</div>
                   </div>
-                  <div className="rounded-lg bg-[#FFFBEB] px-2 py-1.5 text-center">
-                    <div className="text-sm font-bold text-[#92400E] tabular-nums">
+                  <div className="rounded-lg border border-[#C7D2FE] bg-[#EEF2FF] px-2 py-1.5 text-center">
+                    <div className="text-sm font-bold text-[#4F46E5] tabular-nums">
                       {stats.hesitant}
                     </div>
-                    <div className="text-[11px] font-medium text-[#92400E]">Phân vân</div>
+                    <div className="text-[11px] font-medium text-[#4F46E5]">Phân vân</div>
                   </div>
-                  <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center border border-slate-200/70">
+                  <div className="rounded-lg border border-[#D5E3EC] bg-[#F8FAFC] px-2 py-1.5 text-center">
                     <div className="text-sm font-bold text-[#0F172A] tabular-nums">
                       {stats.unlearned}
                     </div>
-                    <div className="text-[11px] font-medium text-slate-600">Chưa thuộc</div>
+                    <div className="text-[11px] font-medium text-[#64748B]">Chưa thuộc</div>
                   </div>
                 </div>
               </div>
 
               <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs font-semibold">
                 {isCompleted ? (
-                  <span className="inline-flex items-center gap-1.5 text-[#065F46]">
-                    <CheckCircle2 className="h-4 w-4 text-[#10B981]" />
+                  <span className="inline-flex items-center gap-1.5 text-[#059669]">
+                    <CheckCircle2 className="h-4 w-4 text-[#059669]" />
                     Đã thuộc toàn bộ
                   </span>
                 ) : (
@@ -931,7 +919,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     {stats.mastered > 0 || stats.hesitant > 0 ? 'Tiếp tục học' : 'Bắt đầu học'}
                   </span>
                 )}
-                <ChevronRight className="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-[#0369A1]" />
+                <ChevronRight className="h-4 w-4 text-[#64748B] transition group-hover:translate-x-0.5 group-hover:text-[#0369A1]" />
               </div>
             </button>
           );
