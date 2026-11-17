@@ -31,7 +31,7 @@ interface MockExamViewProps {
 type ExamPhase = 'lobby' | 'active' | 'results';
 type ReviewFilter = 'wrong' | 'all' | 'flagged';
 
-const EXAM_DURATION_SECONDS = 45 * 60;
+const EXAM_DURATION_SECONDS = 60 * 60;
 const WARNING_THRESHOLD_SECONDS = 5 * 60;
 
 function fisherYatesShuffle<T>(items: readonly T[]): T[] {
@@ -214,7 +214,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
     subjectMeta.examQuotas,
   ]);
 
-  // Active exam 1-second tick for elapsed time and optional 45-minute countdown
+  // Active exam 1-second tick for elapsed time and optional 60-minute countdown
   useEffect(() => {
     if (phase !== 'active') return;
 
@@ -425,7 +425,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
 
               <div className="flex items-center gap-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] px-3.5 py-2 text-xs font-medium text-[#0F172A]">
                 <Clock className="h-4 w-4 text-[#0369A1]" />
-                <span className="tabular-nums">Thời lượng chuẩn: 45 phút</span>
+                <span className="tabular-nums">Thời lượng chuẩn: 60 phút</span>
               </div>
             </div>
 
@@ -469,31 +469,29 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 className="group flex items-center gap-3 text-left"
               >
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors ${
-                    timerEnabled
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors ${timerEnabled
                       ? 'border-[#0891B2]/30 bg-[#E0F2FE] text-[#0369A1]'
                       : 'border-[#CBD5E1] bg-white text-slate-400'
-                  }`}
+                    }`}
                 >
                   {timerEnabled ? <Timer className="h-5 w-5" /> : <TimerOff className="h-5 w-5" />}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 text-sm font-semibold text-[#0F172A]">
-                    <span>Đếm ngược 45 phút</span>
+                    <span>Đếm ngược 60 phút</span>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                        timerEnabled
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${timerEnabled
                           ? 'bg-[#E0F2FE] text-[#0369A1]'
                           : 'bg-slate-200 text-slate-600'
-                      }`}
+                        }`}
                     >
                       {timerEnabled ? 'Đang bật' : 'Đang tắt'}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500">
                     {timerEnabled
-                      ? 'Tự động nộp bài khi hết 45:00 (có thể tắt/bật khi đang làm).'
-                      : 'Làm bài thoải mái không giới hạn thời gian.'}
+                        ? 'Tự động nộp bài khi hết 60:00 (có thể tắt/bật khi đang làm).'
+                        : 'Làm bài thoải mái không giới hạn thời gian.'}
                   </p>
                 </div>
               </button>
@@ -551,11 +549,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2.5">
                           <span
-                            className={`inline-flex items-center justify-center rounded-lg border px-2.5 py-1 text-sm font-bold tabular-nums ${
-                              passed
+                            className={`inline-flex items-center justify-center rounded-lg border px-2.5 py-1 text-sm font-bold tabular-nums ${passed
                                 ? 'border-[#10B981] bg-[#ECFDF5] text-[#065F46]'
                                 : 'border-[#F43F5E] bg-[#FFF1F2] text-[#9F1239]'
-                            }`}
+                              }`}
                           >
                             {item.scoreOn10.toFixed(1)}đ
                           </span>
@@ -615,13 +612,12 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
             {/* Countdown Timer + Toggle */}
             <div className="flex items-center gap-2">
               <div
-                className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-bold tabular-nums transition-colors ${
-                  !timerEnabled
+                className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-bold tabular-nums transition-colors ${!timerEnabled
                     ? 'border-[#CBD5E1] bg-[#F8FAFC] text-slate-600'
                     : isLowTime
                       ? 'animate-pulse border-[#F43F5E] bg-[#FFF1F2] text-[#9F1239]'
                       : 'border-[#BAE6FD] bg-[#E0F2FE] text-[#0369A1]'
-                }`}
+                  }`}
               >
                 <Clock className="h-4 w-4 shrink-0" />
                 <span>
@@ -698,11 +694,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               <button
                 type="button"
                 onClick={() => onToggleFlag(currentQuestion.id)}
-                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                  isFlagged
+                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${isFlagged
                     ? 'border-[#F59E0B] bg-[#FFFBEB] text-[#92400E]'
                     : 'border-[#CBD5E1] bg-white text-slate-600 hover:border-[#F59E0B] hover:bg-[#FFFBEB] hover:text-[#92400E]'
-                }`}
+                  }`}
               >
                 <Flag className={`h-3.5 w-3.5 ${isFlagged ? 'fill-[#F59E0B] text-[#F59E0B]' : ''}`} />
                 <span>Phân vân</span>
@@ -726,18 +721,16 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     key={opt.key}
                     type="button"
                     onClick={() => handleSelectOption(currentQuestion, opt.key)}
-                    className={`flex w-full cursor-pointer items-start gap-3.5 rounded-xl border p-4 px-5 text-left transition-all duration-150 ${
-                      isSelected
+                    className={`flex w-full cursor-pointer items-start gap-3.5 rounded-xl border p-4 px-5 text-left transition-all duration-150 ${isSelected
                         ? 'border-[#0369A1] bg-[#E0F2FE]/80 text-[#0F172A] ring-1 ring-[#0369A1]'
                         : 'border-[#CBD5E1] bg-white text-[#1E293B] hover:translate-x-1 hover:border-[#0284C7] hover:bg-[#E0F2FE]'
-                    }`}
+                      }`}
                   >
                     <span
-                      className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition ${
-                        isSelected
+                      className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition ${isSelected
                           ? 'border-[#0369A1] bg-[#0369A1] text-white'
                           : 'border-[#CBD5E1] bg-[#F8FAFC] text-[#1E293B]'
-                      }`}
+                        }`}
                     >
                       {opt.key}
                     </span>
@@ -816,13 +809,11 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     key={q.id}
                     type="button"
                     onClick={() => setCurrentIndex(idx)}
-                    className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold tabular-nums transition ${
-                      isAnswered
+                    className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold tabular-nums transition ${isAnswered
                         ? 'border-[#0891B2] bg-[#E0F2FE] text-[#0369A1]'
                         : 'border-[#CBD5E1] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#F8FAFC]'
-                    } ${flagged ? 'border-[#F59E0B]' : ''} ${
-                      isCurrent ? 'z-10 ring-2 ring-[#0369A1] ring-offset-1' : ''
-                    }`}
+                      } ${flagged ? 'border-[#F59E0B]' : ''} ${isCurrent ? 'z-10 ring-2 ring-[#0369A1] ring-offset-1' : ''
+                      }`}
                   >
                     {idx + 1}
                     {flagged && (
@@ -920,11 +911,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
         <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <div
-              className={`flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-2xl border ${
-                scoreOn10 >= 5
+              className={`flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-2xl border ${scoreOn10 >= 5
                   ? 'border-[#10B981] bg-[#ECFDF5] text-[#065F46]'
                   : 'border-[#F43F5E] bg-[#FFF1F2] text-[#9F1239]'
-              }`}
+                }`}
             >
               <span className="text-2xl font-extrabold leading-none tabular-nums">
                 {scoreOn10.toFixed(1)}
@@ -1039,11 +1029,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   onClick={() =>
                     handleJumpToReviewQuestion(item.question.id, item.isCorrect, item.isFlagged)
                   }
-                  className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-bold tabular-nums transition ${
-                    item.isCorrect
+                  className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-bold tabular-nums transition ${item.isCorrect
                       ? 'border-[#10B981] bg-[#ECFDF5] text-[#065F46] hover:bg-emerald-100'
                       : 'border-[#F43F5E] bg-[#FFF1F2] text-[#9F1239] hover:bg-rose-100'
-                  } ${focusedReviewId === item.question.id ? 'ring-2 ring-[#0369A1] ring-offset-1' : ''}`}
+                    } ${focusedReviewId === item.question.id ? 'ring-2 ring-[#0369A1] ring-offset-1' : ''}`}
                 >
                   {item.index + 1}
                   {item.isFlagged && (
@@ -1091,17 +1080,15 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   key={tab.id}
                   type="button"
                   onClick={() => setReviewFilter(tab.id)}
-                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold transition sm:text-sm ${
-                    active
+                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold transition sm:text-sm ${active
                       ? 'bg-[#0369A1] text-white shadow-xs hover:bg-[#075985]'
                       : 'text-[#1E293B] hover:bg-[#E0F2FE] hover:text-[#0369A1]'
-                  }`}
+                    }`}
                 >
                   <span>{tab.label}</span>
                   <span
-                    className={`rounded-full px-1.5 py-0.5 text-[11px] tabular-nums ${
-                      active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
-                    }`}
+                    className={`rounded-full px-1.5 py-0.5 text-[11px] tabular-nums ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
                   >
                     {tab.count}
                   </span>
@@ -1130,11 +1117,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 <article
                   key={q.id}
                   id={`exam-review-q-${q.id}`}
-                  className={`rounded-2xl border bg-white p-7 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.06)] transition sm:p-8 ${
-                    isHighlighted
+                  className={`rounded-2xl border bg-white p-7 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.06)] transition sm:p-8 ${isHighlighted
                       ? 'border-[#0369A1] ring-2 ring-[#0369A1]/20'
                       : 'border-[#CBD5E1]'
-                  }`}
+                    }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
                     <div className="flex flex-wrap items-center gap-2">
@@ -1160,11 +1146,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     <button
                       type="button"
                       onClick={() => onToggleFlag(q.id)}
-                      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1 text-xs font-semibold transition ${
-                        isFlagged
+                      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1 text-xs font-semibold transition ${isFlagged
                           ? 'border-[#F59E0B] bg-[#FFFBEB] text-[#92400E]'
                           : 'border-[#CBD5E1] bg-white text-slate-600 hover:border-[#F59E0B] hover:bg-[#FFFBEB] hover:text-[#92400E]'
-                      }`}
+                        }`}
                     >
                       <Flag
                         className={`h-3.5 w-3.5 ${isFlagged ? 'fill-[#F59E0B] text-[#F59E0B]' : ''}`}
@@ -1216,11 +1201,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                           <div className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold">
                             {isUserSelected && (
                               <span
-                                className={`rounded-md px-2 py-0.5 ${
-                                  isCorrectOpt
+                                className={`rounded-md px-2 py-0.5 ${isCorrectOpt
                                     ? 'bg-emerald-100 text-[#065F46]'
                                     : 'bg-rose-100 text-[#9F1239]'
-                                }`}
+                                  }`}
                               >
                                 Bạn chọn
                               </span>
