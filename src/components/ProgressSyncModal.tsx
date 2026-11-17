@@ -187,16 +187,16 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
             exit={{ opacity: 0, scale: 0.96, y: 10 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-sky-100 bg-white shadow-2xl shadow-sky-950/15"
+            className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-[#CBD5E1] bg-white shadow-[0_8px_24px_-4px_rgba(15,23,42,0.12)]"
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-sky-100 bg-white/95 px-5 py-4 backdrop-blur-sm">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur-sm">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-[#0284C7]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E0F2FE] text-[#0369A1]">
                   <Cloud className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 id="sync-modal-title" className="text-base font-bold text-slate-900">
+                  <h2 id="sync-modal-title" className="text-base font-bold text-[#0F172A]">
                     Đồng bộ tiến độ học tập
                   </h2>
                   <p className="text-xs text-slate-500">
@@ -209,7 +209,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                 type="button"
                 onClick={onClose}
                 aria-label="Đóng hộp thoại"
-                className="rounded-xl p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-slate-700"
+                className="rounded-xl p-1.5 text-slate-400 transition hover:bg-[#E0F2FE] hover:text-[#0369A1]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -217,42 +217,42 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
 
             <div className="space-y-5 p-5">
               {/* Current Progress Summary */}
-              <div className="grid grid-cols-3 gap-2.5">
-                <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3 text-center">
-                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium text-emerald-700">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl border border-[#F59E0B]/35 bg-[#FEF3C7]/70 p-3 text-center">
+                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium text-[#D97706]">
                     <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                     <span>Tổng câu đã thuộc</span>
                   </div>
-                  <p className="text-lg font-bold text-emerald-800 tabular-nums">
+                  <p className="text-lg font-bold text-[#92400E] tabular-nums">
                     {summary.mastered}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-amber-100 bg-amber-50/70 p-3 text-center">
-                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium text-amber-700">
+                <div className="rounded-xl border border-[#F59E0B]/40 bg-[#FFFBEB] p-3 text-center">
+                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium text-[#92400E]">
                     <HelpCircle className="h-3.5 w-3.5 shrink-0" />
                     <span>Câu phân vân</span>
                   </div>
-                  <p className="text-lg font-bold text-amber-800 tabular-nums">
+                  <p className="text-lg font-bold text-[#92400E] tabular-nums">
                     {summary.hesitant}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-sky-100 bg-sky-50/70 p-3 text-center">
-                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium text-[#0284C7]">
+                <div className="rounded-xl border border-[#CBD5E1] bg-[#E0F2FE]/50 p-3 text-center">
+                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium text-[#0369A1]">
                     <Trophy className="h-3.5 w-3.5 shrink-0" />
                     <span>Lượt thi thử</span>
                   </div>
-                  <p className="text-lg font-bold text-sky-900 tabular-nums">
+                  <p className="text-lg font-bold text-[#0F172A] tabular-nums">
                     {summary.exams}
                   </p>
                 </div>
               </div>
 
               {/* Export Section */}
-              <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
+              <section className="rounded-2xl border border-[#CBD5E1] bg-[#F8FAFC] p-4">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold text-slate-800">
+                  <h3 className="text-sm font-bold text-[#0F172A]">
                     Sao chép mã tiến độ
                   </h3>
                   <button
@@ -261,7 +261,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                     className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
                       copied
                         ? 'bg-[#10B981] text-white'
-                        : 'bg-[#0284C7] text-white hover:bg-sky-700'
+                        : 'bg-[#0369A1] text-white hover:bg-[#075985]'
                     }`}
                   >
                     {copied ? (

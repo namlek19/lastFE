@@ -72,7 +72,7 @@ export const App: React.FC = () => {
           onOpenSyncModal={() => setIsSyncOpen(true)}
         />
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <main className="mx-auto w-full max-w-[1380px] flex-1 px-6 py-8 lg:px-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={`${subject}-${mode}`}
@@ -111,8 +111,13 @@ export const App: React.FC = () => {
           </AnimatePresence>
         </main>
 
-        <footer className="border-t border-sky-100/80 bg-white/60 py-4 text-center text-xs text-slate-500">
-          Ôn thi trắc nghiệm MLN131 &amp; VNR202 • Tiến độ tự động lưu trên trình duyệt
+        <footer className="mt-12 border-t border-[#CBD5E1] bg-white/80 py-6 text-center text-xs text-slate-600">
+          <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-center gap-2 px-6 lg:px-10">
+            <span>Ôn thi trắc nghiệm MLN131 &amp; VNR202 • Tự động lưu tiến độ</span>
+            <span className="inline-flex items-center rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold text-[#0369A1]">
+              from Namblee
+            </span>
+          </div>
         </footer>
 
         <ProgressSyncModal

@@ -83,22 +83,23 @@ export const Header: React.FC<HeaderProps> = ({
   }, [isShortcutOpen]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-sky-100 bg-white/90 backdrop-blur-md">
-      <div className="mx-auto max-w-6xl px-3 sm:px-6">
+    <header className="sticky top-0 z-40 mb-8 border-b border-[#CBD5E1] bg-white/95 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.06)] backdrop-blur-md">
+      <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
         {/* Top Row: Brand, Subject Switcher & Utility Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5 py-2.5">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 py-3">
+          <div className="flex flex-wrap items-center gap-3.5">
             {/* Brand Title */}
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0284C7] to-[#0EA5E9] text-white shadow-sm shadow-sky-600/20">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#0369A1] to-[#0891B2] text-white shadow-sm shadow-sky-900/15">
                 <GraduationCap className="h-5 w-5" />
               </div>
               <div className="leading-tight">
-                <span className="block text-sm font-bold tracking-tight text-slate-900 sm:text-base">
+                <span className="block text-sm font-bold tracking-tight text-[#0F172A] sm:text-base">
                   Ôn thi Trắc nghiệm
                 </span>
-                <span className="hidden text-[11px] font-medium text-slate-500 sm:block">
-                  MLN131 &amp; VNR202 · FPT
+                <span className="hidden text-[11px] text-slate-500 sm:block">
+                  MLN131 &amp; VNR202 •{' '}
+                  <span className="font-medium text-[#0369A1]">from Namblee</span>
                 </span>
               </div>
             </div>
@@ -107,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div
               role="group"
               aria-label="Chọn môn học"
-              className="inline-flex items-center gap-1 rounded-xl border border-sky-100 bg-sky-50/70 p-1"
+              className="inline-flex items-center gap-1 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] p-1"
             >
               {SUBJECT_ORDER.map((subjId) => {
                 const meta = SUBJECTS[subjId];
@@ -120,14 +121,14 @@ export const Header: React.FC<HeaderProps> = ({
                     aria-pressed={isActive}
                     className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition sm:px-3 ${
                       isActive
-                        ? 'bg-[#0284C7] text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-white hover:text-[#0284C7]'
+                        ? 'bg-[#0369A1] text-white shadow-sm hover:bg-[#075985]'
+                        : 'text-[#1E293B] hover:bg-[#E0F2FE]/60 hover:text-[#0369A1]'
                     }`}
                   >
                     <span>{meta.code}</span>
                     <span
                       className={`tabular-nums text-[11px] font-medium ${
-                        isActive ? 'text-sky-100' : 'text-slate-400'
+                        isActive ? 'text-sky-100' : 'text-slate-500'
                       }`}
                     >
                       ({meta.totalQuestions} câu)
@@ -139,13 +140,13 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Right Cluster: Mastery Badge, Shortcuts Popover, Sync Modal Button */}
-          <div className="flex items-center gap-2">
-            {/* Overall Mastery Badge */}
+          <div className="flex items-center gap-2.5">
+            {/* Overall Mastery Badge (Warm Motivation Accent) */}
             <div
-              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50/90 px-2.5 py-1 text-xs font-semibold text-emerald-700 tabular-nums sm:px-3"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#F59E0B]/40 bg-[#FEF3C7] px-3 py-1 text-xs font-semibold text-[#D97706] tabular-nums sm:px-3.5"
               title={`Đã thuộc ${masteredCount} trên ${activeQuestions.length} câu môn ${SUBJECTS[subject].code}`}
             >
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#D97706]" />
               <span>
                 {masteredCount} / {activeQuestions.length} Đã thuộc
               </span>
@@ -161,8 +162,8 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Phím tắt bàn phím"
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-medium transition ${
                   isShortcutOpen
-                    ? 'border-cyan-200 bg-cyan-50 text-[#0284C7]'
-                    : 'border-sky-100 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-[#0284C7]'
+                    ? 'border-[#0891B2] bg-[#E0F2FE] text-[#0369A1]'
+                    : 'border-[#CBD5E1] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE]/60 hover:text-[#0369A1]'
                 }`}
               >
                 <Keyboard className="h-3.5 w-3.5 shrink-0" />
@@ -173,10 +174,10 @@ export const Header: React.FC<HeaderProps> = ({
                 <div
                   role="dialog"
                   aria-label="Hướng dẫn phím tắt"
-                  className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-sky-100 bg-white p-3.5 shadow-xl shadow-sky-900/10"
+                  className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-[#CBD5E1] bg-white p-4 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.12)]"
                 >
-                  <div className="mb-2.5 flex items-center justify-between border-b border-sky-50 pb-2">
-                    <span className="text-xs font-bold text-slate-800">
+                  <div className="mb-2.5 flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span className="text-xs font-bold text-[#0F172A]">
                       Phím tắt trên máy tính
                     </span>
                     <span className="text-[11px] text-slate-400">PC</span>
@@ -221,9 +222,9 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onOpenSyncModal}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50/90 px-2.5 py-1.5 text-xs font-semibold text-[#0284C7] transition hover:border-[#0284C7]/40 hover:bg-cyan-100/80 sm:px-3"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#0891B2]/30 bg-[#E0F2FE]/70 px-2.5 py-1.5 text-xs font-semibold text-[#0369A1] transition hover:border-[#0369A1]/50 hover:bg-[#E0F2FE] sm:px-3"
             >
-              <Cloud className="h-3.5 w-3.5 shrink-0" />
+              <Cloud className="h-3.5 w-3.5 shrink-0 text-[#0891B2]" />
               <span>Đồng bộ tiến độ</span>
             </button>
           </div>
@@ -232,7 +233,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Bottom Row: 3 Study Mode Tabs */}
         <nav
           aria-label="Chế độ học tập"
-          className="-mx-1 flex items-center gap-1.5 overflow-x-auto border-t border-sky-100/80 px-1 py-2"
+          className="-mx-1 flex items-center gap-2 overflow-x-auto border-t border-slate-200/80 px-1 py-2.5"
         >
           {MODE_TABS.map(({ id, label, Icon }) => {
             const isActive = mode === id;
@@ -242,10 +243,10 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={() => onSelectMode(id)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition sm:text-sm ${
+                className={`inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-1.5 text-xs font-semibold transition sm:text-sm ${
                   isActive
-                    ? 'border-[#0284C7] bg-[#0284C7] text-white shadow-sm shadow-sky-600/15'
-                    : 'border-transparent bg-transparent text-slate-600 hover:border-sky-100 hover:bg-sky-50/80 hover:text-[#0284C7]'
+                    ? 'border-[#0369A1] bg-[#0369A1] text-white shadow-sm hover:bg-[#075985]'
+                    : 'border-transparent bg-transparent text-slate-600 hover:border-[#CBD5E1] hover:bg-[#E0F2FE]/50 hover:text-[#0369A1]'
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" />
