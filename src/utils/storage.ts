@@ -1,0 +1,232 @@
+import LZString from 'lz-string';
+import {
+  ExamHistoryItem,
+  QuestionProgress,
+  StudyMode,
+  SubjectId,
+  ThreeStateMastery,
+  UserProgressStore,
+} from '../types/quiz';
+
+const STORAGE_KEY = 'fpt_exam_prep_v1';
+const CODE_PREFIX = 'OT1:';
+
+export function createDefaultStore(): UserProgressStore {
+  return {
+    version: 1,
+    questions: {},
+    examHistory: [],
+    lastSubject: 'mln131',
+    lastMode: 'chapter',
+  };
+}
+
+export function loadStore(): UserProgressStore {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return createDefaultStore();
+    const parsed = JSON.parse(raw) as Partial<UserProgressStore>;
+    if (!parsed || parsed.version !== 1 || typeof parsed.questions !== 'object') {
+      return createDefaultStore();
+    }
+    return {
+      version: 1,
+      questions: parsed.questions ?? {},
+      examHistory: Array.isArray(parsed.examHistory) ? parsed.examHistory : [],
+      lastSubject: parsed.lastSubject === 'vnr202' ? 'vnr202' : 'mln131',
+      lastMode:
+        parsed.lastMode === 'rolling' || parsed.lastMode === 'exam' ? parsed.lastMode : 'chapter',
+    };
+  } catch {
+    return createDefaultStore();
+  }
+}
+
+export function saveStore(store: UserProgressStore): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  } catch {
+    // Ignore storage quota errors gracefully
+  }
+}
+
+export function getQuestionProgress(
+  store: UserProgressStore,
+  questionId: string
+): QuestionProgress {
+  return (
+    store.questions[questionId] ?? {
+      streak: 0,
+      flagged: false,
+      correctCount: 0,
+      attemptCount: 0,
+    }
+  );
+}
+
+export function getMasteryState(progress?: QuestionProgress): ThreeStateMastery {
+  if (progress?.flagged) return 'hesitant';
+  if ((progress?.streak ?? 0) >= 2) return 'mastered';
+  return 'unlearned';
+}
+
+export function isMastered(progress?: QuestionProgress): boolean {
+  return Boolean(progress && !progress.flagged && progress.streak >= 2);
+}
+
+export function recordQuestionAttempt(
+  store: UserProgressStore,
+  questionId: string,
+  isCorrect: boolean,
+  flaggedOverride?: boolean
+): UserProgressStore {
+  const prev = getQuestionProgress(store, questionId);
+  const flagged = flaggedOverride !== undefined ? flaggedOverride : prev.flagged;
+
+  let streak = 0;
+  if (isCorrect && !flagged) {
+    streak = (prev.streak || 0) + 1;
+  }
+
+  const next: QuestionProgress = {
+    streak,
+    flagged,
+    lastResult: isCorrect ? 'correct' : 'wrong',
+    correctCount: prev.correctCount + (isCorrect ? 1 : 0),
+    attemptCount: prev.attemptCount + 1,
+  };
+
+  return {
+    ...store,
+    questions: {
+      ...store.questions,
+      [questionId]: next,
+    },
+  };
+}
+
+export function toggleQuestionFlag(
+  store: UserProgressStore,
+  questionId: string
+): UserProgressStore {
+  const prev = getQuestionProgress(store, questionId);
+  const nextFlagged = !prev.flagged;
+  const next: QuestionProgress = {
+    ...prev,
+    flagged: nextFlagged,
+    streak: nextFlagged ? 0 : prev.streak,
+  };
+
+  return {
+    ...store,
+    questions: {
+      ...store.questions,
+      [questionId]: next,
+    },
+  };
+}
+
+export function addExamHistory(
+  store: UserProgressStore,
+  result: ExamHistoryItem
+): UserProgressStore {
+  return {
+    ...store,
+    examHistory: [result, ...store.examHistory].slice(0, 30),
+  };
+}
+
+export function resetProgress(
+  store: UserProgressStore,
+  questionIds?: string[]
+): UserProgressStore {
+  if (!questionIds) {
+    return createDefaultStore();
+  }
+  const nextQuestions = { ...store.questions };
+  for (const id of questionIds) {
+    delete nextQuestions[id];
+  }
+  return {
+    ...store,
+    questions: nextQuestions,
+  };
+}
+
+type CompactTuple = [string, number, 0 | 1, 0 | 1 | 2, number, number];
+
+interface CompactSyncPayload {
+  v: 1;
+  s: SubjectId;
+  m: StudyMode;
+  q: CompactTuple[];
+  h: ExamHistoryItem[];
+}
+
+export function exportProgressCode(store: UserProgressStore): string {
+  const tuples: CompactTuple[] = Object.entries(store.questions).map(([id, p]) => [
+    id,
+    p.streak,
+    p.flagged ? 1 : 0,
+    p.lastResult === 'correct' ? 1 : p.lastResult === 'wrong' ? 2 : 0,
+    p.correctCount,
+    p.attemptCount,
+  ]);
+
+  const payload: CompactSyncPayload = {
+    v: 1,
+    s: store.lastSubject,
+    m: store.lastMode,
+    q: tuples,
+    h: store.examHistory,
+  };
+
+  const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(payload));
+  return `${CODE_PREFIX}${compressed}`;
+}
+
+export function importProgressCode(code: string): UserProgressStore | null {
+  try {
+    const trimmed = code.trim();
+    if (!trimmed) return null;
+    const rawCompressed = trimmed.startsWith(CODE_PREFIX)
+      ? trimmed.slice(CODE_PREFIX.length)
+      : trimmed;
+
+    const jsonText = LZString.decompressFromEncodedURIComponent(rawCompressed);
+    if (!jsonText) return null;
+
+    const parsed = JSON.parse(jsonText) as Partial<CompactSyncPayload>;
+    if (!parsed || parsed.v !== 1 || !Array.isArray(parsed.q)) {
+      return null;
+    }
+
+    const questions: Record<string, QuestionProgress> = {};
+    for (const row of parsed.q) {
+      if (!Array.isArray(row) || typeof row[0] !== 'string') continue;
+      const [id, streak, flaggedNum, lastResNum, correctCount, attemptCount] = row;
+      questions[id] = {
+        streak: typeof streak === 'number' ? Math.max(0, streak) : 0,
+        flagged: flaggedNum === 1,
+        ...(lastResNum === 1
+          ? { lastResult: 'correct' as const }
+          : lastResNum === 2
+            ? { lastResult: 'wrong' as const }
+            : {}),
+        correctCount: typeof correctCount === 'number' ? Math.max(0, correctCount) : 0,
+        attemptCount: typeof attemptCount === 'number' ? Math.max(0, attemptCount) : 0,
+      };
+    }
+
+    return {
+      version: 1,
+      questions,
+      examHistory: Array.isArray(parsed.h) ? parsed.h : [],
+      lastSubject: parsed.s === 'vnr202' ? 'vnr202' : 'mln131',
+      lastMode:
+        parsed.m === 'rolling' || parsed.m === 'exam' ? parsed.m : 'chapter',
+    };
+  } catch {
+    return null;
+  }
+}
