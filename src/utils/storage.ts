@@ -9,7 +9,29 @@ import {
 } from '../types/quiz';
 
 const STORAGE_KEY = 'fpt_exam_prep_v1';
+const THEME_STORAGE_KEY = 'fpt_exam_theme_v1';
 const CODE_PREFIX = 'OT1:';
+
+export type ThemeMode = 'light' | 'dark';
+
+export function loadTheme(): ThemeMode {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
+export function saveTheme(theme: ThemeMode): void {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // Ignore storage quota errors gracefully
+  }
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }
+}
 
 export function createDefaultStore(): UserProgressStore {
   return {

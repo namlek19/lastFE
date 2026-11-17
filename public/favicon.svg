@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <!-- Solid Nordic Ocean badge -->
-  <rect x="2" y="2" width="60" height="60" rx="16" fill="#0369A1" />
+  <!-- Solid Cobalt Ocean badge -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#0284C7" />
   <rect x="3" y="3" width="58" height="58" rx="15" stroke="#BAE6FD" stroke-opacity="0.35" stroke-width="2" />
 
   <!-- Graduation cap top diamond -->
@@ -12,13 +12,13 @@
     fill="#E0F2FE"
   />
 
-  <!-- Solid emerald/teal tassel -->
+  <!-- Solid cold teal tassel -->
   <path d="M50 26.5V39.5" stroke="#0D9488" stroke-width="3.4" stroke-linecap="round" />
-  <circle cx="50" cy="41.5" r="3.4" fill="#A7F3D0" />
+  <circle cx="50" cy="41.5" r="3.4" fill="#5EEAD4" />
 
-  <!-- Solid emerald sparkle -->
+  <!-- Solid cold teal sparkle -->
   <path
     d="M15.5 11.5L16.7 14.3L19.5 15.5L16.7 16.7L15.5 19.5L14.3 16.7L11.5 15.5L14.3 14.3L15.5 11.5Z"
-    fill="#A7F3D0"
+    fill="#5EEAD4"
   />
 </svg>

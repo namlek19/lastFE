@@ -294,13 +294,13 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
     <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[310px_1fr]">
       {/* Mobile Chapter Selector: compact horizontal scrollable pills */}
       <div className="lg:hidden">
-        <div className="rounded-2xl border border-[#D5E3EC] bg-white p-4 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)]">
+        <div className="rounded-2xl border border-[#D5E3EC] bg-white p-4 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#0369A1]">
-              <BookOpen className="h-3.5 w-3.5 text-[#0369A1]" />
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#0284C7] dark:text-[#38BDF8]">
+              <BookOpen className="h-3.5 w-3.5 text-[#0284C7] dark:text-[#38BDF8]" />
               <span>{subjectMeta.code} • Chọn chương</span>
             </div>
-            <span className="tabular-nums rounded-full border border-[#A7F3D0] bg-[#ECFDF5] px-2.5 py-0.5 text-xs font-semibold text-[#059669]">
+            <span className="tabular-nums rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2.5 py-0.5 text-xs font-semibold text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF]">
               {subjectMasteredCount}/{allSubjectQuestions.length} đã thuộc
             </span>
           </div>
@@ -315,25 +315,19 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   type="button"
                   data-native-enter="true"
                   onClick={() => handleSelectChapter(ch.chapter)}
-                  className={`shrink-0 rounded-xl border p-3 text-left transition-colors ${
+                  className={`shrink-0 cursor-pointer rounded-xl border p-3 text-left transition-colors ${
                     active
-                      ? 'border-[#0369A1] bg-[#E0F2FE] text-[#0369A1]'
-                      : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#0369A1] hover:bg-[#E0F2FE]/50'
+                      ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8] dark:bg-[#0284C7]/20 dark:text-[#F8FAFC]'
+                      : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE]/50 dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/15'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold">Chương {ch.chapter}</span>
-                    <span
-                      className={`tabular-nums rounded-full border px-1.5 py-0.5 text-[11px] font-semibold ${
-                        stat?.pct === 100
-                          ? 'border-[#A7F3D0] bg-[#ECFDF5] text-[#059669]'
-                          : 'border-[#A7F3D0] bg-[#ECFDF5] text-[#0D9488]'
-                      }`}
-                    >
+                    <span className="tabular-nums rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-1.5 py-0.5 text-[11px] font-semibold text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF]">
                       {stat?.pct ?? 0}%
                     </span>
                   </div>
-                  <div className="mt-0.5 max-w-[160px] truncate text-[11px] text-[#64748B]">
+                  <div className="mt-0.5 max-w-[160px] truncate text-[11px] text-[#64748B] dark:text-[#94A3B8]">
                     {ch.title}
                   </div>
                 </button>
@@ -342,12 +336,14 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
           </div>
 
           {activeChapterMeta && (
-            <div className="mt-2.5 border-t border-slate-100 pt-2.5 text-xs text-[#64748B]">
-              <span className="font-semibold text-[#0369A1]">
+            <div className="mt-2.5 border-t border-[#D5E3EC] pt-2.5 text-xs text-[#64748B] dark:border-[#1E293B] dark:text-[#94A3B8]">
+              <span className="font-semibold text-[#0284C7] dark:text-[#38BDF8]">
                 Chương {activeChapterMeta.chapter}:
               </span>{' '}
               {activeChapterMeta.title}{' '}
-              <span className="tabular-nums text-[#64748B]">({activeChapterMeta.count} câu)</span>
+              <span className="tabular-nums text-[#64748B] dark:text-[#94A3B8]">
+                ({activeChapterMeta.count} câu)
+              </span>
             </div>
           )}
         </div>
@@ -355,15 +351,17 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
 
       {/* Desktop Chapter Sidebar */}
       <aside className="hidden lg:block">
-        <div className="sticky top-28 rounded-2xl border border-[#D5E3EC] bg-white p-5 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)]">
-          <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3.5">
+        <div className="sticky top-28 rounded-2xl border border-[#D5E3EC] bg-white p-5 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
+          <div className="mb-4 flex items-center justify-between border-b border-[#D5E3EC] pb-3.5 dark:border-[#1E293B]">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E0F2FE] text-[#0369A1]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#BAE6FD] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
                 <BookOpen className="h-4 w-4" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-[#0F172A]">Danh sách chương</h2>
-                <p className="tabular-nums text-xs font-semibold text-[#059669]">
+                <h2 className="text-sm font-bold text-[#0F172A] dark:text-[#F8FAFC]">
+                  Danh sách chương
+                </h2>
+                <p className="tabular-nums text-xs font-semibold text-[#0D9488] dark:text-[#14B8A6]">
                   {subjectMasteredCount}/{allSubjectQuestions.length} câu đã thuộc
                 </p>
               </div>
@@ -374,7 +372,6 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
             {chapters.map((ch) => {
               const stat = chapterStats.get(ch.chapter) ?? { mastered: 0, total: ch.count, pct: 0 };
               const active = ch.chapter === selectedChapter;
-              const isComplete = stat.pct === 100 && stat.total > 0;
 
               return (
                 <button
@@ -382,49 +379,47 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   type="button"
                   data-native-enter="true"
                   onClick={() => handleSelectChapter(ch.chapter)}
-                  className={`w-full rounded-xl border p-4 text-left transition-all ${
+                  className={`w-full cursor-pointer rounded-xl border p-4 text-left transition-all ${
                     active
-                      ? 'border-[#0369A1] bg-[#E0F2FE]/60 shadow-xs'
-                      : 'border-[#D5E3EC] bg-white hover:border-[#0369A1] hover:bg-[#F8FAFC]'
+                      ? 'border-[#0284C7] bg-[#E0F2FE]/70 shadow-xs dark:border-[#38BDF8] dark:bg-[#0284C7]/20'
+                      : 'border-[#D5E3EC] bg-white hover:border-[#0284C7] hover:bg-[#F8FAFC] dark:border-[#334155] dark:bg-[#1E293B]/45 dark:hover:border-[#38BDF8] dark:hover:bg-[#1E293B]/80'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className={`text-xs font-bold uppercase tracking-wide ${
-                        active ? 'text-[#0369A1]' : 'text-[#64748B]'
+                        active
+                          ? 'text-[#0284C7] dark:text-[#38BDF8]'
+                          : 'text-[#64748B] dark:text-[#94A3B8]'
                       }`}
                     >
                       Chương {ch.chapter}
                     </span>
-                    <span
-                      className={`tabular-nums rounded-full border border-[#A7F3D0] bg-[#ECFDF5] px-2 py-0.5 text-[11px] font-semibold ${
-                        isComplete ? 'text-[#059669]' : 'text-[#0D9488]'
-                      }`}
-                    >
+                    <span className="tabular-nums rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2 py-0.5 text-[11px] font-semibold text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF]">
                       {stat.pct}% Đã thuộc
                     </span>
                   </div>
 
                   <p
                     className={`mt-1.5 line-clamp-2 text-sm font-semibold leading-snug ${
-                      active ? 'text-[#0369A1]' : 'text-[#0F172A]'
+                      active
+                        ? 'text-[#0284C7] dark:text-[#F8FAFC]'
+                        : 'text-[#0F172A] dark:text-[#E2E8F0]'
                     }`}
                   >
                     {ch.title}
                   </p>
 
-                  <div className="mt-3 flex items-center justify-between text-[11px] text-[#64748B]">
+                  <div className="mt-3 flex items-center justify-between text-[11px] text-[#64748B] dark:text-[#94A3B8]">
                     <span className="tabular-nums">{ch.count} câu</span>
-                    <span className="tabular-nums font-medium text-[#1E293B]">
+                    <span className="tabular-nums font-medium text-[#1E293B] dark:text-[#E2E8F0]">
                       {stat.mastered}/{stat.total}
                     </span>
                   </div>
 
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#E2E8F0] dark:bg-[#0B1120]">
                     <div
-                      className={`h-full rounded-full transition-all duration-300 ${
-                        isComplete ? 'bg-[#059669]' : 'bg-[#0D9488]'
-                      }`}
+                      className="h-full rounded-full bg-[#0D9488] transition-all duration-300 dark:bg-[#14B8A6]"
                       style={{ width: `${stat.pct}%` }}
                     />
                   </div>
@@ -438,10 +433,10 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
       {/* Main Content Area */}
       <div className="min-w-0">
         {/* Quick Filter Pills */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5E3EC] bg-white px-5 py-3.5 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)]">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5E3EC] bg-white px-5 py-3.5 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="mr-1 hidden items-center gap-1.5 text-xs font-medium text-[#64748B] sm:inline-flex">
-              <Filter className="h-3.5 w-3.5 text-[#0369A1]" />
+            <span className="mr-1 hidden items-center gap-1.5 text-xs font-medium text-[#64748B] dark:text-[#94A3B8] sm:inline-flex">
+              <Filter className="h-3.5 w-3.5 text-[#0284C7] dark:text-[#38BDF8]" />
               Lọc nhanh:
             </span>
 
@@ -449,16 +444,18 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
               type="button"
               data-native-enter="true"
               onClick={() => handleApplyFilter('all')}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                 filter === 'all'
-                  ? 'border-[#0369A1] bg-[#0369A1] text-white hover:bg-[#075985]'
-                  : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#0369A1] hover:bg-[#E0F2FE]'
+                  ? 'border-[#0284C7] bg-[#0284C7] text-white hover:bg-[#0369A1] dark:border-[#38BDF8]/60'
+                  : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20'
               }`}
             >
               <span>Tất cả câu</span>
               <span
                 className={`tabular-nums rounded-full px-1.5 py-0.5 text-[11px] ${
-                  filter === 'all' ? 'bg-white/20 text-white' : 'bg-[#F1F6F9] text-[#64748B]'
+                  filter === 'all'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#F1F6F9] text-[#64748B] dark:bg-[#0B1120] dark:text-[#94A3B8]'
                 }`}
               >
                 {filterCounts.all}
@@ -469,16 +466,18 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
               type="button"
               data-native-enter="true"
               onClick={() => handleApplyFilter('wrong')}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                 filter === 'wrong'
                   ? 'border-[#E11D48] bg-[#E11D48] text-white'
-                  : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#FECDD3] hover:bg-[#FFF1F2] hover:text-[#E11D48]'
+                  : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#FECDD3] hover:bg-[#FFF1F2] hover:text-[#E11D48] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#FB7185]/50 dark:hover:bg-[#4C0519]/50 dark:hover:text-[#FB7185]'
               }`}
             >
               <span>Câu làm sai</span>
               <span
                 className={`tabular-nums rounded-full px-1.5 py-0.5 text-[11px] ${
-                  filter === 'wrong' ? 'bg-white/20 text-white' : 'bg-[#FFF1F2] text-[#E11D48]'
+                  filter === 'wrong'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#FFF1F2] text-[#E11D48] dark:bg-[#4C0519]/60 dark:text-[#FB7185]'
                 }`}
               >
                 {filterCounts.wrong}
@@ -489,16 +488,18 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
               type="button"
               data-native-enter="true"
               onClick={() => handleApplyFilter('flagged')}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                 filter === 'flagged'
                   ? 'border-[#4F46E5] bg-[#4F46E5] text-white'
-                  : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#C7D2FE] hover:bg-[#EEF2FF] hover:text-[#4F46E5]'
+                  : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#C7D2FE] hover:bg-[#EEF2FF] hover:text-[#4F46E5] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#1E1B4B]/60 dark:hover:text-[#818CF8]'
               }`}
             >
               <span>Câu phân vân</span>
               <span
                 className={`tabular-nums rounded-full px-1.5 py-0.5 text-[11px] ${
-                  filter === 'flagged' ? 'bg-white/20 text-white' : 'bg-[#EEF2FF] text-[#4F46E5]'
+                  filter === 'flagged'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-[#EEF2FF] text-[#4F46E5] dark:bg-[#1E1B4B]/70 dark:text-[#818CF8]'
                 }`}
               >
                 {filterCounts.flagged}
@@ -511,9 +512,9 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
               type="button"
               data-native-enter="true"
               onClick={() => setIsGridOpen((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#D5E3EC] bg-[#F1F6F9] px-3 py-1.5 text-xs font-semibold text-[#0369A1] transition-colors hover:border-[#0369A1] hover:bg-[#E0F2FE]"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5E3EC] bg-[#F1F6F9] px-3 py-1.5 text-xs font-semibold text-[#0284C7] transition-colors hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#334155] dark:bg-[#1E293B]/70 dark:text-[#38BDF8] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20"
             >
-              <Grid3X3 className="h-3.5 w-3.5 text-[#0369A1]" />
+              <Grid3X3 className="h-3.5 w-3.5 text-[#0284C7] dark:text-[#38BDF8]" />
               <span>Bảng câu hỏi</span>
               {isGridOpen ? (
                 <ChevronUp className="h-3.5 w-3.5" />
@@ -526,18 +527,18 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
 
         {/* Empty Filtered State vs Question Card */}
         {!currentQuestion ? (
-          <div className="rounded-2xl border border-[#D5E3EC] bg-white px-6 py-12 text-center shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)]">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E0F2FE] text-[#0369A1]">
+          <div className="rounded-2xl border border-[#D5E3EC] bg-white px-6 py-12 text-center shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#BAE6FD] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
               <CheckCircle2 className="h-6 w-6" />
             </div>
-            <h3 className="text-base font-bold text-[#0F172A]">
+            <h3 className="text-base font-bold text-[#0F172A] dark:text-[#F8FAFC]">
               {filter === 'wrong'
                 ? 'Không có câu làm sai nào trong chương này'
                 : filter === 'flagged'
                   ? 'Chưa có câu phân vân nào trong chương này'
                   : 'Không có câu hỏi nào trong chương này'}
             </h3>
-            <p className="mx-auto mt-1.5 max-w-md text-sm text-[#64748B]">
+            <p className="mx-auto mt-1.5 max-w-md text-sm text-[#64748B] dark:text-[#94A3B8]">
               {filter === 'wrong'
                 ? 'Bạn đã xử lý hết các câu sai hoặc chưa làm sai câu nào ở chương hiện tại.'
                 : filter === 'flagged'
@@ -549,7 +550,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                 type="button"
                 data-native-enter="true"
                 onClick={() => handleApplyFilter('all')}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0369A1] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#075985]"
+                className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#0284C7] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0369A1] dark:border dark:border-[#38BDF8]/50"
               >
                 <span>Xem tất cả câu</span>
               </button>
@@ -558,31 +559,31 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
         ) : (
           <>
             {/* Question Card */}
-            <div className="rounded-2xl border border-[#D5E3EC] bg-white p-7 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] sm:p-9">
+            <div className="rounded-2xl border border-[#D5E3EC] bg-white p-7 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-9">
               {/* Top Metadata Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-100 pb-4">
+              <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#D5E3EC] pb-4 dark:border-[#1E293B]">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="tabular-nums rounded-full bg-[#F1F6F9] px-3 py-1 text-xs font-bold text-[#0F172A]">
+                  <span className="tabular-nums rounded-full border border-[#D5E3EC] bg-[#F1F6F9] px-3 py-1 text-xs font-bold text-[#0F172A] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#F8FAFC]">
                     Câu {safeIndex + 1} / {filteredQuestions.length}
                   </span>
 
-                  <span className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-1 text-xs font-semibold text-[#0369A1]">
+                  <span className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-1 text-xs font-semibold text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
                     Chương {currentQuestion.chapter}
                   </span>
 
                   {currentQuestion.isMultiSelect && (
-                    <span className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-1 text-xs font-semibold text-[#0369A1]">
+                    <span className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-1 text-xs font-semibold text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
                       Chọn nhiều đáp án
                     </span>
                   )}
 
                   {isCurrentMastered ? (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-[#A7F3D0] bg-[#ECFDF5] px-2.5 py-1 text-xs font-semibold text-[#059669]">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2.5 py-1 text-xs font-semibold text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF]">
                       <Check className="h-3 w-3" />
                       Đã thuộc
                     </span>
                   ) : (
-                    <span className="rounded-full border border-[#D5E3EC] bg-[#F1F6F9] px-2.5 py-1 text-xs font-semibold text-[#64748B]">
+                    <span className="rounded-full border border-[#D5E3EC] bg-[#F1F6F9] px-2.5 py-1 text-xs font-semibold text-[#64748B] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#94A3B8]">
                       Chưa thuộc
                     </span>
                   )}
@@ -592,26 +593,28 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   type="button"
                   data-native-enter="true"
                   onClick={() => onToggleFlag(currentQuestion.id)}
-                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
                     isFlagged
-                      ? 'border-[#C7D2FE] bg-[#EEF2FF] text-[#4F46E5]'
-                      : 'border-[#D5E3EC] bg-white text-[#64748B] hover:border-[#C7D2FE] hover:bg-[#EEF2FF] hover:text-[#4F46E5]'
+                      ? 'border-[#C7D2FE] bg-[#EEF2FF] text-[#4F46E5] dark:border-[#818CF8]/50 dark:bg-[#1E1B4B]/60 dark:text-[#818CF8]'
+                      : 'border-[#D5E3EC] bg-white text-[#64748B] hover:border-[#C7D2FE] hover:bg-[#EEF2FF] hover:text-[#4F46E5] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#94A3B8] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#1E1B4B]/60 dark:hover:text-[#818CF8]'
                   }`}
                 >
                   <Flag
                     className={`h-3.5 w-3.5 ${
-                      isFlagged ? 'fill-[#4F46E5] text-[#4F46E5]' : 'text-[#64748B]'
+                      isFlagged
+                        ? 'fill-[#4F46E5] text-[#4F46E5] dark:fill-[#818CF8] dark:text-[#818CF8]'
+                        : 'text-[#64748B] dark:text-[#94A3B8]'
                     }`}
                   />
                   <span>Phân vân</span>
-                  <kbd className="hidden rounded border border-current/20 px-1 py-0.5 font-mono text-[10px] opacity-75 sm:inline-block">
+                  <kbd className="hidden rounded border border-current/25 px-1 py-0.5 font-mono text-[10px] opacity-80 sm:inline-block">
                     F
                   </kbd>
                 </button>
               </div>
 
               {/* Question Text */}
-              <h2 className="mt-5 text-[19px] font-semibold leading-[1.65] text-[#0F172A] sm:text-[20px]">
+              <h2 className="mt-5 text-[19px] font-semibold leading-[1.65] text-[#0F172A] dark:text-[#F8FAFC] sm:text-[20px]">
                 {currentQuestion.question}
               </h2>
 
@@ -623,25 +626,33 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   const isGraded = currentAttempt.graded;
 
                   let containerClasses =
-                    'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#0369A1] hover:bg-[#E0F2FE] hover:translate-x-1';
-                  let keyBadgeClasses = 'border-[#D5E3EC] bg-[#F1F6F9] text-[#1E293B]';
+                    'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] hover:translate-x-1 dark:border-[#334155] dark:bg-[#1E293B]/50 dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20';
+                  let keyBadgeClasses =
+                    'border-[#D5E3EC] bg-[#F1F6F9] text-[#1E293B] dark:border-[#475569] dark:bg-[#0B1120] dark:text-[#E2E8F0]';
 
                   if (!isGraded) {
                     if (isSelected) {
                       containerClasses =
-                        'border-[#0369A1] bg-[#E0F2FE] text-[#0F172A] ring-1 ring-[#0369A1]';
-                      keyBadgeClasses = 'border-[#0369A1] bg-[#0369A1] text-white';
+                        'border-[#0284C7] bg-[#E0F2FE] text-[#0F172A] ring-1 ring-[#0284C7] dark:border-[#38BDF8] dark:bg-[#0284C7]/25 dark:text-[#F8FAFC] dark:ring-[#38BDF8]';
+                      keyBadgeClasses =
+                        'border-[#0284C7] bg-[#0284C7] text-white dark:border-[#38BDF8]';
                     }
                   } else {
                     if (isCorrectOption) {
-                      containerClasses = 'border-[#A7F3D0] bg-[#ECFDF5] text-[#059669]';
-                      keyBadgeClasses = 'border-[#059669] bg-[#059669] text-white';
+                      containerClasses =
+                        'border-[#5EEAD4] bg-[#F0FDFA] text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#CCFBF1]';
+                      keyBadgeClasses =
+                        'border-[#0D9488] bg-[#0D9488] text-white dark:border-[#14B8A6] dark:bg-[#14B8A6] dark:text-[#0B1120]';
                     } else if (isSelected && !isCorrectOption) {
-                      containerClasses = 'border-[#FECDD3] bg-[#FFF1F2] text-[#E11D48]';
-                      keyBadgeClasses = 'border-[#E11D48] bg-[#E11D48] text-white';
+                      containerClasses =
+                        'border-[#FECDD3] bg-[#FFF1F2] text-[#E11D48] dark:border-[#FB7185]/60 dark:bg-[#4C0519]/50 dark:text-[#FB7185]';
+                      keyBadgeClasses =
+                        'border-[#E11D48] bg-[#E11D48] text-white dark:border-[#FB7185] dark:bg-[#FB7185] dark:text-[#0B1120]';
                     } else {
-                      containerClasses = 'border-slate-200/80 bg-[#F8FAFC] text-[#64748B]';
-                      keyBadgeClasses = 'border-slate-200 bg-slate-100 text-[#64748B]';
+                      containerClasses =
+                        'border-[#D5E3EC] bg-[#F8FAFC] text-[#64748B] dark:border-[#1E293B] dark:bg-[#0B1120]/50 dark:text-[#94A3B8]';
+                      keyBadgeClasses =
+                        'border-[#D5E3EC] bg-[#F1F6F9] text-[#64748B] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#94A3B8]';
                     }
                   }
 
@@ -666,10 +677,10 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                       </span>
 
                       {isGraded && isCorrectOption && (
-                        <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-[#059669]" />
+                        <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-[#0D9488] dark:text-[#14B8A6]" />
                       )}
                       {isGraded && isSelected && !isCorrectOption && (
-                        <XCircle className="mt-1 h-5 w-5 shrink-0 text-[#E11D48]" />
+                        <XCircle className="mt-1 h-5 w-5 shrink-0 text-[#E11D48] dark:text-[#FB7185]" />
                       )}
                     </button>
                   );
@@ -679,14 +690,14 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
               {/* Multi-select submit OR graded action bar */}
               {currentQuestion.isMultiSelect && !currentAttempt.graded && (
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-                  <span className="tabular-nums text-xs text-[#64748B]">
+                  <span className="tabular-nums text-xs text-[#64748B] dark:text-[#94A3B8]">
                     Đã chọn {currentAttempt.selectedKeys.length} đáp án
                   </span>
                   <button
                     type="button"
                     disabled={currentAttempt.selectedKeys.length === 0}
                     onClick={() => handleGradeMultiSelect(currentQuestion)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#0369A1] px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#075985] disabled:cursor-not-allowed disabled:opacity-45"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#0284C7] px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#0369A1] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#38BDF8]/50"
                   >
                     <Check className="h-4 w-4" />
                     <span>Kiểm tra đáp án</span>
@@ -695,17 +706,17 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
               )}
 
               {currentAttempt.graded && (
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] px-4 py-3">
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] px-4 py-3 dark:border-[#334155] dark:bg-[#0B1120]/70">
                   <div className="flex items-center gap-2 text-sm font-semibold">
                     {isCurrentCorrect ? (
                       <>
-                        <CheckCircle2 className="h-4 w-4 text-[#059669]" />
-                        <span className="text-[#059669]">Chính xác!</span>
+                        <CheckCircle2 className="h-4 w-4 text-[#0D9488] dark:text-[#14B8A6]" />
+                        <span className="text-[#115E59] dark:text-[#2DD4BF]">Chính xác!</span>
                       </>
                     ) : (
                       <>
-                        <XCircle className="h-4 w-4 text-[#E11D48]" />
-                        <span className="text-[#E11D48]">
+                        <XCircle className="h-4 w-4 text-[#E11D48] dark:text-[#FB7185]" />
+                        <span className="text-[#E11D48] dark:text-[#FB7185]">
                           Chưa đúng • Đáp án đúng:{' '}
                           <span className="font-bold">
                             {currentQuestion.correctAnswers.join(', ')}
@@ -719,7 +730,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                     type="button"
                     data-native-enter="true"
                     onClick={() => handleRetryQuestion(currentQuestion.id)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#D5E3EC] bg-white px-3 py-1 text-xs font-semibold text-[#64748B] transition-colors hover:border-[#0369A1] hover:text-[#0369A1]"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#D5E3EC] bg-white px-3 py-1 text-xs font-semibold text-[#64748B] transition-colors hover:border-[#0284C7] hover:text-[#0284C7] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:text-[#38BDF8]"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                     <span>Làm lại câu này</span>
@@ -743,35 +754,35 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
               </AnimatePresence>
 
               {/* Navigation Footer */}
-              <div className="mt-7 flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
+              <div className="mt-7 flex items-center justify-between gap-3 border-t border-[#D5E3EC] pt-5 dark:border-[#1E293B]">
                 <button
                   type="button"
                   data-native-enter="true"
                   disabled={safeIndex === 0}
                   onClick={goToPrev}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#D5E3EC] bg-white px-4 py-2.5 text-sm font-semibold text-[#1E293B] transition-colors hover:border-[#0369A1] hover:bg-[#E0F2FE] hover:text-[#0369A1] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5E3EC] bg-white px-4 py-2.5 text-sm font-semibold text-[#1E293B] transition-colors hover:border-[#0284C7] hover:bg-[#E0F2FE] hover:text-[#0284C7] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20 dark:hover:text-[#38BDF8]"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   <span>Câu trước</span>
                 </button>
 
-                <div className="hidden items-center gap-3 text-[11px] text-[#64748B] md:flex">
+                <div className="hidden items-center gap-3 text-[11px] text-[#64748B] dark:text-[#94A3B8] md:flex">
                   <span>
-                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B]">
+                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0]">
                       1-5
                     </kbd>{' '}
                     /{' '}
-                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B]">
+                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0]">
                       A-E
                     </kbd>{' '}
                     Chọn
                   </span>
                   <span>
-                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B]">
+                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0]">
                       Enter
                     </kbd>{' '}
                     /{' '}
-                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B]">
+                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0]">
                       Space
                     </kbd>{' '}
                     {currentQuestion.isMultiSelect && !currentAttempt.graded
@@ -779,7 +790,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                       : 'Câu tiếp'}
                   </span>
                   <span>
-                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B]">
+                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0]">
                       F
                     </kbd>{' '}
                     Phân vân
@@ -791,7 +802,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   data-native-enter="true"
                   disabled={safeIndex >= filteredQuestions.length - 1}
                   onClick={goToNext}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0369A1] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#075985] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#0284C7] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0369A1] disabled:cursor-not-allowed disabled:opacity-40 dark:border dark:border-[#38BDF8]/50"
                 >
                   <span>Câu tiếp</span>
                   <ChevronRight className="h-4 w-4" />
@@ -809,27 +820,27 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   transition={{ duration: 0.18 }}
                   className="mt-8 overflow-hidden"
                 >
-                  <div className="rounded-2xl border border-[#D5E3EC] bg-white p-6 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)]">
+                  <div className="rounded-2xl border border-[#D5E3EC] bg-white p-6 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                      <span className="tabular-nums text-xs font-bold uppercase tracking-wide text-[#0F172A]">
+                      <span className="tabular-nums text-xs font-bold uppercase tracking-wide text-[#0F172A] dark:text-[#F8FAFC]">
                         Mục lục câu hỏi ({filteredQuestions.length})
                       </span>
 
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#64748B]">
+                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#64748B] dark:text-[#94A3B8]">
                         <span className="inline-flex items-center gap-1">
-                          <span className="h-2.5 w-2.5 rounded-full bg-[#059669]" />
+                          <span className="h-2.5 w-2.5 rounded-full bg-[#0D9488] dark:bg-[#14B8A6]" />
                           Đã thuộc
                         </span>
                         <span className="inline-flex items-center gap-1">
-                          <span className="h-2.5 w-2.5 rounded-full bg-[#0369A1]" />
+                          <span className="h-2.5 w-2.5 rounded-full bg-[#0284C7] dark:bg-[#38BDF8]" />
                           Làm đúng
                         </span>
                         <span className="inline-flex items-center gap-1">
-                          <span className="h-2.5 w-2.5 rounded-full bg-[#E11D48]" />
+                          <span className="h-2.5 w-2.5 rounded-full bg-[#E11D48] dark:bg-[#FB7185]" />
                           Làm sai
                         </span>
                         <span className="inline-flex items-center gap-1">
-                          <span className="h-2.5 w-2.5 rounded-full bg-[#4F46E5]" />
+                          <span className="h-2.5 w-2.5 rounded-full bg-[#4F46E5] dark:bg-[#818CF8]" />
                           Phân vân
                         </span>
                       </div>
@@ -845,16 +856,20 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                         const lastCorrect = qp?.lastResult === 'correct';
 
                         let cellStyle =
-                          'border-[#D5E3EC] bg-[#F8FAFC] text-[#1E293B] hover:border-[#0369A1] hover:bg-[#E0F2FE]';
+                          'border-[#D5E3EC] bg-[#F8FAFC] text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20';
 
                         if (flagged) {
-                          cellStyle = 'border-[#C7D2FE] bg-[#EEF2FF] text-[#4F46E5]';
+                          cellStyle =
+                            'border-[#C7D2FE] bg-[#EEF2FF] text-[#4F46E5] dark:border-[#818CF8]/50 dark:bg-[#1E1B4B]/60 dark:text-[#818CF8]';
                         } else if (mastered) {
-                          cellStyle = 'border-[#A7F3D0] bg-[#ECFDF5] text-[#059669]';
+                          cellStyle =
+                            'border-[#5EEAD4] bg-[#F0FDFA] text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF]';
                         } else if (lastWrong) {
-                          cellStyle = 'border-[#FECDD3] bg-[#FFF1F2] text-[#E11D48]';
+                          cellStyle =
+                            'border-[#FECDD3] bg-[#FFF1F2] text-[#E11D48] dark:border-[#FB7185]/50 dark:bg-[#4C0519]/50 dark:text-[#FB7185]';
                         } else if (lastCorrect) {
-                          cellStyle = 'border-[#BAE6FD] bg-[#E0F2FE] text-[#0369A1]';
+                          cellStyle =
+                            'border-[#BAE6FD] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/20 dark:text-[#38BDF8]';
                         }
 
                         return (
@@ -863,13 +878,15 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                             type="button"
                             data-native-enter="true"
                             onClick={() => setCurrentIndex(idx)}
-                            className={`tabular-nums relative flex h-8 items-center justify-center rounded-lg border text-xs font-semibold transition-all ${cellStyle} ${
-                              isActive ? 'ring-2 ring-[#0369A1] ring-offset-1' : ''
+                            className={`tabular-nums relative flex h-8 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold transition-all ${cellStyle} ${
+                              isActive
+                                ? 'ring-2 ring-[#0284C7] ring-offset-1 dark:ring-[#38BDF8] dark:ring-offset-[#111827]'
+                                : ''
                             }`}
                           >
                             {idx + 1}
                             {flagged && (
-                              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[#4F46E5]" />
+                              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[#4F46E5] dark:bg-[#818CF8]" />
                             )}
                           </button>
                         );

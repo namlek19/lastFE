@@ -11,9 +11,18 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
     rel="stylesheet" />
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem('fpt_exam_theme_v1') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 
-<body class="bg-[#F1F6F9] text-[#1E293B] antialiased selection:bg-[#E0F2FE] selection:text-[#0369A1]">
+<body class="bg-[#F1F6F9] text-[#1E293B] dark:bg-[#0B1120] dark:text-[#E2E8F0] antialiased selection:bg-[#BAE6FD] selection:text-[#0F172A] dark:selection:bg-[#0284C7]/40 dark:selection:text-[#F8FAFC]">
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

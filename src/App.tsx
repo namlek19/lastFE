@@ -9,19 +9,31 @@ import { ExamHistoryItem, StudyMode, SubjectId, UserProgressStore } from './type
 import {
   addExamHistory,
   loadStore,
+  loadTheme,
   recordQuestionAttempt,
   resetProgress,
   saveStore,
+  saveTheme,
+  ThemeMode,
   toggleQuestionFlag,
 } from './utils/storage';
 
 export const App: React.FC = () => {
   const [store, setStore] = useState<UserProgressStore>(() => loadStore());
+  const [theme, setTheme] = useState<ThemeMode>(() => loadTheme());
   const [isSyncOpen, setIsSyncOpen] = useState(false);
 
   useEffect(() => {
     saveStore(store);
   }, [store]);
+
+  useEffect(() => {
+    saveTheme(theme);
+  }, [theme]);
+
+  const handleToggleTheme = useCallback(() => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  }, []);
 
   const handleSelectSubject = useCallback((subject: SubjectId) => {
     setStore(prev => ({ ...prev, lastSubject: subject }));
@@ -66,9 +78,11 @@ export const App: React.FC = () => {
         <Header
           subject={subject}
           mode={mode}
+          theme={theme}
           progress={store}
           onSelectSubject={handleSelectSubject}
           onSelectMode={handleSelectMode}
+          onToggleTheme={handleToggleTheme}
           onOpenSyncModal={() => setIsSyncOpen(true)}
         />
 
@@ -111,10 +125,10 @@ export const App: React.FC = () => {
           </AnimatePresence>
         </main>
 
-        <footer className="mt-12 border-t border-[#D5E3EC] bg-white py-6 text-center text-xs text-[#64748B]">
+        <footer className="mt-12 border-t border-[#D5E3EC] bg-white py-6 text-center text-xs text-[#64748B] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#94A3B8]">
           <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-center gap-2 px-6 lg:px-10">
             <span>Ôn thi trắc nghiệm MLN131 &amp; VNR202 • Tự động lưu tiến độ</span>
-            <span className="inline-flex items-center rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold text-[#0369A1]">
+            <span className="inline-flex items-center rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
               from Namblee
             </span>
           </div>
