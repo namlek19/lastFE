@@ -103,7 +103,7 @@ export function getDetailedMasteryState(progress?: QuestionProgress): DetailedMa
   if (progress.flagged) return 'hesitant';
   if (progress.streak >= 2) return 'mastered';
   if (progress.streak === 1) return 'pass1';
-  if (progress.studied || progress.attemptCount > 0) return 'studied';
+  if (progress.studied) return 'studied';
   return 'unlearned';
 }
 
@@ -112,7 +112,7 @@ export function isMastered(progress?: QuestionProgress): boolean {
 }
 
 export function isStudied(progress?: QuestionProgress): boolean {
-  return Boolean(progress && (progress.studied || progress.attemptCount > 0 || progress.streak > 0));
+  return Boolean(progress && (progress.studied || progress.streak > 0));
 }
 
 export function recordQuestionAttempt(
@@ -135,7 +135,7 @@ export function recordQuestionAttempt(
     lastResult: isCorrect ? 'correct' : 'wrong',
     correctCount: prev.correctCount + (isCorrect ? 1 : 0),
     attemptCount: prev.attemptCount + 1,
-    studied: true,
+    studied: isCorrect ? Boolean(prev.studied) : false,
   };
 
   return {

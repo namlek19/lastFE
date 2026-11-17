@@ -646,10 +646,6 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                           ●○
                         </span>
                       </span>
-                    ) : currentDetailedState === 'studied' ? (
-                      <span className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE]/70 px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8] sm:py-1">
-                        Đã học
-                      </span>
                     ) : (
                       <span className="rounded-full bg-[#F1F6F9] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8] sm:py-1">
                         Chưa thuộc

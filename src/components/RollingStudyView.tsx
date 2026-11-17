@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { getChaptersBySubject, getQuestionsBySubject, isAnswerCorrect, SUBJECTS } from '../data';
 import { QuestionItem, SubjectId, UserProgressStore } from '../types/quiz';
-import { getDetailedMasteryState, getMasteryState, isMastered } from '../utils/storage';
+import { getMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
 
 export interface RollingStudyViewProps {
@@ -571,7 +571,8 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     const qProg = progress.questions[currentQuestion.id];
                     const effectiveStreak =
                       gradedState !== null ? gradedState.nextStreak : (qProg?.streak ?? 0);
-                    const detailedState = getDetailedMasteryState(qProg);
+                    const isWrongState =
+                      gradedState !== null ? !gradedState.isCorrect : qProg?.lastResult === 'wrong';
 
                     if (turnFlagged) {
                       return (
@@ -601,11 +602,11 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                         </span>
                       );
                     }
-                    if (detailedState === 'studied') {
+                    if (isWrongState) {
                       return (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#BAE6FD] bg-[#E0F2FE]/70 px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8] sm:py-1">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#0284C7] dark:bg-[#38BDF8]" />
-                          Đã học
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FECDD3] bg-[#FFF1F2] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#E11D48] dark:border-[#FB7185]/60 dark:bg-[#4C0519]/50 dark:text-[#FB7185] sm:py-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#E11D48] dark:bg-[#FB7185]" />
+                          Đã trả lời sai
                         </span>
                       );
                     }

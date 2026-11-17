@@ -366,20 +366,10 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         </span>
       );
     }
-    if (currentState === 'pass1') {
+    if (currentState === 'pass1' || currentState === 'studied') {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0284C7] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/20 dark:text-[#38BDF8]">
-          <Check className="h-3 w-3 shrink-0" />
-          <span>Đúng 1/2 lần</span>
-          <span className="ml-0.5 tracking-tighter" aria-hidden="true">
-            ●○
-          </span>
-        </span>
-      );
-    }
-    if (currentState === 'studied') {
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full border border-[#BAE6FD] bg-[#E0F2FE]/70 px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#BAE6FD] bg-[#E0F2FE]/80 px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#0284C7] dark:bg-[#38BDF8]" />
           <span>Đã học</span>
         </span>
       );
