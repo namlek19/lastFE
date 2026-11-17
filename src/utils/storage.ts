@@ -222,6 +222,26 @@ export function toggleQuestionFlag(
   };
 }
 
+export function markQuestionsFlagged(
+  store: UserProgressStore,
+  questionIds: string[]
+): UserProgressStore {
+  if (questionIds.length === 0) return store;
+  const nextQuestions = { ...store.questions };
+  for (const qId of questionIds) {
+    const prev = getQuestionProgress(store, qId);
+    nextQuestions[qId] = {
+      ...prev,
+      flagged: true,
+      streak: 0,
+    };
+  }
+  return {
+    ...store,
+    questions: nextQuestions,
+  };
+}
+
 export function addExamHistory(
   store: UserProgressStore,
   result: ExamHistoryItem
@@ -312,7 +332,7 @@ export function importProgressCode(code: string): UserProgressStore | null {
             : {}),
         correctCount: typeof correctCount === 'number' ? Math.max(0, correctCount) : 0,
         attemptCount: typeof attemptCount === 'number' ? Math.max(0, attemptCount) : 0,
-        studied: studiedNum === 1 || (typeof attemptCount === 'number' && attemptCount > 0),
+        studied: studiedNum === 1,
       };
     }
 

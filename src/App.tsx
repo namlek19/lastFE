@@ -11,6 +11,7 @@ import {
   addExamHistory,
   loadStore,
   loadTheme,
+  markQuestionsFlagged,
   markQuestionStudied,
   recordQuestionAttempt,
   resetProgress,
@@ -55,6 +56,10 @@ export const App: React.FC = () => {
 
   const handleToggleFlag = useCallback((qId: string) => {
     setStore(prev => toggleQuestionFlag(prev, qId));
+  }, []);
+
+  const handleFlagQuestions = useCallback((qIds: string[]) => {
+    setStore(prev => markQuestionsFlagged(prev, qIds));
   }, []);
 
   const handleMarkStudied = useCallback((qId: string) => {
@@ -139,6 +144,7 @@ export const App: React.FC = () => {
                   onSaveExamResult={handleSaveExamResult}
                   onRecordAttempt={handleRecordAttempt}
                   onToggleFlag={handleToggleFlag}
+                  onFlagQuestions={handleFlagQuestions}
                 />
               )}
             </motion.div>

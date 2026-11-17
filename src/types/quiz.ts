@@ -34,9 +34,12 @@ export interface QuestionProgress {
   studied?: boolean;
 }
 
+export type ExamType = 'standard' | 'mastered';
+
 export interface ExamHistoryItem {
   id: string;
   subject: SubjectId;
+  examType?: ExamType;
   timestamp: number;
   totalQuestions: number;
   correctCount: number;
