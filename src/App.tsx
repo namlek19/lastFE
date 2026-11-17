@@ -3,6 +3,7 @@ import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { Header } from './components/Header';
 import { ChapterStudyView } from './components/ChapterStudyView';
 import { RollingStudyView } from './components/RollingStudyView';
+import { FlashcardView } from './components/FlashcardView';
 import { MockExamView } from './components/MockExamView';
 import { ProgressSyncModal } from './components/ProgressSyncModal';
 import { ExamHistoryItem, StudyMode, SubjectId, UserProgressStore } from './types/quiz';
@@ -10,12 +11,14 @@ import {
   addExamHistory,
   loadStore,
   loadTheme,
+  markQuestionStudied,
   recordQuestionAttempt,
   resetProgress,
   saveStore,
   saveTheme,
   ThemeMode,
   toggleQuestionFlag,
+  toggleQuestionMastered,
 } from './utils/storage';
 
 export const App: React.FC = () => {
@@ -52,6 +55,14 @@ export const App: React.FC = () => {
 
   const handleToggleFlag = useCallback((qId: string) => {
     setStore(prev => toggleQuestionFlag(prev, qId));
+  }, []);
+
+  const handleMarkStudied = useCallback((qId: string) => {
+    setStore(prev => markQuestionStudied(prev, qId));
+  }, []);
+
+  const handleToggleMastered = useCallback((qId: string) => {
+    setStore(prev => toggleQuestionMastered(prev, qId));
   }, []);
 
   const handleResetStage = useCallback((questionIds: string[]) => {
@@ -110,6 +121,15 @@ export const App: React.FC = () => {
                   onRecordAttempt={handleRecordAttempt}
                   onToggleFlag={handleToggleFlag}
                   onResetStage={handleResetStage}
+                />
+              )}
+              {mode === 'flashcard' && (
+                <FlashcardView
+                  subject={subject}
+                  progress={store}
+                  onMarkStudied={handleMarkStudied}
+                  onToggleMastered={handleToggleMastered}
+                  onToggleFlag={handleToggleFlag}
                 />
               )}
               {mode === 'exam' && (

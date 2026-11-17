@@ -1,5 +1,6 @@
 import LZString from 'lz-string';
 import {
+  DetailedMasteryState,
   ExamHistoryItem,
   QuestionProgress,
   StudyMode,
@@ -57,7 +58,11 @@ export function loadStore(): UserProgressStore {
       examHistory: Array.isArray(parsed.examHistory) ? parsed.examHistory : [],
       lastSubject: parsed.lastSubject === 'vnr202' ? 'vnr202' : 'mln131',
       lastMode:
-        parsed.lastMode === 'rolling' || parsed.lastMode === 'exam' ? parsed.lastMode : 'chapter',
+        parsed.lastMode === 'rolling' ||
+        parsed.lastMode === 'flashcard' ||
+        parsed.lastMode === 'exam'
+          ? parsed.lastMode
+          : 'chapter',
     };
   } catch {
     return createDefaultStore();
@@ -82,6 +87,7 @@ export function getQuestionProgress(
       flagged: false,
       correctCount: 0,
       attemptCount: 0,
+      studied: false,
     }
   );
 }
@@ -92,8 +98,21 @@ export function getMasteryState(progress?: QuestionProgress): ThreeStateMastery 
   return 'unlearned';
 }
 
+export function getDetailedMasteryState(progress?: QuestionProgress): DetailedMasteryState {
+  if (!progress) return 'unlearned';
+  if (progress.flagged) return 'hesitant';
+  if (progress.streak >= 2) return 'mastered';
+  if (progress.streak === 1) return 'pass1';
+  if (progress.studied || progress.attemptCount > 0) return 'studied';
+  return 'unlearned';
+}
+
 export function isMastered(progress?: QuestionProgress): boolean {
   return Boolean(progress && !progress.flagged && progress.streak >= 2);
+}
+
+export function isStudied(progress?: QuestionProgress): boolean {
+  return Boolean(progress && (progress.studied || progress.attemptCount > 0 || progress.streak > 0));
 }
 
 export function recordQuestionAttempt(
@@ -116,7 +135,62 @@ export function recordQuestionAttempt(
     lastResult: isCorrect ? 'correct' : 'wrong',
     correctCount: prev.correctCount + (isCorrect ? 1 : 0),
     attemptCount: prev.attemptCount + 1,
+    studied: true,
   };
+
+  return {
+    ...store,
+    questions: {
+      ...store.questions,
+      [questionId]: next,
+    },
+  };
+}
+
+export function markQuestionStudied(
+  store: UserProgressStore,
+  questionId: string
+): UserProgressStore {
+  const existing = store.questions[questionId];
+  if (existing?.studied) {
+    return store;
+  }
+  const prev = getQuestionProgress(store, questionId);
+  const next: QuestionProgress = {
+    ...prev,
+    studied: true,
+  };
+
+  return {
+    ...store,
+    questions: {
+      ...store.questions,
+      [questionId]: next,
+    },
+  };
+}
+
+export function toggleQuestionMastered(
+  store: UserProgressStore,
+  questionId: string
+): UserProgressStore {
+  const prev = getQuestionProgress(store, questionId);
+  const currentlyMastered = isMastered(prev);
+
+  const next: QuestionProgress = currentlyMastered
+    ? {
+        ...prev,
+        streak: 0,
+        flagged: false,
+        studied: true,
+      }
+    : {
+        ...prev,
+        streak: Math.max(prev.streak, 2),
+        flagged: false,
+        lastResult: 'correct',
+        studied: true,
+      };
 
   return {
     ...store,
@@ -175,7 +249,7 @@ export function resetProgress(
   };
 }
 
-type CompactTuple = [string, number, 0 | 1, 0 | 1 | 2, number, number];
+type CompactTuple = [string, number, 0 | 1, 0 | 1 | 2, number, number, (0 | 1)?];
 
 interface CompactSyncPayload {
   v: 1;
@@ -193,6 +267,7 @@ export function exportProgressCode(store: UserProgressStore): string {
     p.lastResult === 'correct' ? 1 : p.lastResult === 'wrong' ? 2 : 0,
     p.correctCount,
     p.attemptCount,
+    p.studied ? 1 : 0,
   ]);
 
   const payload: CompactSyncPayload = {
@@ -226,7 +301,7 @@ export function importProgressCode(code: string): UserProgressStore | null {
     const questions: Record<string, QuestionProgress> = {};
     for (const row of parsed.q) {
       if (!Array.isArray(row) || typeof row[0] !== 'string') continue;
-      const [id, streak, flaggedNum, lastResNum, correctCount, attemptCount] = row;
+      const [id, streak, flaggedNum, lastResNum, correctCount, attemptCount, studiedNum] = row;
       questions[id] = {
         streak: typeof streak === 'number' ? Math.max(0, streak) : 0,
         flagged: flaggedNum === 1,
@@ -237,6 +312,7 @@ export function importProgressCode(code: string): UserProgressStore | null {
             : {}),
         correctCount: typeof correctCount === 'number' ? Math.max(0, correctCount) : 0,
         attemptCount: typeof attemptCount === 'number' ? Math.max(0, attemptCount) : 0,
+        studied: studiedNum === 1 || (typeof attemptCount === 'number' && attemptCount > 0),
       };
     }
 
@@ -246,7 +322,9 @@ export function importProgressCode(code: string): UserProgressStore | null {
       examHistory: Array.isArray(parsed.h) ? parsed.h : [],
       lastSubject: parsed.s === 'vnr202' ? 'vnr202' : 'mln131',
       lastMode:
-        parsed.m === 'rolling' || parsed.m === 'exam' ? parsed.m : 'chapter',
+        parsed.m === 'rolling' || parsed.m === 'flashcard' || parsed.m === 'exam'
+          ? parsed.m
+          : 'chapter',
     };
   } catch {
     return null;

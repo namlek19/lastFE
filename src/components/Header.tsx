@@ -4,7 +4,9 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Cloud,
+  CreditCard,
   GraduationCap,
+  Info,
   Keyboard,
   Layers,
   Moon,
@@ -33,6 +35,7 @@ const MODE_TABS: {
 }[] = [
   { id: 'chapter', label: 'Học theo chương', mobileLabel: 'Theo chương', Icon: BookOpen },
   { id: 'rolling', label: 'Học cuốn chiếu', mobileLabel: 'Cuốn chiếu', Icon: Layers },
+  { id: 'flashcard', label: 'Flashcard', mobileLabel: 'Flashcard', Icon: CreditCard },
   { id: 'exam', label: 'Thi thử trộn đề', mobileLabel: 'Thi thử', Icon: ClipboardCheck },
 ];
 
@@ -49,7 +52,9 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSyncModal,
 }) => {
   const [isShortcutOpen, setIsShortcutOpen] = useState(false);
+  const [isRuleInfoOpen, setIsRuleInfoOpen] = useState(false);
   const shortcutContainerRef = useRef<HTMLDivElement>(null);
+  const ruleInfoContainerRef = useRef<HTMLDivElement>(null);
 
   const activeQuestions = useMemo(() => getQuestionsBySubject(subject), [subject]);
 
@@ -64,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
   }, [activeQuestions, progress.questions]);
 
   useEffect(() => {
-    if (!isShortcutOpen) return;
+    if (!isShortcutOpen && !isRuleInfoOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -73,11 +78,18 @@ export const Header: React.FC<HeaderProps> = ({
       ) {
         setIsShortcutOpen(false);
       }
+      if (
+        ruleInfoContainerRef.current &&
+        !ruleInfoContainerRef.current.contains(event.target as Node)
+      ) {
+        setIsRuleInfoOpen(false);
+      }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsShortcutOpen(false);
+        setIsRuleInfoOpen(false);
       }
     };
 
@@ -87,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isShortcutOpen]);
+  }, [isShortcutOpen, isRuleInfoOpen]);
 
   return (
     <header className="z-40 mb-3.5 border-b border-[#D5E3EC] bg-white shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.6)] md:sticky md:top-0 md:mb-8">
@@ -146,18 +158,95 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Right Cluster: Mastery Badge, Shortcuts Popover (Desktop only), Sync Modal Button, Theme Toggle */}
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
-            {/* Overall Mastery Badge */}
-            <div
-              className="inline-flex items-center gap-1 rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2.5 py-1 text-[11px] font-semibold text-[#115E59] tabular-nums dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF] sm:gap-1.5 sm:px-3.5 sm:text-xs"
-              title={`Đã thuộc ${masteredCount} trên ${activeQuestions.length} câu môn ${SUBJECTS[subject].code}`}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#0D9488] dark:text-[#14B8A6]" />
-              <span>
-                {masteredCount}/{activeQuestions.length}
-                <span className="hidden sm:inline"> Đã thuộc</span>
-              </span>
+          {/* Right Cluster: Mastery Badge + Rule Info, Shortcuts Popover (Desktop only), Sync Modal Button, Theme Toggle */}
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            {/* Overall Mastery Badge + Info Popover */}
+            <div ref={ruleInfoContainerRef} className="relative flex items-center gap-1">
+              <div
+                className="inline-flex items-center gap-1 rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2.5 py-1 text-[11px] font-semibold text-[#115E59] tabular-nums dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF] sm:gap-1.5 sm:px-3 sm:text-xs"
+                title={`Đã thuộc ${masteredCount} trên ${activeQuestions.length} câu môn ${SUBJECTS[subject].code}`}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#0D9488] dark:text-[#14B8A6]" />
+                <span>
+                  {masteredCount}/{activeQuestions.length}
+                  <span className="hidden sm:inline"> Đã thuộc</span>
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsRuleInfoOpen((prev) => !prev)}
+                aria-expanded={isRuleInfoOpen}
+                aria-haspopup="true"
+                aria-label="Quy tắc tính tiến độ Đã thuộc"
+                title="Xem quy tắc đạt Đã thuộc"
+                className={`inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border text-xs transition sm:h-7 sm:w-7 ${
+                  isRuleInfoOpen
+                    ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8] dark:bg-[#0284C7]/25 dark:text-[#38BDF8]'
+                    : 'border-[#D5E3EC] bg-white text-[#64748B] hover:border-[#0284C7] hover:bg-[#E0F2FE] hover:text-[#0284C7] dark:border-[#334155] dark:bg-[#1E293B]/70 dark:text-[#94A3B8] dark:hover:border-[#38BDF8] dark:hover:text-[#38BDF8]'
+                }`}
+              >
+                <Info className="h-3.5 w-3.5" />
+              </button>
+
+              {isRuleInfoOpen && (
+                <div
+                  role="dialog"
+                  aria-label="Quy tắc tính tiến độ"
+                  className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-[#D5E3EC] bg-white p-4 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.14)] dark:border-[#334155] dark:bg-[#111827] dark:shadow-[0_14px_34px_-6px_rgba(0,0,0,0.65)] sm:w-80"
+                >
+                  <div className="mb-2.5 flex items-center justify-between border-b border-[#D5E3EC] pb-2 dark:border-[#1E293B]">
+                    <span className="text-xs font-bold text-[#0F172A] dark:text-[#F8FAFC]">
+                      Quy tắc tính tiến độ học tập
+                    </span>
+                    <span className="rounded-md bg-[#E0F2FE] px-1.5 py-0.5 text-[10px] font-semibold text-[#0284C7] dark:bg-[#0284C7]/20 dark:text-[#38BDF8]">
+                      Đồng bộ 2 chiều
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 text-xs leading-relaxed text-[#1E293B] dark:text-[#E2E8F0]">
+                    <div className="rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] p-2.5 dark:border-[#334155] dark:bg-[#0B1120]/70">
+                      <div className="mb-1 font-bold text-[#0284C7] dark:text-[#38BDF8]">
+                        1. Học theo chương &amp; Học cuốn chiếu
+                      </div>
+                      <ul className="space-y-1 text-[11px]">
+                        <li>
+                          • Trả lời đúng lần 1 →{' '}
+                          <span className="font-semibold text-[#0284C7] dark:text-[#38BDF8]">
+                            ✓ Đúng 1/2 lần (● ○)
+                          </span>
+                        </li>
+                        <li>
+                          • Trả lời đúng <strong>2 lần liên tiếp</strong> (không bấm phân vân) →{' '}
+                          <span className="font-semibold text-[#0D9488] dark:text-[#2DD4BF]">
+                            ✓ Đã thuộc (● ●)
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] p-2.5 dark:border-[#334155] dark:bg-[#0B1120]/70">
+                      <div className="mb-1 font-bold text-[#0D9488] dark:text-[#2DD4BF]">
+                        2. Flashcard (Lật thẻ nhanh)
+                      </div>
+                      <ul className="space-y-1 text-[11px]">
+                        <li>
+                          • Lật xem đáp án mặt sau →{' '}
+                          <span className="font-semibold text-[#0284C7] dark:text-[#38BDF8]">
+                            Đã học
+                          </span>
+                        </li>
+                        <li>
+                          • Bấm nút <strong>Cờ xanh lá</strong> →{' '}
+                          <span className="font-semibold text-[#0D9488] dark:text-[#2DD4BF]">
+                            ✓ Đã thuộc
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Keyboard Shortcuts Popover — Desktop Only */}
@@ -182,7 +271,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div
                   role="dialog"
                   aria-label="Hướng dẫn phím tắt"
-                  className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-[#D5E3EC] bg-white p-4 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.12)] dark:border-[#334155] dark:bg-[#111827] dark:shadow-[0_14px_34px_-6px_rgba(0,0,0,0.65)]"
+                  className="absolute right-0 top-full z-50 mt-2 w-76 rounded-2xl border border-[#D5E3EC] bg-white p-4 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.12)] dark:border-[#334155] dark:bg-[#111827] dark:shadow-[0_14px_34px_-6px_rgba(0,0,0,0.65)]"
                 >
                   <div className="mb-2.5 flex items-center justify-between border-b border-[#D5E3EC] pb-2 dark:border-[#1E293B]">
                     <span className="text-xs font-bold text-[#0F172A] dark:text-[#F8FAFC]">
@@ -204,7 +293,7 @@ export const Header: React.FC<HeaderProps> = ({
                       </span>
                     </li>
                     <li className="flex items-center justify-between gap-2">
-                      <span>Kiểm tra / Câu tiếp</span>
+                      <span>Kiểm tra / Lật thẻ / Tiếp</span>
                       <span className="flex items-center gap-1">
                         <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#0F172A] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#F8FAFC]">
                           Enter
@@ -214,6 +303,24 @@ export const Header: React.FC<HeaderProps> = ({
                           Space
                         </kbd>
                       </span>
+                    </li>
+                    <li className="flex items-center justify-between gap-2">
+                      <span>Chuyển câu / Thẻ trước-tiếp</span>
+                      <span className="flex items-center gap-1">
+                        <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#0F172A] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#F8FAFC]">
+                          ←
+                        </kbd>
+                        <span className="text-[#64748B] dark:text-[#94A3B8]">/</span>
+                        <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#0F172A] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#F8FAFC]">
+                          →
+                        </kbd>
+                      </span>
+                    </li>
+                    <li className="flex items-center justify-between gap-2">
+                      <span>Cờ xanh lá Đã thuộc (Flashcard)</span>
+                      <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#0F172A] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#F8FAFC]">
+                        G
+                      </kbd>
                     </li>
                     <li className="flex items-center justify-between gap-2">
                       <span>Đánh dấu Phân vân</span>
@@ -256,10 +363,10 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Bottom Row: 3 Study Mode Tabs (grid-cols-3 full width on Mobile, flex tabs on Desktop) */}
+        {/* Bottom Row: 4 Study Mode Tabs (grid-cols-4 full width on Mobile, flex tabs on Desktop) */}
         <nav
           aria-label="Chế độ học tập"
-          className="grid grid-cols-3 gap-1.5 border-t border-[#D5E3EC]/70 py-2 dark:border-[#1E293B] md:flex md:items-center md:gap-2 md:py-2.5"
+          className="grid grid-cols-4 gap-1 border-t border-[#D5E3EC]/70 py-2 dark:border-[#1E293B] md:flex md:items-center md:gap-2 md:py-2.5"
         >
           {MODE_TABS.map(({ id, label, mobileLabel, Icon }) => {
             const isActive = mode === id;
@@ -269,13 +376,13 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={() => onSelectMode(id)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-2 py-1.5 text-xs font-semibold transition md:shrink-0 md:gap-2 md:px-4 md:text-sm ${
+                className={`inline-flex cursor-pointer items-center justify-center gap-1 rounded-xl border px-1.5 py-1.5 text-xs font-semibold whitespace-nowrap transition md:shrink-0 md:gap-2 md:px-4 md:text-sm ${
                   isActive
                     ? 'border-[#0284C7] bg-[#0284C7] text-white shadow-sm hover:bg-[#0369A1] dark:border-[#38BDF8]/60'
                     : 'border-transparent bg-[#F1F6F9]/70 text-[#64748B] hover:border-[#D5E3EC] hover:bg-[#E0F2FE] hover:text-[#0284C7] dark:bg-[#1E293B]/40 dark:text-[#94A3B8] dark:hover:border-[#334155] dark:hover:bg-[#0284C7]/15 dark:hover:text-[#38BDF8] md:bg-transparent dark:md:bg-transparent'
                 }`}
               >
-                <Icon className="h-3.5 w-3.5 shrink-0 md:h-4 md:w-4" />
+                <Icon className="hidden h-4 w-4 shrink-0 md:block" />
                 <span className="truncate md:hidden">{mobileLabel}</span>
                 <span className="hidden md:inline">{label}</span>
               </button>

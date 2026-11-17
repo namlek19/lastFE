@@ -11,6 +11,7 @@ import {
   Filter,
   Flag,
   Grid3X3,
+  Info,
   Menu,
   RotateCcw,
   X,
@@ -23,7 +24,7 @@ import {
   SUBJECTS,
 } from '../data';
 import { QuestionItem, SubjectId, UserProgressStore } from '../types/quiz';
-import { isMastered } from '../utils/storage';
+import { getDetailedMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
 
 interface ChapterStudyViewProps {
@@ -56,6 +57,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
   const [sessionAttempts, setSessionAttempts] = useState<Record<string, SessionAttempt>>({});
   const [isGridOpen, setIsGridOpen] = useState<boolean>(true);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState<boolean>(false);
+  const [isMobileRuleOpen, setIsMobileRuleOpen] = useState<boolean>(false);
 
   const explanationRef = useRef<HTMLDivElement>(null);
 
@@ -76,6 +78,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
     setCurrentIndex(0);
     setSessionAttempts({});
     setIsMobileSheetOpen(false);
+    setIsMobileRuleOpen(false);
   }, [subject, chapters]);
 
   const chapterQuestions = useMemo(
@@ -117,7 +120,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
 
   const currentProgress = currentQuestion ? progress.questions[currentQuestion.id] : undefined;
   const isFlagged = Boolean(currentProgress?.flagged);
-  const isCurrentMastered = isMastered(currentProgress);
+  const currentDetailedState = getDetailedMasteryState(currentProgress);
 
   // Compute per-chapter stats ("Đã thuộc" %)
   const chapterStats = useMemo(() => {
@@ -393,136 +396,186 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
         {/* Main Content Area */}
         <div className="min-w-0">
           {/* Mobile Compact 1-Line Toolbar (< 768px) */}
-          <div className="mb-3 flex items-center justify-between gap-2 md:hidden">
-            <button
-              type="button"
-              onClick={() => setIsMobileSheetOpen(true)}
-              className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#D5E3EC] bg-white px-3 py-2 text-left text-xs font-semibold text-[#0F172A] shadow-xs transition active:scale-[0.99] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#F8FAFC]"
-            >
-              <span className="flex min-w-0 items-center gap-2">
-                <Menu className="h-4 w-4 shrink-0 text-[#0284C7] dark:text-[#38BDF8]" />
-                <span className="truncate tabular-nums">
-                  Chương {selectedChapter} • Câu {filteredQuestions.length > 0 ? safeIndex + 1 : 0}/
-                  {filteredQuestions.length}
-                </span>
-              </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-[#64748B] dark:text-[#94A3B8]" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsMobileSheetOpen(true)}
-              className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold shadow-xs transition ${
-                filter === 'wrong'
-                  ? 'border-[#FECDD3] bg-[#FFF1F2] text-[#E11D48] dark:border-[#FB7185]/60 dark:bg-[#4C0519]/50 dark:text-[#FB7185]'
-                  : filter === 'flagged'
-                    ? 'border-[#C7D2FE] bg-[#EEF2FF] text-[#4F46E5] dark:border-[#818CF8]/50 dark:bg-[#1E1B4B]/60 dark:text-[#818CF8]'
-                    : 'border-[#D5E3EC] bg-white text-[#1E293B] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#E2E8F0]'
-              }`}
-            >
-              <Filter className="h-3.5 w-3.5 shrink-0" />
-              <span>
-                {filter === 'wrong'
-                  ? `Sai (${filterCounts.wrong})`
-                  : filter === 'flagged'
-                    ? `Phân vân (${filterCounts.flagged})`
-                    : 'Lọc'}
-              </span>
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-75" />
-            </button>
-          </div>
-
-          {/* Desktop Quick Filter Pills */}
-          <div className="mb-6 hidden flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5E3EC] bg-white px-5 py-3.5 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] md:flex">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="mr-1 inline-flex items-center gap-1.5 text-xs font-medium text-[#64748B] dark:text-[#94A3B8]">
-                <Filter className="h-3.5 w-3.5 text-[#0284C7] dark:text-[#38BDF8]" />
-                Lọc nhanh:
-              </span>
-
+          <div className="mb-3 space-y-2 md:hidden">
+            <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
-                data-native-enter="true"
-                onClick={() => handleApplyFilter('all')}
-                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                  filter === 'all'
-                    ? 'border-[#0284C7] bg-[#0284C7] text-white hover:bg-[#0369A1] dark:border-[#38BDF8]/60'
-                    : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20'
-                }`}
+                onClick={() => setIsMobileSheetOpen(true)}
+                className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#D5E3EC] bg-white px-3 py-2 text-left text-xs font-semibold text-[#0F172A] shadow-xs transition active:scale-[0.99] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#F8FAFC]"
               >
-                <span>Tất cả câu</span>
-                <span
-                  className={`tabular-nums rounded-full px-1.5 py-0.5 text-[11px] ${
-                    filter === 'all'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-[#F1F6F9] text-[#64748B] dark:bg-[#0B1120] dark:text-[#94A3B8]'
-                  }`}
-                >
-                  {filterCounts.all}
+                <span className="flex min-w-0 items-center gap-2">
+                  <Menu className="h-4 w-4 shrink-0 text-[#0284C7] dark:text-[#38BDF8]" />
+                  <span className="truncate tabular-nums">
+                    Chương {selectedChapter} • Câu {filteredQuestions.length > 0 ? safeIndex + 1 : 0}/
+                    {filteredQuestions.length}
+                  </span>
                 </span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-[#64748B] dark:text-[#94A3B8]" />
               </button>
 
               <button
                 type="button"
-                data-native-enter="true"
-                onClick={() => handleApplyFilter('wrong')}
-                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                onClick={() => setIsMobileSheetOpen(true)}
+                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold shadow-xs transition ${
                   filter === 'wrong'
-                    ? 'border-[#E11D48] bg-[#E11D48] text-white'
-                    : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#FECDD3] hover:bg-[#FFF1F2] hover:text-[#E11D48] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#FB7185]/50 dark:hover:bg-[#4C0519]/50 dark:hover:text-[#FB7185]'
+                    ? 'border-[#FECDD3] bg-[#FFF1F2] text-[#E11D48] dark:border-[#FB7185]/60 dark:bg-[#4C0519]/50 dark:text-[#FB7185]'
+                    : filter === 'flagged'
+                      ? 'border-[#C7D2FE] bg-[#EEF2FF] text-[#4F46E5] dark:border-[#818CF8]/50 dark:bg-[#1E1B4B]/60 dark:text-[#818CF8]'
+                      : 'border-[#D5E3EC] bg-white text-[#1E293B] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#E2E8F0]'
                 }`}
               >
-                <span>Câu làm sai</span>
-                <span
-                  className={`tabular-nums rounded-full px-1.5 py-0.5 text-[11px] ${
-                    filter === 'wrong'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-[#FFF1F2] text-[#E11D48] dark:bg-[#4C0519]/60 dark:text-[#FB7185]'
-                  }`}
-                >
-                  {filterCounts.wrong}
+                <Filter className="h-3.5 w-3.5 shrink-0" />
+                <span>
+                  {filter === 'wrong'
+                    ? `Sai (${filterCounts.wrong})`
+                    : filter === 'flagged'
+                      ? `Phân vân (${filterCounts.flagged})`
+                      : 'Lọc'}
                 </span>
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-75" />
               </button>
 
               <button
                 type="button"
-                data-native-enter="true"
-                onClick={() => handleApplyFilter('flagged')}
-                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                  filter === 'flagged'
-                    ? 'border-[#4F46E5] bg-[#4F46E5] text-white'
-                    : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#C7D2FE] hover:bg-[#EEF2FF] hover:text-[#4F46E5] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#1E1B4B]/60 dark:hover:text-[#818CF8]'
+                onClick={() => setIsMobileRuleOpen((prev) => !prev)}
+                aria-expanded={isMobileRuleOpen}
+                aria-label="Điều kiện đạt Đã thuộc"
+                title="Điều kiện đạt Đã thuộc"
+                className={`inline-flex shrink-0 cursor-pointer items-center justify-center rounded-xl border p-2 text-xs font-semibold transition ${
+                  isMobileRuleOpen
+                    ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8] dark:bg-[#0284C7]/20 dark:text-[#38BDF8]'
+                    : 'border-[#D5E3EC] bg-white text-[#64748B] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#94A3B8]'
                 }`}
               >
-                <span>Câu phân vân</span>
-                <span
-                  className={`tabular-nums rounded-full px-1.5 py-0.5 text-[11px] ${
-                    filter === 'flagged'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-[#EEF2FF] text-[#4F46E5] dark:bg-[#1E1B4B]/70 dark:text-[#818CF8]'
-                  }`}
-                >
-                  {filterCounts.flagged}
-                </span>
+                <Info className="h-3.5 w-3.5" />
               </button>
             </div>
 
-            {filteredQuestions.length > 0 && (
-              <button
-                type="button"
-                data-native-enter="true"
-                onClick={() => setIsGridOpen((prev) => !prev)}
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5E3EC] bg-[#F1F6F9] px-3 py-1.5 text-xs font-semibold text-[#0284C7] transition-colors hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#334155] dark:bg-[#1E293B]/70 dark:text-[#38BDF8] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20"
-              >
-                <Grid3X3 className="h-3.5 w-3.5 text-[#0284C7] dark:text-[#38BDF8]" />
-                <span>Bảng câu hỏi</span>
-                {isGridOpen ? (
-                  <ChevronUp className="h-3.5 w-3.5" />
-                ) : (
-                  <ChevronDown className="h-3.5 w-3.5" />
-                )}
-              </button>
+            {isMobileRuleOpen && (
+              <div className="flex items-center justify-between gap-2 rounded-xl border border-[#BAE6FD] bg-[#E0F2FE]/70 px-3 py-2 text-xs font-medium text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+                <span className="truncate">
+                  Điều kiện đạt Đã thuộc: Trả lời đúng 2 lần liên tiếp (●○ → ●●)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileRuleOpen(false)}
+                  className="shrink-0 rounded p-0.5 opacity-75 hover:opacity-100"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
             )}
+          </div>
+
+          {/* Desktop Quick Filter Pills + Mastery Rule Banner */}
+          <div className="mb-6 hidden flex-col gap-3 rounded-2xl border border-[#D5E3EC] bg-white px-5 py-3.5 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] md:flex">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="mr-1 inline-flex items-center gap-1.5 text-xs font-medium text-[#64748B] dark:text-[#94A3B8]">
+                  <Filter className="h-3.5 w-3.5 text-[#0284C7] dark:text-[#38BDF8]" />
+                  Lọc nhanh:
+                </span>
+
+                <button
+                  type="button"
+                  data-native-enter="true"
+                  onClick={() => handleApplyFilter('all')}
+                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                    filter === 'all'
+                      ? 'border-[#0284C7] bg-[#0284C7] text-white hover:bg-[#0369A1] dark:border-[#38BDF8]/60'
+                      : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20'
+                  }`}
+                >
+                  <span>Tất cả câu</span>
+                  <span
+                    className={`tabular-nums rounded-full px-1.5 py-0.5 text-[11px] ${
+                      filter === 'all'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-[#F1F6F9] text-[#64748B] dark:bg-[#0B1120] dark:text-[#94A3B8]'
+                    }`}
+                  >
+                    {filterCounts.all}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  data-native-enter="true"
+                  onClick={() => handleApplyFilter('wrong')}
+                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                    filter === 'wrong'
+                      ? 'border-[#E11D48] bg-[#E11D48] text-white'
+                      : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#FECDD3] hover:bg-[#FFF1F2] hover:text-[#E11D48] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#FB7185]/50 dark:hover:bg-[#4C0519]/50 dark:hover:text-[#FB7185]'
+                  }`}
+                >
+                  <span>Câu làm sai</span>
+                  <span
+                    className={`tabular-nums rounded-full px-1.5 py-0.5 text-[11px] ${
+                      filter === 'wrong'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-[#FFF1F2] text-[#E11D48] dark:bg-[#4C0519]/60 dark:text-[#FB7185]'
+                    }`}
+                  >
+                    {filterCounts.wrong}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  data-native-enter="true"
+                  onClick={() => handleApplyFilter('flagged')}
+                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                    filter === 'flagged'
+                      ? 'border-[#4F46E5] bg-[#4F46E5] text-white'
+                      : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#C7D2FE] hover:bg-[#EEF2FF] hover:text-[#4F46E5] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#1E1B4B]/60 dark:hover:text-[#818CF8]'
+                  }`}
+                >
+                  <span>Câu phân vân</span>
+                  <span
+                    className={`tabular-nums rounded-full px-1.5 py-0.5 text-[11px] ${
+                      filter === 'flagged'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-[#EEF2FF] text-[#4F46E5] dark:bg-[#1E1B4B]/70 dark:text-[#818CF8]'
+                    }`}
+                  >
+                    {filterCounts.flagged}
+                  </span>
+                </button>
+              </div>
+
+              {filteredQuestions.length > 0 && (
+                <button
+                  type="button"
+                  data-native-enter="true"
+                  onClick={() => setIsGridOpen((prev) => !prev)}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5E3EC] bg-[#F1F6F9] px-3 py-1.5 text-xs font-semibold text-[#0284C7] transition-colors hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#334155] dark:bg-[#1E293B]/70 dark:text-[#38BDF8] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20"
+                >
+                  <Grid3X3 className="h-3.5 w-3.5 text-[#0284C7] dark:text-[#38BDF8]" />
+                  <span>Bảng câu hỏi</span>
+                  {isGridOpen ? (
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#D5E3EC]/70 pt-2.5 text-xs text-[#64748B] dark:border-[#1E293B] dark:text-[#94A3B8]">
+              <span className="inline-flex items-center gap-1.5 font-medium text-[#0284C7] dark:text-[#38BDF8]">
+                <Info className="h-3.5 w-3.5 shrink-0" />
+                <span>Điều kiện đạt Đã thuộc: Trả lời đúng 2 lần liên tiếp</span>
+              </span>
+              <span className="inline-flex items-center gap-2 text-[11px]">
+                <span className="rounded-md border border-[#BAE6FD] bg-[#E0F2FE] px-2 py-0.5 font-semibold text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+                  ✓ Đúng 1/2 lần ●○
+                </span>
+                <span>→</span>
+                <span className="rounded-md border border-[#5EEAD4] bg-[#F0FDFA] px-2 py-0.5 font-semibold text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF]">
+                  ✓ Đã thuộc (2/2) ●●
+                </span>
+              </span>
+            </div>
           </div>
 
           {/* Empty Filtered State vs Question Card */}
@@ -563,33 +616,48 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                 {/* Top Metadata Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D5E3EC] pb-3 dark:border-[#1E293B] sm:pb-4">
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <span className="tabular-nums rounded-full bg-[#F1F6F9] px-2.5 py-0.5 text-xs font-bold text-[#0F172A] dark:bg-[#1E293B] dark:text-[#F8FAFC] sm:px-3 sm:py-1">
+                    <span className="tabular-nums rounded-full bg-[#F1F6F9] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#0F172A] dark:bg-[#1E293B] dark:text-[#F8FAFC] sm:px-3 sm:py-1">
                       Câu {safeIndex + 1}/{filteredQuestions.length}
                     </span>
 
-                    <span className="hidden rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-1 text-xs font-semibold text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8] sm:inline-flex">
+                    <span className="hidden rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8] sm:inline-flex">
                       Chương {currentQuestion.chapter}
                     </span>
 
                     {currentQuestion.isMultiSelect && (
-                      <span className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-0.5 text-[11px] font-semibold text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8] sm:py-1 sm:text-xs">
+                      <span className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8] sm:py-1">
                         Chọn nhiều đáp án
                       </span>
                     )}
 
-                    {isCurrentMastered ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2.5 py-0.5 text-[11px] font-semibold text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF] sm:py-1 sm:text-xs">
-                        <Check className="h-3 w-3" />
-                        Đã thuộc
+                    {currentDetailedState === 'mastered' ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF] sm:py-1">
+                        <Check className="h-3 w-3 shrink-0" />
+                        <span>Đã thuộc (2/2)</span>
+                        <span className="ml-0.5 tracking-tighter text-[#0D9488] dark:text-[#14B8A6]" aria-hidden="true">
+                          ●●
+                        </span>
+                      </span>
+                    ) : currentDetailedState === 'pass1' ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0284C7] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/20 dark:text-[#38BDF8] sm:py-1">
+                        <Check className="h-3 w-3 shrink-0" />
+                        <span>Đúng 1/2 lần</span>
+                        <span className="ml-0.5 tracking-tighter" aria-hidden="true">
+                          ●○
+                        </span>
+                      </span>
+                    ) : currentDetailedState === 'studied' ? (
+                      <span className="rounded-full border border-[#BAE6FD] bg-[#E0F2FE]/70 px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8] sm:py-1">
+                        Đã học
                       </span>
                     ) : (
-                      <span className="rounded-full bg-[#F1F6F9] px-2.5 py-0.5 text-[11px] font-semibold text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8] sm:py-1 sm:text-xs">
+                      <span className="rounded-full bg-[#F1F6F9] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8] sm:py-1">
                         Chưa thuộc
                       </span>
                     )}
 
                     {isFlagged && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-[#C7D2FE] bg-[#EEF2FF] px-2 py-0.5 text-[11px] font-semibold text-[#4F46E5] dark:border-[#818CF8]/50 dark:bg-[#1E1B4B]/60 dark:text-[#818CF8] md:hidden">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[#C7D2FE] bg-[#EEF2FF] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#4F46E5] dark:border-[#818CF8]/50 dark:bg-[#1E1B4B]/60 dark:text-[#818CF8] md:hidden">
                         <Flag className="h-3 w-3 fill-current" />
                         Phân vân
                       </span>
@@ -715,15 +783,25 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
 
                 {currentAttempt.graded && (
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] px-3.5 py-2.5 dark:border-[#334155] dark:bg-[#0B1120]/70 sm:mt-5 sm:px-4 sm:py-3">
-                    <div className="flex items-center gap-2 text-xs font-semibold sm:text-sm">
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-semibold sm:text-sm">
                       {isCurrentCorrect ? (
                         <>
-                          <CheckCircle2 className="h-4 w-4 text-[#0D9488] dark:text-[#14B8A6]" />
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-[#0D9488] dark:text-[#14B8A6]" />
                           <span className="text-[#115E59] dark:text-[#2DD4BF]">Chính xác!</span>
+                          {currentDetailedState === 'mastered' && (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-[#5EEAD4] bg-[#F0FDFA] px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/50 dark:text-[#2DD4BF]">
+                              ✓ Đã thuộc (2/2) ●●
+                            </span>
+                          )}
+                          {currentDetailedState === 'pass1' && (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-[#BAE6FD] bg-[#E0F2FE] px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0284C7] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/20 dark:text-[#38BDF8]">
+                              ✓ Đúng 1/2 lần ●○
+                            </span>
+                          )}
                         </>
                       ) : (
                         <>
-                          <XCircle className="h-4 w-4 text-[#E11D48] dark:text-[#FB7185]" />
+                          <XCircle className="h-4 w-4 shrink-0 text-[#E11D48] dark:text-[#FB7185]" />
                           <span className="text-[#E11D48] dark:text-[#FB7185]">
                             Chưa đúng • Đáp án đúng:{' '}
                             <span className="font-bold">
@@ -999,7 +1077,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                       {subjectMeta.code} • Chọn chương &amp; câu hỏi
                     </h3>
                     <p className="text-xs text-[#0D9488] tabular-nums dark:text-[#14B8A6]">
-                      {subjectMasteredCount}/{allSubjectQuestions.length} câu đã thuộc
+                      Đúng 2 lần liên tiếp → Đã thuộc ({subjectMasteredCount}/{allSubjectQuestions.length})
                     </p>
                   </div>
                   <button

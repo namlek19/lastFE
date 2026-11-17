@@ -1,6 +1,6 @@
 export type SubjectId = 'mln131' | 'vnr202';
 
-export type StudyMode = 'chapter' | 'rolling' | 'exam';
+export type StudyMode = 'chapter' | 'rolling' | 'flashcard' | 'exam';
 
 export interface QuestionOption {
   key: string; // "A" | "B" | "C" | "D" | "E"
@@ -23,12 +23,15 @@ export type MasteryStatus = 'unlearned' | 'hesitant' | 'wrong' | 'mastered';
 
 export type ThreeStateMastery = 'unlearned' | 'hesitant' | 'mastered';
 
+export type DetailedMasteryState = 'unlearned' | 'studied' | 'pass1' | 'hesitant' | 'mastered';
+
 export interface QuestionProgress {
   streak: number;
   flagged: boolean;
   lastResult?: 'correct' | 'wrong';
   correctCount: number;
   attemptCount: number;
+  studied?: boolean;
 }
 
 export interface ExamHistoryItem {
