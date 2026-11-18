@@ -12,20 +12,20 @@ export const RichExplanation: React.FC<RichExplanationProps> = ({ question, clas
 
   return (
     <div
-      className={`rounded-xl border border-[#D4E1EE] bg-[#F8FAFC] p-3.5 text-[14px] leading-relaxed text-[#1E293B] dark:border-[#18243C] dark:bg-[#0C1322] dark:text-[#E2E8F0] sm:p-5 sm:text-[15px] ${className}`}
+      className={`rounded-xl border border-[#C5D1BE] bg-[#F5F7F2] p-3.5 text-[14px] leading-relaxed text-[#243329] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF] sm:p-5 sm:text-[15px] ${className}`}
     >
-      <div className="mb-2 flex items-center gap-2 font-semibold text-[#0369A1] dark:text-[#38BDF8]">
-        <BookOpen className="h-4 w-4 shrink-0 text-[#0369A1] dark:text-[#38BDF8]" />
+      <div className="mb-2 flex items-center gap-2 font-semibold text-[#2E6F4E] dark:text-[#74C69D]">
+        <BookOpen className="h-4 w-4 shrink-0 text-[#2E6F4E] dark:text-[#74C69D]" />
         <span>Giải thích chi tiết</span>
       </div>
 
-      <p className="leading-relaxed text-[#1E293B] dark:text-[#E2E8F0]">
+      <p className="leading-relaxed text-[#243329] dark:text-[#DDE5DF]">
         {parts.map((part, idx) => {
           if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
             return (
               <mark
                 key={idx}
-                className="mx-0.5 rounded-md border border-[#5EEAD4] bg-[#E6F7F5] px-1.5 py-0.5 font-semibold text-[#0F766E] dark:border-[#14B8A6]/60 dark:bg-[#0D9488]/15 dark:text-[#2DD4BF]"
+                className="mx-0.5 rounded-md border border-[#68B99A] bg-[#E1F3EC] px-1.5 py-0.5 font-semibold text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7]"
               >
                 {part.slice(2, -2)}
               </mark>
@@ -36,8 +36,8 @@ export const RichExplanation: React.FC<RichExplanationProps> = ({ question, clas
       </p>
 
       {question.note && question.note.trim() !== '' && (
-        <div className="mt-3.5 flex items-start gap-2 rounded-lg border border-[#D4E1EE] bg-white px-3.5 py-2.5 text-xs text-[#5B6E88] dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#7E91B0]">
-          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#0369A1] dark:text-[#38BDF8]" />
+        <div className="mt-3.5 flex items-start gap-2 rounded-lg border border-[#D2DACB] bg-[#FFFFFF] px-3.5 py-2.5 text-xs text-[#5C6E60] dark:border-[#31453A] dark:bg-[#1B2620] dark:text-[#8B9E91]">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#2E6F4E] dark:text-[#74C69D]" />
           <span>{question.note}</span>
         </div>
       )}

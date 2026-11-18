@@ -5,21 +5,21 @@
 @layer base {
   body {
     font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
-    background-color: #EAF1F8;
+    background-color: #F2F4EF;
     min-height: 100vh;
-    color: #1E293B;
+    color: #243329;
   }
 
   .dark body {
-    background-color: #070B14;
-    color: #E2E8F0;
+    background-color: #0D120F;
+    color: #DDE5DF;
   }
 
   button:focus-visible,
   a:focus-visible,
   textarea:focus-visible,
   input:focus-visible {
-    outline: 2px solid #0369A1;
+    outline: 2px solid #2E6F4E;
     outline-offset: 2px;
   }
 
@@ -27,7 +27,7 @@
   .dark a:focus-visible,
   .dark textarea:focus-visible,
   .dark input:focus-visible {
-    outline: 2px solid #38BDF8;
+    outline: 2px solid #52B788;
     outline-offset: 2px;
   }
 
@@ -55,18 +55,18 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #7DD3FC;
+  background: #9BC4AE;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0369A1;
+  background: #2E6F4E;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #18243C;
+  background: #222E27;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #38BDF8;
+  background: #52B788;
 }

@@ -102,7 +102,7 @@ export const App: React.FC = () => {
           onOpenSyncModal={() => setIsSyncOpen(true)}
         />
 
-        <main className="mx-auto w-full max-w-[1380px] flex-1 px-3.5 py-3.5 pb-24 sm:px-6 md:py-8 md:pb-8 lg:px-10">
+        <main className="mx-auto w-full max-w-[1720px] flex-1 px-4 py-4 pb-24 sm:px-6 md:py-8 md:pb-8 lg:px-12">
           <AnimatePresence mode="wait">
             <motion.div
               key={`${subject}-${mode}`}
@@ -151,10 +151,10 @@ export const App: React.FC = () => {
           </AnimatePresence>
         </main>
 
-        <footer className="mt-6 border-t border-[#D4E1EE] bg-[#F8FAFC] py-5 pb-24 text-center text-xs text-[#5B6E88] dark:border-[#18243C] dark:bg-[#0C1322] dark:text-[#7E91B0] md:mt-12 md:py-6 md:pb-6">
-          <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-center gap-2 px-6 lg:px-10">
+        <footer className="mt-6 border-t border-[#D2DACB] bg-[#E8ECE4] py-5 pb-24 text-xs text-[#5C6E60] dark:border-[#222E27] dark:bg-[#131A16] dark:text-[#8B9E91] md:mt-12 md:py-6 md:pb-6">
+          <div className="mx-auto flex w-full max-w-[1720px] flex-wrap items-center justify-between gap-2 px-4 sm:px-6 lg:px-12">
             <span>Ôn thi trắc nghiệm MLN131 &amp; VNR202 • Tự động lưu tiến độ</span>
-            <span className="inline-flex items-center rounded-full border border-[#7DD3FC] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+            <span className="inline-flex items-center rounded-full border border-[#9BC4AE] bg-[#E3EFE8] px-2.5 py-0.5 text-xs font-semibold text-[#2E6F4E] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]">
               from Namblee
             </span>
           </div>
