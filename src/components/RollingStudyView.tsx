@@ -369,14 +369,14 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 <button
                   type="button"
                   onClick={handleExitSession}
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-1.5 text-xs font-semibold text-[#292524] transition hover:border-[#C2410C] hover:bg-[#FFF7ED] hover:text-[#9A3412] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#FB923C] dark:hover:bg-[#7C2D12]/25 dark:hover:text-[#FDBA74]"
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-1.5 text-xs font-semibold text-[#292524] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
                   <span>Danh sách chặng</span>
                 </button>
 
                 {currentQuestion ? (
-                  <div className="rounded-full border border-[#FDBA74] bg-[#FFF7ED] px-2.5 py-1 text-xs font-semibold text-[#9A3412] tabular-nums dark:border-[#FB923C]/50 dark:bg-[#7C2D12]/30 dark:text-[#FDBA74]">
+                  <div className="rounded-full border border-[#A5B4FC] bg-[#EEF2FF] px-2.5 py-1 text-xs font-semibold text-[#3730A3] tabular-nums dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
                     Còn {queue.length} câu
                   </div>
                 ) : (
@@ -424,7 +424,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   <span className="text-[#047857] dark:text-[#34D399]">
                     Thuộc: {stageStats.mastered}
                   </span>
-                  <span className="text-[#6D28D9] dark:text-[#DDD6FE]">
+                  <span className="text-[#A21CAF] dark:text-[#F5D0FE]">
                     Phân vân: {stageStats.hesitant}
                   </span>
                   <span className="text-[#656058] dark:text-[#9CA39B]">
@@ -451,8 +451,8 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                         onClick={() => startStageSession(stage.index)}
                         className={`flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl border px-3 py-2.5 text-left transition ${
                           isCurrentStage
-                            ? 'border-[#C2410C] bg-[#FFF7ED] text-[#18181B] shadow-xs dark:border-[#FB923C] dark:bg-[#7C2D12]/30 dark:text-[#F5F5F4]'
-                            : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#C2410C] hover:bg-[#FFF7ED] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#FB923C] dark:hover:bg-[#7C2D12]/25'
+                            ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] shadow-xs dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
+                            : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                         }`}
                       >
                         <div className="min-w-0">
@@ -484,7 +484,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#D5CFC2] bg-[#EAE6DD] px-3 py-2 text-left text-xs font-semibold text-[#18181B] shadow-xs transition active:scale-[0.99] dark:border-[#262925] dark:bg-[#161816] dark:text-[#F5F5F4]"
               >
                 <span className="flex min-w-0 items-center gap-2">
-                  <Menu className="h-4 w-4 shrink-0 text-[#C2410C] dark:text-[#FB923C]" />
+                  <Menu className="h-4 w-4 shrink-0 text-[#4338CA] dark:text-[#818CF8]" />
                   <span className="truncate tabular-nums">
                     C{selectedChapter} • {activeStage.title} ({stageStats.percent}%)
                   </span>
@@ -493,7 +493,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
               </button>
 
               {currentQuestion ? (
-                <span className="shrink-0 rounded-xl border border-[#FDBA74] bg-[#FFF7ED] px-2.5 py-2 text-xs font-semibold text-[#9A3412] tabular-nums dark:border-[#FB923C]/50 dark:bg-[#7C2D12]/30 dark:text-[#FDBA74]">
+                <span className="shrink-0 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] px-2.5 py-2 text-xs font-semibold text-[#3730A3] tabular-nums dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
                   Còn {queue.length}
                 </span>
               ) : (
@@ -526,11 +526,11 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                       Đã thuộc
                     </div>
                   </div>
-                  <div className="rounded-xl border border-[#C4B5FD] bg-[#EDE9FE] p-3 dark:border-[#A78BFA]/55 dark:bg-[#8B5CF6]/20">
-                    <div className="text-lg font-bold text-[#6D28D9] tabular-nums dark:text-[#DDD6FE]">
+                  <div className="rounded-xl border border-[#F0ABFC] bg-[#FAE8FF] p-3 dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20">
+                    <div className="text-lg font-bold text-[#A21CAF] tabular-nums dark:text-[#F5D0FE]">
                       {stageStats.hesitant}
                     </div>
-                    <div className="text-xs font-medium text-[#6D28D9] dark:text-[#DDD6FE]">
+                    <div className="text-xs font-medium text-[#A21CAF] dark:text-[#F5D0FE]">
                       Phân vân
                     </div>
                   </div>
@@ -549,7 +549,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     <button
                       type="button"
                       onClick={() => startStageSession(activeStage.index + 1)}
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#C2410C] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9A3412] dark:border dark:border-[#FB923C]/50 dark:bg-[#C2410C] dark:text-white dark:hover:bg-[#9A3412]"
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]"
                     >
                       <span>Sang Chặng {activeStage.index + 2}</span>
                       <ArrowRight className="h-4 w-4" />
@@ -559,7 +559,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   <button
                     type="button"
                     onClick={() => startStageSession(activeStage.index, true)}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#FDBA74] bg-[#FFF7ED] px-4 py-2.5 text-sm font-semibold text-[#9A3412] transition hover:bg-[#FFEDD5] dark:border-[#FB923C]/50 dark:bg-[#7C2D12]/30 dark:text-[#FDBA74] dark:hover:bg-[#7C2D12]/45"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] px-4 py-2.5 text-sm font-semibold text-[#3730A3] transition hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:hover:bg-[#312E81]/45"
                   >
                     <RotateCcw className="h-4 w-4" />
                     <span>Ôn tập lại chặng này</span>
@@ -569,7 +569,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     <button
                       type="button"
                       onClick={handleResetAndRestartStage}
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-medium text-[#292524] transition hover:border-[#C2410C] hover:bg-[#FFF7ED] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#FB923C] dark:hover:bg-[#7C2D12]/25"
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-medium text-[#292524] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25"
                     >
                       <span>Học lại chặng</span>
                     </button>
@@ -578,7 +578,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   <button
                     type="button"
                     onClick={handleExitSession}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-medium text-[#656058] transition hover:border-[#C2410C] hover:bg-[#FFF7ED] hover:text-[#9A3412] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#FB923C] dark:hover:bg-[#7C2D12]/25 dark:hover:text-[#FDBA74]"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-medium text-[#656058] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]"
                   >
                     <span>Quay lại danh sách</span>
                   </button>
@@ -602,8 +602,8 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
                       if (turnFlagged) {
                         return (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#C4B5FD] bg-[#EDE9FE] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#6D28D9] dark:border-[#A78BFA]/55 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE] sm:py-1">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#6D28D9] dark:bg-[#DDD6FE]" />
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F0ABFC] bg-[#FAE8FF] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#A21CAF] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] sm:py-1">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#A21CAF] dark:bg-[#F5D0FE]" />
                             Phân vân
                           </span>
                         );
@@ -658,14 +658,14 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     aria-pressed={turnFlagged}
                     className={`hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition lg:inline-flex ${
                       turnFlagged
-                        ? 'border-[#C4B5FD] bg-[#EDE9FE] text-[#6D28D9] shadow-xs dark:border-[#A78BFA]/55 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE]'
-                        : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#C4B5FD] hover:bg-[#EDE9FE] hover:text-[#6D28D9] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#A78BFA]/55 dark:hover:bg-[#8B5CF6]/20 dark:hover:text-[#DDD6FE]'
+                        ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-xs dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
+                        : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#E879F9]/55 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
                     }`}
                   >
                     <Flag
                       className={`h-3.5 w-3.5 ${
                         turnFlagged
-                          ? 'fill-[#6D28D9] text-[#6D28D9] dark:fill-[#DDD6FE] dark:text-[#DDD6FE]'
+                          ? 'fill-[#A21CAF] text-[#A21CAF] dark:fill-[#F5D0FE] dark:text-[#F5D0FE]'
                           : 'text-[#656058] dark:text-[#9CA39B]'
                       }`}
                     />
@@ -673,7 +673,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     <kbd
                       className={`ml-0.5 hidden rounded px-1 py-0.5 font-mono text-[10px] lg:inline-block ${
                         turnFlagged
-                          ? 'border border-[#C4B5FD] bg-white text-[#6D28D9] dark:border-[#A78BFA]/40 dark:bg-[#0F100E] dark:text-[#DDD6FE]'
+                          ? 'border border-[#F0ABFC] bg-white text-[#A21CAF] dark:border-[#E879F9]/40 dark:bg-[#0F100E] dark:text-[#F5D0FE]'
                           : 'border border-[#D5CFC2] bg-white text-[#656058] dark:border-[#2C302B] dark:bg-[#0F100E] dark:text-[#9CA39B]'
                       }`}
                     >
@@ -683,7 +683,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 </div>
 
                 {/* Question Text */}
-                <div className="rounded-2xl border border-[#E2DDD2] border-l-4 border-l-[#C2410C] bg-[#FAF8F3] p-4 dark:border-[#2C322D] dark:border-l-4 dark:border-l-[#FB923C] dark:bg-[#161917] sm:p-5">
+                <div className="rounded-2xl border border-[#E2DDD2] border-l-4 border-l-[#4338CA] bg-[#FAF8F3] p-4 dark:border-[#2C322D] dark:border-l-4 dark:border-l-[#818CF8] dark:bg-[#161917] sm:p-5">
                   <h3 className="max-w-[78ch] text-[17px] font-semibold leading-[1.6] text-[#18181B] dark:text-[#F5F5F4] sm:text-[19px] sm:leading-[1.65] md:text-[20px]">
                     {currentQuestion.question}
                   </h3>
@@ -699,15 +699,15 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     const isGraded = gradedState !== null;
 
                     let containerCls =
-                      'border-[#D5CFC2] bg-[#F8F6F0] text-[#292524] hover:border-[#C2410C] hover:bg-[#FFF7ED] md:hover:translate-x-1 dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#E7E5E4] dark:hover:border-[#FB923C] dark:hover:bg-[#7C2D12]/25';
+                      'border-[#D5CFC2] bg-[#F8F6F0] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] md:hover:translate-x-1 dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25';
                     let badgeCls =
-                      'border-[#C6BEB0] bg-white text-[#C2410C] group-hover:border-[#C2410C] group-hover:bg-[#C2410C] group-hover:text-white dark:border-[#353B36] dark:bg-[#161816] dark:text-[#FDBA74] dark:group-hover:border-[#FB923C] dark:group-hover:bg-[#C2410C] dark:group-hover:text-white';
+                      'border-[#C6BEB0] bg-white text-[#4338CA] group-hover:border-[#4338CA] group-hover:bg-[#4338CA] group-hover:text-white dark:border-[#353B36] dark:bg-[#161816] dark:text-[#A5B4FC] dark:group-hover:border-[#818CF8] dark:group-hover:bg-[#4338CA] dark:group-hover:text-white';
 
                     if (!isGraded && isSelected) {
                       containerCls =
-                        'border-[#C2410C] bg-[#FFF7ED] text-[#18181B] ring-1 ring-[#C2410C] dark:border-[#FB923C] dark:bg-[#7C2D12]/35 dark:text-[#F5F5F4] dark:ring-[#FB923C]';
+                        'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] ring-1 ring-[#4338CA] dark:border-[#818CF8] dark:bg-[#312E81]/35 dark:text-[#F5F5F4] dark:ring-[#818CF8]';
                       badgeCls =
-                        'border-[#C2410C] bg-[#C2410C] text-white dark:border-[#FB923C] dark:bg-[#C2410C] dark:text-white';
+                        'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8] dark:bg-[#4338CA] dark:text-white';
                     } else if (isGraded) {
                       if (isCorrectOption) {
                         containerCls =
@@ -772,7 +772,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                       type="button"
                       disabled={selectedOptions.length === 0}
                       onClick={() => gradeSubmission(selectedOptions)}
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#C2410C] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9A3412] disabled:cursor-not-allowed disabled:border disabled:border-[#D5CFC2] disabled:bg-[#EAE6DD] disabled:text-[#656058] dark:border dark:border-[#FB923C]/50 dark:bg-[#C2410C] dark:text-white dark:hover:bg-[#9A3412] dark:disabled:border-[#2C302B] dark:disabled:bg-[#252A26] dark:disabled:text-[#9CA39B]"
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:border disabled:border-[#D5CFC2] disabled:bg-[#EAE6DD] disabled:text-[#656058] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3] dark:disabled:border-[#2C302B] dark:disabled:bg-[#252A26] dark:disabled:text-[#9CA39B]"
                     >
                       <span>Kiểm tra đáp án</span>
                       <kbd className="hidden rounded bg-white/20 px-1.5 py-0.5 font-mono text-[10px] text-white lg:inline-block">
@@ -820,8 +820,8 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                       </div>
 
                       {turnFlagged && (
-                        <span className="inline-flex items-center gap-1 rounded-lg border border-[#C4B5FD] bg-[#EDE9FE] px-2.5 py-1 text-xs font-medium text-[#6D28D9] dark:border-[#A78BFA]/55 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE]">
-                          <Flag className="h-3.5 w-3.5 text-[#6D28D9] dark:text-[#DDD6FE]" />
+                        <span className="inline-flex items-center gap-1 rounded-lg border border-[#F0ABFC] bg-[#FAE8FF] px-2.5 py-1 text-xs font-medium text-[#A21CAF] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]">
+                          <Flag className="h-3.5 w-3.5 text-[#A21CAF] dark:text-[#F5D0FE]" />
                           Đang đánh dấu phân vân
                         </span>
                       )}
@@ -833,7 +833,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                       <button
                         type="button"
                         onClick={handleNext}
-                        className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#C2410C] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9A3412] dark:border dark:border-[#FB923C]/50 dark:bg-[#C2410C] dark:text-white dark:hover:bg-[#9A3412]"
+                        className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]"
                       >
                         <span>Câu tiếp theo</span>
                         <ArrowRight className="h-4 w-4" />
@@ -902,7 +902,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 aria-pressed={turnFlagged}
                 className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
                   turnFlagged
-                    ? 'border-[#C4B5FD] bg-[#EDE9FE] text-[#6D28D9] dark:border-[#A78BFA]/55 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE]'
+                    ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
                     : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
                 }`}
               >
@@ -915,7 +915,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   type="button"
                   disabled={selectedOptions.length === 0}
                   onClick={() => gradeSubmission(selectedOptions)}
-                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#C2410C] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#9A3412] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#FB923C]/50 dark:bg-[#C2410C] dark:text-white dark:hover:bg-[#9A3412]"
+                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]"
                 >
                   <Check className="h-4 w-4" />
                   <span>Kiểm tra ({selectedOptions.length})</span>
@@ -925,7 +925,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   type="button"
                   disabled={gradedState === null}
                   onClick={handleNext}
-                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#C2410C] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#9A3412] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#FB923C]/50 dark:bg-[#C2410C] dark:text-white dark:hover:bg-[#9A3412]"
+                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]"
                 >
                   <span>Câu tiếp</span>
                   <ChevronRight className="h-4 w-4" />
@@ -995,7 +995,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                         }}
                         className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
                           isCurrentStage
-                            ? 'border-[#C2410C] bg-[#FFF7ED] text-[#18181B] dark:border-[#FB923C] dark:bg-[#7C2D12]/30 dark:text-[#F5F5F4]'
+                            ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
                             : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
                         }`}
                       >
@@ -1042,7 +1042,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
         <div className="mb-5 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-4 shadow-xs dark:border-[#262925] dark:bg-[#161816] dark:shadow-none sm:p-6 md:mb-8 md:p-7">
           <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#FDBA74] bg-[#FFF7ED] text-[#9A3412] dark:border-[#FB923C]/50 dark:bg-[#7C2D12]/30 dark:text-[#FDBA74] sm:h-11 sm:w-11">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] sm:h-11 sm:w-11">
                 <Layers className="h-5 w-5" />
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -1073,7 +1073,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
               className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3.5 py-2.5 text-left text-xs font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]"
             >
               <span className="flex min-w-0 items-center gap-2">
-                <Menu className="h-4 w-4 shrink-0 text-[#C2410C] dark:text-[#FB923C]" />
+                <Menu className="h-4 w-4 shrink-0 text-[#4338CA] dark:text-[#818CF8]" />
                 <span className="truncate">
                   Chương {selectedChapter}: {currentChapterMeta?.title}
                 </span>
@@ -1101,8 +1101,8 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   onClick={() => setSelectedChapter(ch.chapter)}
                   className={`flex min-w-[135px] flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3.5 py-2 text-left text-sm transition ${
                     isSelected
-                      ? 'border-[#C2410C] bg-[#C2410C] text-white shadow-sm hover:border-[#9A3412] hover:bg-[#9A3412] dark:border-[#FB923C]/50 dark:bg-[#C2410C] dark:text-white dark:hover:bg-[#9A3412]'
-                      : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#C2410C] hover:bg-[#FFF7ED] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#FB923C] dark:hover:bg-[#7C2D12]/25'
+                      ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-sm hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]'
+                      : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                   }`}
                 >
                   <span className="font-semibold">Chương {ch.chapter}</span>
@@ -1118,7 +1118,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
           {currentChapterMeta && (
             <div className="mt-3.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-3.5 dark:border-[#2C302B] dark:bg-[#1C1F1C] sm:mt-5 sm:p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="hidden text-sm font-semibold text-[#9A3412] dark:text-[#FDBA74] md:block">
+                <div className="hidden text-sm font-semibold text-[#3730A3] dark:text-[#A5B4FC] md:block">
                   Chương {currentChapterMeta.chapter}: {currentChapterMeta.title}
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
@@ -1126,8 +1126,8 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     <span className="h-2 w-2 rounded-full bg-[#059669] dark:bg-[#10B981]" />
                     Đã thuộc: {chapterStats.mastered}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 text-[#6D28D9] tabular-nums dark:text-[#DDD6FE]">
-                    <span className="h-2 w-2 rounded-full bg-[#6D28D9] dark:bg-[#DDD6FE]" />
+                  <span className="inline-flex items-center gap-1.5 text-[#A21CAF] tabular-nums dark:text-[#F5D0FE]">
+                    <span className="h-2 w-2 rounded-full bg-[#A21CAF] dark:bg-[#F5D0FE]" />
                     Phân vân: {chapterStats.hesitant}
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-[#656058] tabular-nums dark:text-[#9CA39B]">
@@ -1161,7 +1161,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 className={`group flex cursor-pointer flex-col justify-between rounded-2xl border bg-[#EAE6DD] p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:bg-[#161816] dark:shadow-none sm:p-6 ${
                   isCompleted
                     ? 'border-[#10B981] hover:border-[#059669] hover:bg-[#ECFDF5] dark:border-[#10B981]/70 dark:hover:border-[#34D399] dark:hover:bg-[#059669]/20'
-                    : 'border-[#D5CFC2] hover:border-[#C2410C] hover:bg-[#FFF7ED] dark:border-[#262925] dark:hover:border-[#FB923C] dark:hover:bg-[#7C2D12]/25'
+                    : 'border-[#D5CFC2] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#262925] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                 }`}
               >
                 <div className="w-full">
@@ -1171,7 +1171,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                         className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-bold ${
                           isCompleted
                             ? 'border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]'
-                            : 'border-[#FDBA74] bg-[#FFF7ED] text-[#9A3412] dark:border-[#FB923C]/50 dark:bg-[#7C2D12]/30 dark:text-[#FDBA74]'
+                            : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
                         }`}
                       >
                         {stage.index + 1}
@@ -1215,11 +1215,11 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                         Đã thuộc
                       </div>
                     </div>
-                    <div className="rounded-lg border border-[#C4B5FD] bg-[#EDE9FE] px-2 py-1.5 text-center dark:border-[#A78BFA]/55 dark:bg-[#8B5CF6]/20">
-                      <div className="text-sm font-bold text-[#6D28D9] tabular-nums dark:text-[#DDD6FE]">
+                    <div className="rounded-lg border border-[#F0ABFC] bg-[#FAE8FF] px-2 py-1.5 text-center dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20">
+                      <div className="text-sm font-bold text-[#A21CAF] tabular-nums dark:text-[#F5D0FE]">
                         {stats.hesitant}
                       </div>
-                      <div className="text-[11px] font-medium text-[#6D28D9] dark:text-[#DDD6FE]">
+                      <div className="text-[11px] font-medium text-[#A21CAF] dark:text-[#F5D0FE]">
                         Phân vân
                       </div>
                     </div>
@@ -1241,7 +1241,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                       Đã thuộc toàn bộ
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 text-[#9A3412] dark:text-[#FB923C]">
+                    <span className="inline-flex items-center gap-1.5 text-[#3730A3] dark:text-[#818CF8]">
                       <Play className="h-3.5 w-3.5 fill-current" />
                       {stats.mastered > 0 || stats.hesitant > 0 ? 'Tiếp tục học' : 'Bắt đầu học'}
                     </span>
@@ -1250,7 +1250,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     className={`h-4 w-4 text-[#656058] transition group-hover:translate-x-0.5 dark:text-[#9CA39B] ${
                       isCompleted
                         ? 'group-hover:text-[#059669] dark:group-hover:text-[#34D399]'
-                        : 'group-hover:text-[#C2410C] dark:group-hover:text-[#FB923C]'
+                        : 'group-hover:text-[#4338CA] dark:group-hover:text-[#818CF8]'
                     }`}
                   />
                 </div>
@@ -1321,7 +1321,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                       }}
                       className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
                         isSelected
-                          ? 'border-[#C2410C] bg-[#FFF7ED] text-[#18181B] dark:border-[#FB923C] dark:bg-[#7C2D12]/30 dark:text-[#F5F5F4]'
+                          ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
                           : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
                       }`}
                     >

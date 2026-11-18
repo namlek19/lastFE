@@ -154,7 +154,7 @@ export const App: React.FC = () => {
         <footer className="mt-6 border-t border-[#D5CFC2] bg-[#EAE6DD] py-5 pb-24 text-xs text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B] md:mt-12 md:py-6 md:pb-6">
           <div className="mx-auto flex w-full max-w-[1720px] flex-wrap items-center justify-between gap-2 px-4 sm:px-6 lg:px-10 xl:px-12">
             <span>Ôn thi trắc nghiệm MLN131 &amp; VNR202 • Tự động lưu tiến độ</span>
-            <span className="inline-flex items-center rounded-full border border-[#FDBA74] bg-[#FFF7ED] px-2.5 py-0.5 text-xs font-semibold text-[#9A3412] dark:border-[#FB923C]/50 dark:bg-[#7C2D12]/30 dark:text-[#FDBA74]">
+            <span className="inline-flex items-center rounded-full border border-[#A5B4FC] bg-[#EEF2FF] px-2.5 py-0.5 text-xs font-semibold text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
               from Namblee
             </span>
           </div>
