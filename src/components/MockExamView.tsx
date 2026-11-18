@@ -1034,9 +1034,9 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
             </div>
 
             {/* Question Card (Focal Point Elevation) */}
-            <div className="w-full rounded-2xl border border-[#C6BEB0] border-t-2 border-t-[#284E3B] bg-white p-4 shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] dark:border-[#323833] dark:border-t-2 dark:border-t-[#10B981] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)] sm:p-7 lg:p-9">
+            <div className="w-full rounded-2xl border border-[#BFB6A6] bg-white p-4 ring-1 ring-[#18181B]/[0.04] shadow-[0_18px_40px_-12px_rgba(28,25,23,0.12),0_2px_6px_-1px_rgba(28,25,23,0.05)] dark:border-[#363D37] dark:bg-[#1E221F] dark:ring-white/[0.05] dark:shadow-[0_20px_44px_-12px_rgba(0,0,0,0.75)] sm:p-7 lg:p-9">
               {/* Header Metadata */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D5CFC2] pb-3 dark:border-[#323833] sm:pb-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E6E1D6] bg-[#FAF8F3] px-3 py-2 dark:border-[#2C322D] dark:bg-[#171A17] sm:px-3.5 sm:py-2.5">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <span className="rounded-lg bg-[#284E3B] px-2.5 py-0.5 text-xs font-bold text-white tabular-nums dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] sm:py-1">
                     Câu {currentIndex + 1} / {examQuestions.length}
@@ -1681,11 +1681,11 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   <article
                     key={q.id}
                     id={`exam-review-q-${q.id}`}
-                    className={`rounded-2xl border border-[#C6BEB0] border-t-2 border-t-[#284E3B] bg-white p-4 shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] transition dark:border-[#323833] dark:border-t-2 dark:border-t-[#10B981] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)] sm:p-7 lg:p-8 ${
+                    className={`rounded-2xl border border-[#BFB6A6] bg-white p-4 ring-1 ring-[#18181B]/[0.04] shadow-[0_18px_40px_-12px_rgba(28,25,23,0.12),0_2px_6px_-1px_rgba(28,25,23,0.05)] transition dark:border-[#363D37] dark:bg-[#1E221F] dark:ring-white/[0.05] dark:shadow-[0_20px_44px_-12px_rgba(0,0,0,0.75)] sm:p-7 lg:p-8 ${
                       isHighlighted ? 'ring-2 ring-[#284E3B]/40 dark:ring-[#10B981]/40' : ''
                     }`}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D5CFC2] pb-3 dark:border-[#323833] sm:pb-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E6E1D6] bg-[#FAF8F3] px-3 py-2 dark:border-[#2C322D] dark:bg-[#171A17] sm:px-3.5 sm:py-2.5">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <span className="rounded-lg bg-[#284E3B] px-2.5 py-0.5 text-xs font-bold text-white tabular-nums dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] sm:py-1">
                           Câu {index + 1}

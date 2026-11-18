@@ -505,7 +505,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
             {/* Stage Completion Card */}
             {!currentQuestion ? (
-              <div className="rounded-2xl border border-[#10B981] border-t-2 border-t-[#059669] bg-white p-5 text-center shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] dark:border-[#10B981]/70 dark:border-t-2 dark:border-t-[#34D399] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)] sm:p-8">
+              <div className="rounded-2xl border-2 border-[#10B981] bg-white p-5 text-center ring-4 ring-[#10B981]/10 shadow-[0_18px_40px_-12px_rgba(5,150,105,0.14)] dark:border-[#10B981]/80 dark:bg-[#1E221F] dark:ring-[#10B981]/15 dark:shadow-[0_20px_44px_-12px_rgba(0,0,0,0.75)] sm:p-8">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#10B981] bg-[#D1FAE5] text-[#059669] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] sm:h-16 sm:w-16">
                   <Trophy className="h-7 w-7 sm:h-8 sm:w-8" />
                 </div>
@@ -588,10 +588,10 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
               /* Question Card */
               <div
                 key={`${currentQuestion.id}-${turnCounter}`}
-                className="rounded-2xl border border-[#C6BEB0] border-t-2 border-t-[#284E3B] bg-white p-4 shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] dark:border-[#323833] dark:border-t-2 dark:border-t-[#10B981] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)] sm:p-7 md:p-8"
+                className="rounded-2xl border border-[#BFB6A6] bg-white p-4 ring-1 ring-[#18181B]/[0.04] shadow-[0_18px_40px_-12px_rgba(28,25,23,0.12),0_2px_6px_-1px_rgba(28,25,23,0.05)] dark:border-[#363D37] dark:bg-[#1E221F] dark:ring-white/[0.05] dark:shadow-[0_20px_44px_-12px_rgba(0,0,0,0.75)] sm:p-7 md:p-8"
               >
                 {/* Card top badges + Desktop Phân vân toggle */}
-                <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2 border-b border-[#D5CFC2] pb-3 dark:border-[#262925] sm:mb-5 sm:pb-4">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E6E1D6] bg-[#FAF8F3] px-3 py-2 dark:border-[#2C322D] dark:bg-[#171A17] sm:mb-5 sm:px-3.5 sm:py-2.5">
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                     {(() => {
                       const qProg = progress.questions[currentQuestion.id];
