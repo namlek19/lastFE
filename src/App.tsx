@@ -151,10 +151,10 @@ export const App: React.FC = () => {
           </AnimatePresence>
         </main>
 
-        <footer className="mt-6 border-t border-[#D5E3EC] bg-white py-5 pb-24 text-center text-xs text-[#64748B] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#94A3B8] md:mt-12 md:py-6 md:pb-6">
+        <footer className="mt-6 border-t border-[#D4E1EE] bg-[#F8FAFC] py-5 pb-24 text-center text-xs text-[#5B6E88] dark:border-[#18243C] dark:bg-[#0C1322] dark:text-[#7E91B0] md:mt-12 md:py-6 md:pb-6">
           <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-center gap-2 px-6 lg:px-10">
             <span>Ôn thi trắc nghiệm MLN131 &amp; VNR202 • Tự động lưu tiến độ</span>
-            <span className="inline-flex items-center rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+            <span className="inline-flex items-center rounded-full border border-[#7DD3FC] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
               from Namblee
             </span>
           </div>

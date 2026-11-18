@@ -175,7 +175,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
           onClick={onClose}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-3 backdrop-blur-xs dark:bg-[#0B1120]/75 sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B1324]/50 p-3 backdrop-blur-xs dark:bg-[#070B14]/80 sm:p-6"
         >
           <motion.div
             key="sync-modal-dialog"
@@ -187,19 +187,19 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
             exit={{ opacity: 0, scale: 0.96, y: 10 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-[#D5E3EC] bg-white shadow-[0_8px_24px_-4px_rgba(15,23,42,0.12)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.6)]"
+            className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-[#BBD0E6] bg-[#F8FAFC] shadow-[0_14px_36px_-6px_rgba(11,19,36,0.18)] dark:border-[#253759] dark:bg-[#0C1322] dark:shadow-[0_20px_48px_-8px_rgba(0,0,0,0.75)]"
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#D5E3EC] bg-white px-5 py-4 dark:border-[#1E293B] dark:bg-[#111827]">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#D4E1EE] bg-[#F8FAFC] px-5 py-4 dark:border-[#18243C] dark:bg-[#0C1322]">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#BAE6FD] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#7DD3FC] bg-[#E0F2FE] text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
                   <Cloud className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 id="sync-modal-title" className="text-base font-bold text-[#0F172A] dark:text-[#F8FAFC]">
+                  <h2 id="sync-modal-title" className="text-base font-bold text-[#0B1324] dark:text-[#F8FAFC]">
                     Đồng bộ tiến độ học tập
                   </h2>
-                  <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+                  <p className="text-xs text-[#5B6E88] dark:text-[#7E91B0]">
                     Chuyển kết quả ôn tập giữa điện thoại và máy tính bằng mã cá nhân
                   </p>
                 </div>
@@ -209,7 +209,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                 type="button"
                 onClick={onClose}
                 aria-label="Đóng hộp thoại"
-                className="cursor-pointer rounded-xl p-1.5 text-[#64748B] transition hover:bg-[#E0F2FE] hover:text-[#0284C7] dark:text-[#94A3B8] dark:hover:bg-[#0284C7]/20 dark:hover:text-[#38BDF8]"
+                className="cursor-pointer rounded-xl p-1.5 text-[#5B6E88] transition hover:bg-[#E0F2FE] hover:text-[#0369A1] dark:text-[#7E91B0] dark:hover:bg-[#0284C7]/15 dark:hover:text-[#38BDF8]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -218,41 +218,41 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
             <div className="space-y-5 p-5">
               {/* Current Progress Summary */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-xl border border-[#5EEAD4] bg-[#F0FDFA] p-3 text-center dark:border-[#2DD4BF] dark:bg-[#134E4A]/40">
-                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium text-[#115E59] dark:text-[#2DD4BF]">
-                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#0D9488] dark:text-[#14B8A6]" />
+                <div className="rounded-xl border border-[#5EEAD4] bg-[#E6F7F5] p-3 text-center text-[#0F766E] dark:border-[#14B8A6]/60 dark:bg-[#0D9488]/15 dark:text-[#2DD4BF]">
+                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#0D9488] dark:text-[#2DD4BF]" />
                     <span>Tổng câu đã thuộc</span>
                   </div>
-                  <p className="text-lg font-bold text-[#115E59] tabular-nums dark:text-[#F8FAFC]">
+                  <p className="text-lg font-bold tabular-nums">
                     {summary.mastered}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-[#C7D2FE] bg-[#EEF2FF] p-3 text-center dark:border-[#818CF8]/50 dark:bg-[#1E1B4B]/60">
-                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium text-[#4F46E5] dark:text-[#818CF8]">
+                <div className="rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] p-3 text-center text-[#4338CA] dark:border-[#818CF8]/50 dark:bg-[#6366F1]/15 dark:text-[#A5B4FC]">
+                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium">
                     <HelpCircle className="h-3.5 w-3.5 shrink-0" />
                     <span>Câu phân vân</span>
                   </div>
-                  <p className="text-lg font-bold text-[#4F46E5] tabular-nums dark:text-[#818CF8]">
+                  <p className="text-lg font-bold tabular-nums">
                     {summary.hesitant}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-[#BAE6FD] bg-[#E0F2FE] p-3 text-center dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15">
-                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium text-[#0284C7] dark:text-[#38BDF8]">
+                <div className="rounded-xl border border-[#7DD3FC] bg-[#E0F2FE] p-3 text-center text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+                  <div className="mb-1 flex items-center justify-center gap-1 text-[11px] font-medium">
                     <Trophy className="h-3.5 w-3.5 shrink-0" />
                     <span>Lượt thi thử</span>
                   </div>
-                  <p className="text-lg font-bold text-[#0F172A] tabular-nums dark:text-[#F8FAFC]">
+                  <p className="text-lg font-bold tabular-nums">
                     {summary.exams}
                   </p>
                 </div>
               </div>
 
               {/* Export Section */}
-              <section className="rounded-2xl border border-[#D5E3EC] bg-[#F8FAFC] p-4 dark:border-[#334155] dark:bg-[#0B1120]/70">
+              <section className="rounded-2xl border border-[#D4E1EE] bg-white p-4 dark:border-[#18243C] dark:bg-[#111B2E]">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold text-[#0F172A] dark:text-[#F8FAFC]">
+                  <h3 className="text-sm font-bold text-[#0B1324] dark:text-[#F8FAFC]">
                     Sao chép mã tiến độ
                   </h3>
                   <button
@@ -260,8 +260,8 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                     onClick={handleCopyCode}
                     className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
                       copied
-                        ? 'bg-[#0D9488] text-white dark:bg-[#14B8A6] dark:text-[#0B1120]'
-                        : 'bg-[#0284C7] text-white hover:bg-[#0369A1]'
+                        ? 'bg-[#0D9488] text-white dark:bg-[#14B8A6] dark:text-[#070B14]'
+                        : 'bg-[#0369A1] text-white hover:bg-[#0284C7] dark:bg-[#0284C7] dark:hover:bg-[#0369A1]'
                     }`}
                   >
                     {copied ? (
@@ -278,7 +278,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                   </button>
                 </div>
 
-                <p className="mb-2.5 text-xs text-[#64748B] dark:text-[#94A3B8]">
+                <p className="mb-2.5 text-xs text-[#5B6E88] dark:text-[#7E91B0]">
                   Sao chép đoạn mã dưới đây để lưu dự phòng hoặc dán sang thiết bị khác.
                 </p>
 
@@ -289,16 +289,16 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                   value={syncCode}
                   onClick={(e) => e.currentTarget.select()}
                   aria-label="Mã tiến độ hiện tại"
-                  className="w-full resize-none rounded-xl border border-[#D5E3EC] bg-white px-3 py-2 font-mono text-xs leading-relaxed text-[#1E293B] focus:border-[#0284C7] focus:outline-none dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
+                  className="w-full resize-none rounded-xl border border-[#C7D8EA] bg-[#F4F8FC] px-3 py-2 font-mono text-xs leading-relaxed text-[#1E293B] focus:border-[#0369A1] focus:outline-none dark:border-[#2B4066] dark:bg-[#070B14] dark:text-[#E2E8F0] dark:focus:border-[#38BDF8]"
                 />
               </section>
 
               {/* Import Section */}
-              <section className="rounded-2xl border border-[#D5E3EC] bg-white p-4 dark:border-[#334155] dark:bg-[#1E293B]/40">
-                <h3 className="mb-1 text-sm font-bold text-[#0F172A] dark:text-[#F8FAFC]">
+              <section className="rounded-2xl border border-[#D4E1EE] bg-white p-4 dark:border-[#18243C] dark:bg-[#111B2E]">
+                <h3 className="mb-1 text-sm font-bold text-[#0B1324] dark:text-[#F8FAFC]">
                   Nhập mã tiến độ
                 </h3>
-                <p className="mb-2.5 text-xs text-[#64748B] dark:text-[#94A3B8]">
+                <p className="mb-2.5 text-xs text-[#5B6E88] dark:text-[#7E91B0]">
                   Dán mã tiến độ đã lưu từ thiết bị khác vào ô bên dưới để khôi phục.
                 </p>
 
@@ -312,13 +312,13 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                   }}
                   placeholder="Dán mã bắt đầu bằng OT1:... vào đây"
                   aria-label="Ô nhập mã tiến độ"
-                  className="w-full resize-none rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] px-3 py-2 font-mono text-xs leading-relaxed text-[#1E293B] placeholder:text-[#64748B] focus:border-[#0284C7] focus:bg-white focus:outline-none dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0] dark:placeholder:text-[#94A3B8] dark:focus:border-[#38BDF8] dark:focus:bg-[#0B1120]"
+                  className="w-full resize-none rounded-xl border border-[#C7D8EA] bg-[#F4F8FC] px-3 py-2 font-mono text-xs leading-relaxed text-[#1E293B] placeholder:text-[#5B6E88] focus:border-[#0369A1] focus:outline-none dark:border-[#2B4066] dark:bg-[#070B14] dark:text-[#E2E8F0] dark:placeholder:text-[#7E91B0] dark:focus:border-[#38BDF8]"
                 />
 
                 {importError && (
                   <p
                     role="alert"
-                    className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#E11D48] dark:text-[#FB7185]"
+                    className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#E11D48] dark:text-[#FDA4AF]"
                   >
                     <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                     <span>{importError}</span>
@@ -328,7 +328,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                 {importSuccess && (
                   <p
                     role="status"
-                    className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#0D9488] dark:text-[#2DD4BF]"
+                    className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#0F766E] dark:text-[#2DD4BF]"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                     <span>{importSuccess}</span>
@@ -340,7 +340,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                     type="button"
                     onClick={handleImport}
                     disabled={!inputCode.trim()}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#0284C7] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-[#0369A1] disabled:cursor-not-allowed disabled:bg-[#E2E8F0] disabled:text-[#64748B] dark:disabled:bg-[#1E293B] dark:disabled:text-[#64748B]"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#0369A1] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-[#0284C7] disabled:cursor-not-allowed disabled:bg-[#D4E1EE] disabled:text-[#5B6E88] dark:bg-[#0284C7] dark:hover:bg-[#0369A1] dark:disabled:bg-[#18243C] dark:disabled:text-[#7E91B0]"
                   >
                     <Upload className="h-3.5 w-3.5" />
                     <span>Khôi phục tiến độ</span>
@@ -349,11 +349,11 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
               </section>
 
               {/* Reset Section */}
-              <section className="rounded-2xl border border-[#FECDD3] bg-[#FFF1F2]/70 p-4 dark:border-[#FB7185]/40 dark:bg-[#4C0519]/40">
+              <section className="rounded-2xl border border-[#FECDD3] bg-[#FFF1F2] p-4 dark:border-[#FB7185]/50 dark:bg-[#F43F5E]/15">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-bold text-[#0F172A] dark:text-[#F8FAFC]">Xóa tiến độ</h3>
-                    <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
+                    <h3 className="text-sm font-bold text-[#0B1324] dark:text-[#F8FAFC]">Xóa tiến độ</h3>
+                    <p className="text-xs text-[#5B6E88] dark:text-[#7E91B0]">
                       Đặt lại toàn bộ trạng thái câu hỏi và lịch sử thi thử về ban đầu.
                     </p>
                   </div>
@@ -362,7 +362,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setConfirmReset(true)}
-                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#FECDD3] bg-white px-3 py-1.5 text-xs font-semibold text-[#E11D48] transition hover:bg-[#FFF1F2] dark:border-[#FB7185]/50 dark:bg-[#111827] dark:text-[#FB7185] dark:hover:bg-[#4C0519]/60"
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#FECDD3] bg-white px-3 py-1.5 text-xs font-semibold text-[#E11D48] transition hover:bg-[#FFF1F2] dark:border-[#FB7185]/50 dark:bg-[#F43F5E]/15 dark:text-[#FDA4AF] dark:hover:bg-[#F43F5E]/25"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       <span>Xóa toàn bộ tiến độ</span>
@@ -372,14 +372,14 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setConfirmReset(false)}
-                        className="cursor-pointer rounded-xl border border-[#D5E3EC] bg-white px-3 py-1.5 text-xs font-semibold text-[#1E293B] transition hover:bg-[#F8FAFC] dark:border-[#334155] dark:bg-[#111827] dark:text-[#E2E8F0] dark:hover:bg-[#1E293B]"
+                        className="cursor-pointer rounded-xl border border-[#D4E1EE] bg-white px-3 py-1.5 text-xs font-semibold text-[#1E293B] transition hover:bg-[#F8FAFC] dark:border-[#253759] dark:bg-[#111B2E] dark:text-[#E2E8F0] dark:hover:bg-[#18243C]"
                       >
                         Hủy
                       </button>
                       <button
                         type="button"
                         onClick={handleConfirmReset}
-                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#E11D48] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#BE123C]"
+                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#E11D48] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#BE123C] dark:border dark:border-[#FB7185]/50 dark:bg-[#F43F5E]/15 dark:text-[#FDA4AF] dark:hover:bg-[#F43F5E]/25"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         <span>Xác nhận xóa</span>

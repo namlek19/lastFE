@@ -12,10 +12,10 @@ export const RichExplanation: React.FC<RichExplanationProps> = ({ question, clas
 
   return (
     <div
-      className={`rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] p-3.5 text-[14px] leading-relaxed text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120]/80 dark:text-[#E2E8F0] sm:p-5 sm:text-[15px] ${className}`}
+      className={`rounded-xl border border-[#D4E1EE] bg-[#F8FAFC] p-3.5 text-[14px] leading-relaxed text-[#1E293B] dark:border-[#18243C] dark:bg-[#0C1322] dark:text-[#E2E8F0] sm:p-5 sm:text-[15px] ${className}`}
     >
-      <div className="mb-2 flex items-center gap-2 font-semibold text-[#0284C7] dark:text-[#38BDF8]">
-        <BookOpen className="h-4 w-4 shrink-0 text-[#0284C7] dark:text-[#38BDF8]" />
+      <div className="mb-2 flex items-center gap-2 font-semibold text-[#0369A1] dark:text-[#38BDF8]">
+        <BookOpen className="h-4 w-4 shrink-0 text-[#0369A1] dark:text-[#38BDF8]" />
         <span>Giải thích chi tiết</span>
       </div>
 
@@ -25,7 +25,7 @@ export const RichExplanation: React.FC<RichExplanationProps> = ({ question, clas
             return (
               <mark
                 key={idx}
-                className="mx-0.5 rounded-md border border-[#5EEAD4] bg-[#CCFBF1] px-1.5 py-0.5 font-semibold text-[#115E59] dark:border-[#2DD4BF]/60 dark:bg-[#134E4A]/70 dark:text-[#5EEAD4]"
+                className="mx-0.5 rounded-md border border-[#5EEAD4] bg-[#E6F7F5] px-1.5 py-0.5 font-semibold text-[#0F766E] dark:border-[#14B8A6]/60 dark:bg-[#0D9488]/15 dark:text-[#2DD4BF]"
               >
                 {part.slice(2, -2)}
               </mark>
@@ -36,8 +36,8 @@ export const RichExplanation: React.FC<RichExplanationProps> = ({ question, clas
       </p>
 
       {question.note && question.note.trim() !== '' && (
-        <div className="mt-3.5 flex items-start gap-2 rounded-lg border border-[#D5E3EC] bg-white px-3.5 py-2.5 text-xs text-[#64748B] dark:border-[#334155] dark:bg-[#111827] dark:text-[#94A3B8]">
-          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#0284C7] dark:text-[#38BDF8]" />
+        <div className="mt-3.5 flex items-start gap-2 rounded-lg border border-[#D4E1EE] bg-white px-3.5 py-2.5 text-xs text-[#5B6E88] dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#7E91B0]">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#0369A1] dark:text-[#38BDF8]" />
           <span>{question.note}</span>
         </div>
       )}

@@ -12,7 +12,6 @@ import {
   Filter,
   Flag,
   Grid3X3,
-  Info,
   Menu,
   RotateCw,
   Shuffle,
@@ -66,7 +65,6 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const [showExplanation, setShowExplanation] = useState<boolean>(false);
   const [isGridOpen, setIsGridOpen] = useState<boolean>(true);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState<boolean>(false);
-  const [isMobileRuleOpen, setIsMobileRuleOpen] = useState<boolean>(false);
 
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const didSwipeRef = useRef<boolean>(false);
@@ -83,7 +81,6 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     setIsFlipped(false);
     setShowExplanation(false);
     setIsMobileSheetOpen(false);
-    setIsMobileRuleOpen(false);
   }, [subject, chapters]);
 
   const chapterQuestions = useMemo(
@@ -347,12 +344,10 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     handleFlipCard();
   };
 
-  const activeChapterMeta = chapters.find((c) => c.chapter === selectedChapter);
-
   const renderStatusBadge = () => {
     if (currentState === 'mastered') {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF]">
+        <span className="inline-flex items-center gap-1 rounded-full border border-[#5EEAD4] bg-[#E6F7F5] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0F766E] dark:border-[#14B8A6]/60 dark:bg-[#0D9488]/15 dark:text-[#2DD4BF]">
           <Check className="h-3 w-3 shrink-0" />
           <span>Đã thuộc</span>
         </span>
@@ -360,7 +355,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     }
     if (currentState === 'hesitant') {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full border border-[#C7D2FE] bg-[#EEF2FF] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#4F46E5] dark:border-[#818CF8]/50 dark:bg-[#1E1B4B]/60 dark:text-[#818CF8]">
+        <span className="inline-flex items-center gap-1 rounded-full border border-[#A5B4FC] bg-[#EEF2FF] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#4338CA] dark:border-[#818CF8]/50 dark:bg-[#6366F1]/15 dark:text-[#A5B4FC]">
           <Flag className="h-3 w-3 shrink-0 fill-current" />
           <span>Phân vân</span>
         </span>
@@ -368,14 +363,14 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     }
     if (currentState === 'pass1' || currentState === 'studied') {
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#BAE6FD] bg-[#E0F2FE]/80 px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#0284C7] dark:bg-[#38BDF8]" />
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#7DD3FC] bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#0369A1] dark:bg-[#38BDF8]" />
           <span>Đã học</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center rounded-full bg-[#F1F6F9] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#64748B] dark:bg-[#1E293B] dark:text-[#94A3B8]">
+      <span className="inline-flex items-center rounded-full bg-[#EAF1F8] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#5B6E88] dark:bg-[#18243C] dark:text-[#7E91B0]">
         Chưa thuộc
       </span>
     );
@@ -395,8 +390,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         title="Đánh dấu Đã thuộc (Phím G)"
         className={`inline-flex cursor-pointer items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition sm:px-3 ${
           isCurrentMastered
-            ? 'border-[#0D9488] bg-[#0D9488] text-white shadow-xs hover:bg-[#115E59] dark:border-[#2DD4BF] dark:bg-[#14B8A6] dark:text-[#0B1120]'
-            : 'border-[#5EEAD4] bg-[#F0FDFA] text-[#115E59] hover:bg-[#CCFBF1] dark:border-[#2DD4BF]/50 dark:bg-[#134E4A]/30 dark:text-[#2DD4BF] dark:hover:bg-[#134E4A]/60'
+            ? 'border-[#0D9488] bg-[#0D9488] text-white shadow-xs hover:bg-[#0F766E] dark:border-[#14B8A6] dark:bg-[#14B8A6] dark:text-[#070B14] dark:hover:bg-[#2DD4BF]'
+            : 'border-[#5EEAD4] bg-[#E6F7F5] text-[#0F766E] hover:bg-[#CCFBF1] dark:border-[#14B8A6]/60 dark:bg-[#0D9488]/15 dark:text-[#2DD4BF] dark:hover:bg-[#0D9488]/25'
         }`}
       >
         <Flag className={`h-3.5 w-3.5 shrink-0 ${isCurrentMastered ? 'fill-current' : ''}`} />
@@ -404,8 +399,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         <kbd
           className={`ml-0.5 hidden rounded px-1 font-mono text-[10px] md:inline-block ${
             isCurrentMastered
-              ? 'bg-white/20 text-white dark:bg-[#0B1120]/20 dark:text-[#0B1120]'
-              : 'border border-[#5EEAD4] bg-white text-[#115E59] dark:border-[#2DD4BF]/40 dark:bg-[#0B1120] dark:text-[#2DD4BF]'
+              ? 'bg-white/20 text-white dark:bg-[#070B14]/20 dark:text-[#070B14]'
+              : 'border border-[#5EEAD4] bg-white text-[#0F766E] dark:border-[#14B8A6]/40 dark:bg-[#070B14] dark:text-[#2DD4BF]'
           }`}
         >
           G
@@ -424,8 +419,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         title="Đánh dấu Phân vân (Phím F)"
         className={`inline-flex cursor-pointer items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition sm:px-3 ${
           isCurrentFlagged
-            ? 'border-[#C7D2FE] bg-[#EEF2FF] text-[#4F46E5] dark:border-[#818CF8]/50 dark:bg-[#1E1B4B]/60 dark:text-[#818CF8]'
-            : 'border-[#D5E3EC] bg-white text-[#64748B] hover:border-[#C7D2FE] hover:bg-[#EEF2FF] hover:text-[#4F46E5] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#94A3B8] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#1E1B4B]/60 dark:hover:text-[#818CF8]'
+            ? 'border-[#A5B4FC] bg-[#EEF2FF] text-[#4338CA] dark:border-[#818CF8]/50 dark:bg-[#6366F1]/15 dark:text-[#A5B4FC]'
+            : 'border-[#D4E1EE] bg-[#F8FAFC] text-[#5B6E88] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#4338CA] dark:border-[#18243C] dark:bg-[#0C1322] dark:text-[#7E91B0] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#6366F1]/15 dark:hover:text-[#A5B4FC]'
         }`}
       >
         <Flag className={`h-3.5 w-3.5 shrink-0 ${isCurrentFlagged ? 'fill-current' : ''}`} />
@@ -448,14 +443,14 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
       <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[280px_1fr] lg:grid-cols-[310px_1fr] lg:gap-8">
         {/* Desktop Chapter Sidebar */}
         <aside className="hidden md:block">
-          <div className="sticky top-28 rounded-2xl border border-[#D5E3EC] bg-white p-5 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
-            <div className="mb-4 flex items-center justify-between border-b border-[#D5E3EC] pb-3.5 dark:border-[#1E293B]">
+          <div className="sticky top-28 rounded-2xl border border-[#D4E1EE] bg-[#F8FAFC] p-5 shadow-xs dark:border-[#18243C] dark:bg-[#0C1322] dark:shadow-none">
+            <div className="mb-4 flex items-center justify-between border-b border-[#D4E1EE] pb-3.5 dark:border-[#18243C]">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#BAE6FD] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#7DD3FC] bg-[#E0F2FE] text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
                   <CreditCard className="h-4 w-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-[#0F172A] dark:text-[#F8FAFC]">
+                  <h2 className="text-sm font-bold text-[#0B1324] dark:text-[#F8FAFC]">
                     Bộ thẻ theo chương
                   </h2>
                   <p className="tabular-nums text-xs font-semibold text-[#0D9488] dark:text-[#14B8A6]">
@@ -483,21 +478,21 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                     onClick={() => handleSelectChapter(ch.chapter)}
                     className={`w-full cursor-pointer rounded-xl border p-4 text-left transition-all ${
                       active
-                        ? 'border-[#0284C7] bg-[#E0F2FE]/70 shadow-xs dark:border-[#38BDF8] dark:bg-[#0284C7]/20'
-                        : 'border-[#D5E3EC] bg-white hover:border-[#0284C7] hover:bg-[#F8FAFC] dark:border-[#334155] dark:bg-[#1E293B]/45 dark:hover:border-[#38BDF8] dark:hover:bg-[#1E293B]/80'
+                        ? 'border-[#0284C7] bg-[#E0F2FE] shadow-xs dark:border-[#38BDF8] dark:bg-[#0284C7]/20'
+                        : 'border-[#D4E1EE] bg-white hover:border-[#0284C7] hover:bg-[#E0F2FE]/50 dark:border-[#18243C] dark:bg-[#111B2E] dark:hover:border-[#38BDF8] dark:hover:bg-[#1C2D4A]'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span
                         className={`text-xs font-bold uppercase tracking-wide ${
                           active
-                            ? 'text-[#0284C7] dark:text-[#38BDF8]'
-                            : 'text-[#64748B] dark:text-[#94A3B8]'
+                            ? 'text-[#0369A1] dark:text-[#38BDF8]'
+                            : 'text-[#5B6E88] dark:text-[#7E91B0]'
                         }`}
                       >
                         Chương {ch.chapter}
                       </span>
-                      <span className="tabular-nums rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2 py-0.5 text-[11px] font-semibold text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF]">
+                      <span className="tabular-nums rounded-full border border-[#5EEAD4] bg-[#E6F7F5] px-2 py-0.5 text-[11px] font-semibold text-[#0F766E] dark:border-[#14B8A6]/60 dark:bg-[#0D9488]/15 dark:text-[#2DD4BF]">
                         {stat.pct}% Đã thuộc
                       </span>
                     </div>
@@ -505,21 +500,21 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                     <p
                       className={`mt-1.5 line-clamp-2 text-sm font-semibold leading-snug ${
                         active
-                          ? 'text-[#0284C7] dark:text-[#F8FAFC]'
-                          : 'text-[#0F172A] dark:text-[#E2E8F0]'
+                          ? 'text-[#0369A1] dark:text-[#F8FAFC]'
+                          : 'text-[#0B1324] dark:text-[#E2E8F0]'
                       }`}
                     >
                       {ch.title}
                     </p>
 
-                    <div className="mt-3 flex items-center justify-between text-[11px] text-[#64748B] dark:text-[#94A3B8]">
+                    <div className="mt-3 flex items-center justify-between text-[11px] text-[#5B6E88] dark:text-[#7E91B0]">
                       <span className="tabular-nums">Đã học {stat.studied}/{ch.count}</span>
                       <span className="tabular-nums font-medium text-[#1E293B] dark:text-[#E2E8F0]">
                         Thuộc {stat.mastered}/{stat.total}
                       </span>
                     </div>
 
-                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#E2E8F0] dark:bg-[#0B1120]">
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#D4E1EE] dark:bg-[#070B14]">
                       <div
                         className="h-full rounded-full bg-[#0D9488] transition-all duration-300 dark:bg-[#14B8A6]"
                         style={{ width: `${stat.pct}%` }}
@@ -535,169 +530,126 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         {/* Main Flashcard Area */}
         <div className="min-w-0">
           {/* Mobile Compact 1-Row Toolbar (< 768px) */}
-          <div className="mb-3 space-y-2 md:hidden">
-            <div className="flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => setIsMobileSheetOpen(true)}
-                className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#D5E3EC] bg-white px-3 py-2 text-left text-xs font-semibold text-[#0F172A] shadow-xs transition active:scale-[0.99] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#F8FAFC]"
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <Menu className="h-4 w-4 shrink-0 text-[#0284C7] dark:text-[#38BDF8]" />
-                  <span className="truncate tabular-nums">
-                    Chương {selectedChapter} • Thẻ {deck.length > 0 ? safeIndex + 1 : 0}/{deck.length}
-                  </span>
+          <div className="mb-3 flex items-center justify-between gap-2 md:hidden">
+            <button
+              type="button"
+              onClick={() => setIsMobileSheetOpen(true)}
+              className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#D4E1EE] bg-[#F8FAFC] px-3 py-2 text-left text-xs font-semibold text-[#0B1324] shadow-xs transition active:scale-[0.99] dark:border-[#18243C] dark:bg-[#0C1322] dark:text-[#F8FAFC]"
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <Menu className="h-4 w-4 shrink-0 text-[#0284C7] dark:text-[#38BDF8]" />
+                <span className="truncate tabular-nums">
+                  Chương {selectedChapter} • Thẻ {deck.length > 0 ? safeIndex + 1 : 0}/{deck.length}
                 </span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-[#64748B] dark:text-[#94A3B8]" />
-              </button>
+              </span>
+              <ChevronDown className="h-4 w-4 shrink-0 text-[#5B6E88] dark:text-[#7E91B0]" />
+            </button>
 
+            <button
+              type="button"
+              onClick={handleToggleShuffle}
+              aria-pressed={isShuffled}
+              title="Trộn thẻ ngẫu nhiên"
+              className={`inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-xl border px-2.5 py-2 text-xs font-semibold transition ${
+                isShuffled
+                  ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0369A1] dark:border-[#38BDF8] dark:bg-[#0284C7]/20 dark:text-[#38BDF8]'
+                  : 'border-[#D4E1EE] bg-[#F8FAFC] text-[#5B6E88] dark:border-[#18243C] dark:bg-[#0C1322] dark:text-[#7E91B0]'
+              }`}
+            >
+              <Shuffle className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {/* Desktop Top Filter & Shuffle Bar */}
+          <div className="mb-5 hidden flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D4E1EE] bg-[#F8FAFC] px-5 py-3.5 shadow-xs dark:border-[#18243C] dark:bg-[#0C1322] dark:shadow-none md:flex">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 inline-flex items-center gap-1.5 text-xs font-medium text-[#5B6E88] dark:text-[#7E91B0]">
+                <Filter className="h-3.5 w-3.5 text-[#0284C7] dark:text-[#38BDF8]" />
+                Lọc thẻ:
+              </span>
+
+              {(
+                [
+                  { id: 'all', label: 'Tất cả', count: filterCounts.all },
+                  { id: 'unlearned', label: 'Chưa thuộc', count: filterCounts.unlearned },
+                  { id: 'studied', label: 'Đã học', count: filterCounts.studied },
+                  { id: 'flagged', label: 'Phân vân', count: filterCounts.flagged },
+                  { id: 'mastered', label: 'Đã thuộc', count: filterCounts.mastered },
+                ] as const
+              ).map((item) => {
+                const active = filter === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    data-no-keyflip="true"
+                    onClick={() => handleApplyFilter(item.id)}
+                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                      active
+                        ? 'border-[#0369A1] bg-[#0369A1] text-white hover:bg-[#0284C7] dark:border-[#38BDF8]/50 dark:bg-[#0284C7] dark:hover:bg-[#0369A1]'
+                        : 'border-[#D4E1EE] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#1C2D4A]'
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    <span
+                      className={`tabular-nums rounded-full px-1.5 py-0.5 text-[11px] ${
+                        active
+                          ? 'bg-white/20 text-white'
+                          : 'bg-[#EAF1F8] text-[#5B6E88] dark:bg-[#070B14] dark:text-[#7E91B0]'
+                      }`}
+                    >
+                      {item.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-2">
               <button
                 type="button"
+                data-no-keyflip="true"
                 onClick={handleToggleShuffle}
                 aria-pressed={isShuffled}
-                title="Trộn thẻ ngẫu nhiên"
-                className={`inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-xl border px-2.5 py-2 text-xs font-semibold transition ${
+                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                   isShuffled
-                    ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8] dark:bg-[#0284C7]/20 dark:text-[#38BDF8]'
-                    : 'border-[#D5E3EC] bg-white text-[#64748B] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#94A3B8]'
+                    ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0369A1] dark:border-[#38BDF8] dark:bg-[#0284C7]/20 dark:text-[#38BDF8]'
+                    : 'border-[#D4E1EE] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] hover:text-[#0369A1] dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#1C2D4A]'
                 }`}
               >
                 <Shuffle className="h-3.5 w-3.5" />
+                <span>{isShuffled ? 'Đang trộn thẻ' : 'Trộn thẻ'}</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => setIsMobileRuleOpen((prev) => !prev)}
-                aria-expanded={isMobileRuleOpen}
-                aria-label="Quy tắc Flashcard"
-                title="Quy tắc Flashcard"
-                className={`inline-flex shrink-0 cursor-pointer items-center justify-center rounded-xl border p-2 text-xs font-semibold transition ${
-                  isMobileRuleOpen
-                    ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8] dark:bg-[#0284C7]/20 dark:text-[#38BDF8]'
-                    : 'border-[#D5E3EC] bg-white text-[#64748B] dark:border-[#1E293B] dark:bg-[#111827] dark:text-[#94A3B8]'
-                }`}
-              >
-                <Info className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            {isMobileRuleOpen && (
-              <div className="flex items-center justify-between gap-2 rounded-xl border border-[#BAE6FD] bg-[#E0F2FE]/70 px-3 py-2 text-[11px] font-medium text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
-                <span>Lật thẻ → Đã học • Bấm cờ xanh lá → Đã thuộc</span>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileRuleOpen(false)}
-                  className="shrink-0 rounded p-0.5 opacity-75 hover:opacity-100"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Desktop Top Filter, Shuffle & Rule Bar */}
-          <div className="mb-5 hidden flex-col gap-3 rounded-2xl border border-[#D5E3EC] bg-white px-5 py-3.5 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] md:flex">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 inline-flex items-center gap-1.5 text-xs font-medium text-[#64748B] dark:text-[#94A3B8]">
-                  <Filter className="h-3.5 w-3.5 text-[#0284C7] dark:text-[#38BDF8]" />
-                  Lọc thẻ:
-                </span>
-
-                {(
-                  [
-                    { id: 'all', label: 'Tất cả', count: filterCounts.all },
-                    { id: 'unlearned', label: 'Chưa thuộc', count: filterCounts.unlearned },
-                    { id: 'studied', label: 'Đã học', count: filterCounts.studied },
-                    { id: 'flagged', label: 'Phân vân', count: filterCounts.flagged },
-                    { id: 'mastered', label: 'Đã thuộc', count: filterCounts.mastered },
-                  ] as const
-                ).map((item) => {
-                  const active = filter === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      data-no-keyflip="true"
-                      onClick={() => handleApplyFilter(item.id)}
-                      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                        active
-                          ? 'border-[#0284C7] bg-[#0284C7] text-white hover:bg-[#0369A1] dark:border-[#38BDF8]/60'
-                          : 'border-[#D5E3EC] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20'
-                      }`}
-                    >
-                      <span>{item.label}</span>
-                      <span
-                        className={`tabular-nums rounded-full px-1.5 py-0.5 text-[11px] ${
-                          active
-                            ? 'bg-white/20 text-white'
-                            : 'bg-[#F1F6F9] text-[#64748B] dark:bg-[#0B1120] dark:text-[#94A3B8]'
-                        }`}
-                      >
-                        {item.count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="flex items-center gap-2">
+              {deck.length > 0 && (
                 <button
                   type="button"
                   data-no-keyflip="true"
-                  onClick={handleToggleShuffle}
-                  aria-pressed={isShuffled}
-                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                    isShuffled
-                      ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8] dark:bg-[#0284C7]/20 dark:text-[#38BDF8]'
-                      : 'border-[#D5E3EC] bg-[#F1F6F9] text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] hover:text-[#0284C7] dark:border-[#334155] dark:bg-[#1E293B]/70 dark:text-[#E2E8F0] dark:hover:border-[#38BDF8]'
-                  }`}
+                  onClick={() => setIsGridOpen((prev) => !prev)}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D4E1EE] bg-white px-3 py-1.5 text-xs font-semibold text-[#0369A1] transition-colors hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#38BDF8] dark:hover:border-[#38BDF8] dark:hover:bg-[#1C2D4A]"
                 >
-                  <Shuffle className="h-3.5 w-3.5" />
-                  <span>{isShuffled ? 'Đang trộn thẻ' : 'Trộn thẻ'}</span>
+                  <Grid3X3 className="h-3.5 w-3.5" />
+                  <span>Danh sách thẻ</span>
+                  {isGridOpen ? (
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  )}
                 </button>
-
-                {deck.length > 0 && (
-                  <button
-                    type="button"
-                    data-no-keyflip="true"
-                    onClick={() => setIsGridOpen((prev) => !prev)}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5E3EC] bg-[#F1F6F9] px-3 py-1.5 text-xs font-semibold text-[#0284C7] transition-colors hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#334155] dark:bg-[#1E293B]/70 dark:text-[#38BDF8] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20"
-                  >
-                    <Grid3X3 className="h-3.5 w-3.5" />
-                    <span>Danh sách thẻ</span>
-                    {isGridOpen ? (
-                      <ChevronUp className="h-3.5 w-3.5" />
-                    ) : (
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    )}
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Explicit Mastery Rule Description */}
-            <div className="flex items-center justify-between border-t border-[#D5E3EC]/70 pt-2.5 text-xs text-[#64748B] dark:border-[#1E293B] dark:text-[#94A3B8]">
-              <span className="inline-flex items-center gap-1.5 font-medium text-[#0284C7] dark:text-[#38BDF8]">
-                <Info className="h-3.5 w-3.5 shrink-0" />
-                <span>Lật thẻ → Đã học • Bấm cờ xanh lá → Đã thuộc</span>
-              </span>
-              <span className="tabular-nums">
-                Chương {selectedChapter}: {activeChapterMeta?.title}
-              </span>
+              )}
             </div>
           </div>
 
           {/* Empty Deck State vs 3D Flashcard */}
           {!currentQuestion ? (
-            <div className="rounded-2xl border border-[#D5E3EC] bg-white px-5 py-10 text-center shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:px-6 sm:py-12">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#BAE6FD] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+            <div className="rounded-2xl border border-[#D4E1EE] bg-[#F8FAFC] px-5 py-10 text-center shadow-xs dark:border-[#18243C] dark:bg-[#0C1322] dark:shadow-none sm:px-6 sm:py-12">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#7DD3FC] bg-[#E0F2FE] text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
-              <h3 className="text-base font-bold text-[#0F172A] dark:text-[#F8FAFC]">
+              <h3 className="text-base font-bold text-[#0B1324] dark:text-[#F8FAFC]">
                 Không có thẻ nào trong bộ lọc này
               </h3>
-              <p className="mx-auto mt-1.5 max-w-md text-sm text-[#64748B] dark:text-[#94A3B8]">
+              <p className="mx-auto mt-1.5 max-w-md text-sm text-[#5B6E88] dark:text-[#7E91B0]">
                 Hãy chuyển sang bộ lọc "Tất cả" hoặc chọn một chương khác để tiếp tục lật thẻ.
               </p>
               {filter !== 'all' && (
@@ -705,7 +657,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                   type="button"
                   data-no-keyflip="true"
                   onClick={() => handleApplyFilter('all')}
-                  className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#0284C7] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0369A1] dark:border dark:border-[#38BDF8]/50"
+                  className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#0369A1] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0284C7] dark:border dark:border-[#38BDF8]/50 dark:bg-[#0284C7] dark:hover:bg-[#0369A1]"
                 >
                   <span>Xem tất cả thẻ</span>
                 </button>
@@ -736,14 +688,14 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                       WebkitBackfaceVisibility: 'hidden',
                       transform: 'rotateY(0deg)',
                     }}
-                    className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-2xl border border-[#D5E3EC] bg-white p-4 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.06)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_12px_32px_-6px_rgba(0,0,0,0.6)] sm:min-h-[390px] sm:p-7 md:p-8 ${
+                    className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-2xl border border-[#BBD0E6] border-t-2 border-t-[#0284C7] bg-white p-4 shadow-[0_12px_30px_-8px_rgba(3,105,161,0.12)] dark:border-[#253759] dark:border-t-2 dark:border-t-[#38BDF8] dark:bg-[#111B2E] dark:shadow-[0_12px_32px_-8px_rgba(2,132,199,0.18)] sm:min-h-[390px] sm:p-7 md:p-8 ${
                       isFlipped ? 'pointer-events-none' : ''
                     }`}
                   >
                     {/* Top Bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D5E3EC] pb-3 dark:border-[#1E293B] sm:pb-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D4E1EE] pb-3 dark:border-[#18243C] sm:pb-4">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                        <span className="tabular-nums rounded-full bg-[#F1F6F9] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#0F172A] dark:bg-[#1E293B] dark:text-[#F8FAFC] sm:px-3 sm:py-1">
+                        <span className="tabular-nums rounded-full bg-[#EAF1F8] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#0B1324] dark:bg-[#18243C] dark:text-[#F8FAFC] sm:px-3 sm:py-1">
                           Thẻ {safeIndex + 1} / {deck.length}
                         </span>
                         {renderStatusBadge()}
@@ -755,22 +707,19 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                     {/* Center Question Prompt */}
                     <div className="my-auto flex flex-col items-center justify-center py-6 text-center sm:py-10">
                       {currentQuestion.isMultiSelect && (
-                        <span className="mb-3 inline-flex items-center rounded-full border border-[#BAE6FD] bg-[#E0F2FE] px-3 py-0.5 text-xs font-semibold text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
+                        <span className="mb-3 inline-flex items-center rounded-full border border-[#7DD3FC] bg-[#E0F2FE] px-3 py-0.5 text-xs font-semibold text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]">
                           Chọn nhiều đáp án ({currentQuestion.correctAnswers.length} ý đúng)
                         </span>
                       )}
-                      <h2 className="max-w-2xl text-[17px] font-semibold leading-[1.6] text-[#0F172A] dark:text-[#F8FAFC] sm:text-[20px] md:text-[22px] md:leading-[1.6]">
+                      <h2 className="max-w-2xl text-[17px] font-semibold leading-[1.6] text-[#0B1324] dark:text-[#F8FAFC] sm:text-[20px] md:text-[22px] md:leading-[1.6]">
                         {currentQuestion.question}
                       </h2>
                     </div>
 
                     {/* Bottom Flip Hint */}
-                    <div className="flex items-center justify-center gap-2 border-t border-[#D5E3EC]/70 pt-3 text-xs font-medium text-[#64748B] dark:border-[#1E293B] dark:text-[#94A3B8]">
+                    <div className="flex items-center justify-center gap-2 border-t border-[#D4E1EE]/70 pt-3 text-xs font-medium text-[#5B6E88] dark:border-[#18243C] dark:text-[#7E91B0]">
                       <RotateCw className="h-3.5 w-3.5 text-[#0284C7] dark:text-[#38BDF8]" />
-                      <span>
-                        Chạm vào thẻ để lật xem đáp án
-                        <span className="hidden md:inline"> (hoặc bấm Space)</span>
-                      </span>
+                      <span>Chạm thẻ để lật</span>
                     </div>
                   </div>
 
@@ -781,14 +730,14 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                       WebkitBackfaceVisibility: 'hidden',
                       transform: 'rotateY(180deg)',
                     }}
-                    className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-2xl border-2 border-[#0D9488] bg-white p-4 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.06)] dark:border-[#2DD4BF]/70 dark:bg-[#111827] dark:shadow-[0_12px_32px_-6px_rgba(0,0,0,0.6)] sm:min-h-[390px] sm:p-7 md:p-8 ${
+                    className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-2xl border border-[#5EEAD4] border-t-2 border-t-[#0D9488] bg-white p-4 shadow-[0_12px_30px_-8px_rgba(3,105,161,0.12)] dark:border-[#14B8A6]/60 dark:border-t-2 dark:border-t-[#2DD4BF] dark:bg-[#111B2E] dark:shadow-[0_12px_32px_-8px_rgba(2,132,199,0.18)] sm:min-h-[390px] sm:p-7 md:p-8 ${
                       !isFlipped ? 'pointer-events-none' : ''
                     }`}
                   >
                     {/* Top Bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D5E3EC] pb-3 dark:border-[#1E293B] sm:pb-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D4E1EE] pb-3 dark:border-[#18243C] sm:pb-4">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                        <span className="tabular-nums rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF] sm:px-3 sm:py-1">
+                        <span className="tabular-nums rounded-full border border-[#5EEAD4] bg-[#E6F7F5] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#0F766E] dark:border-[#14B8A6]/60 dark:bg-[#0D9488]/15 dark:text-[#2DD4BF] sm:px-3 sm:py-1">
                           Đáp án • Thẻ {safeIndex + 1}/{deck.length}
                         </span>
                         {renderStatusBadge()}
@@ -799,14 +748,14 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
                     {/* Center Answer Box (Minimal & High-Impact) */}
                     <div className="my-auto flex flex-col justify-center py-5 sm:py-8">
-                      <p className="mb-3 line-clamp-2 text-center text-xs font-medium text-[#64748B] dark:text-[#94A3B8] sm:text-sm">
+                      <p className="mb-3 line-clamp-2 text-center text-xs font-medium text-[#5B6E88] dark:text-[#7E91B0] sm:text-sm">
                         {currentQuestion.question}
                       </p>
 
-                      <div className="mx-auto w-full max-w-2xl space-y-2.5 rounded-2xl border border-[#0D9488] bg-[#F0FDFA] p-4 text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#CCFBF1] sm:p-6">
+                      <div className="mx-auto w-full max-w-2xl space-y-2.5 rounded-2xl border border-[#5EEAD4] bg-[#E6F7F5] p-4 text-[#0F766E] dark:border-[#14B8A6]/60 dark:bg-[#0D9488]/15 dark:text-[#2DD4BF] sm:p-6">
                         {correctOptionItems.map((opt) => (
                           <div key={opt.key} className="flex items-start gap-3">
-                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#0D9488] text-xs font-bold text-white dark:bg-[#14B8A6] dark:text-[#0B1120]">
+                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#0D9488] text-xs font-bold text-white dark:bg-[#14B8A6] dark:text-[#070B14]">
                               {opt.key}
                             </span>
                             <span className="flex-1 text-[16px] font-bold leading-relaxed sm:text-[18px] md:text-[20px]">
@@ -819,7 +768,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
                     {/* Bottom Toggle Explanation */}
                     <div
-                      className="border-t border-[#D5E3EC]/70 pt-3 dark:border-[#1E293B]"
+                      className="border-t border-[#D4E1EE]/70 pt-3 dark:border-[#18243C]"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -830,7 +779,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                             e.stopPropagation();
                             setShowExplanation((prev) => !prev);
                           }}
-                          className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5E3EC] bg-[#F8FAFC] px-3 py-1.5 text-xs font-semibold text-[#0284C7] transition hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#38BDF8] dark:hover:border-[#38BDF8]"
+                          className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D4E1EE] bg-[#F8FAFC] px-3 py-1.5 text-xs font-semibold text-[#0369A1] transition hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#18243C] dark:bg-[#0C1322] dark:text-[#38BDF8] dark:hover:border-[#38BDF8]"
                         >
                           <BookOpen className="h-3.5 w-3.5" />
                           <span>{showExplanation ? 'Ẩn giải thích' : 'Xem giải thích'}</span>
@@ -843,9 +792,9 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
                         <span
                           onClick={handleFlipCard}
-                          className="cursor-pointer text-xs text-[#64748B] hover:text-[#0284C7] dark:text-[#94A3B8] dark:hover:text-[#38BDF8]"
+                          className="cursor-pointer text-xs text-[#5B6E88] hover:text-[#0284C7] dark:text-[#7E91B0] dark:hover:text-[#38BDF8]"
                         >
-                          Chạm thẻ để lật lại câu hỏi
+                          Chạm thẻ để lật
                         </span>
                       </div>
 
@@ -868,14 +817,14 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               </div>
 
               {/* Desktop Navigation Controls (< Thẻ trước | Lật thẻ | Thẻ tiếp >) */}
-              <div className="mt-5 hidden flex-col gap-3 rounded-2xl border border-[#D5E3EC] bg-white p-4 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] md:flex">
+              <div className="mt-5 hidden flex-col gap-3 rounded-2xl border border-[#D4E1EE] bg-[#F8FAFC] p-4 shadow-xs dark:border-[#18243C] dark:bg-[#0C1322] dark:shadow-none md:flex">
                 <div className="flex items-center justify-between gap-3">
                   <button
                     type="button"
                     data-no-keyflip="true"
                     disabled={safeIndex === 0}
                     onClick={goToPrev}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5E3EC] bg-white px-4 py-2.5 text-sm font-semibold text-[#1E293B] transition hover:border-[#0284C7] hover:bg-[#E0F2FE] hover:text-[#0284C7] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20 dark:hover:text-[#38BDF8]"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D4E1EE] bg-white px-4 py-2.5 text-sm font-semibold text-[#1E293B] transition hover:border-[#0284C7] hover:bg-[#E0F2FE] hover:text-[#0369A1] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#1C2D4A] dark:hover:text-[#38BDF8]"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     <span>Thẻ trước</span>
@@ -885,7 +834,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                     type="button"
                     data-no-keyflip="true"
                     onClick={handleFlipCard}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#BAE6FD] bg-[#E0F2FE] px-6 py-2.5 text-sm font-semibold text-[#0284C7] transition hover:bg-[#BAE6FD]/70 dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/20 dark:text-[#38BDF8] dark:hover:bg-[#0284C7]/30"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#7DD3FC] bg-[#E0F2FE] px-6 py-2.5 text-sm font-semibold text-[#0369A1] transition hover:bg-[#BAE6FD]/70 dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8] dark:hover:bg-[#0284C7]/25"
                   >
                     <RotateCw className="h-4 w-4" />
                     <span>Lật thẻ</span>
@@ -896,42 +845,42 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                     data-no-keyflip="true"
                     disabled={safeIndex >= deck.length - 1}
                     onClick={goToNext}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#0284C7] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0369A1] disabled:cursor-not-allowed disabled:opacity-40 dark:border dark:border-[#38BDF8]/50"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#0369A1] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0284C7] disabled:cursor-not-allowed disabled:opacity-40 dark:border dark:border-[#38BDF8]/50 dark:bg-[#0284C7] dark:hover:bg-[#0369A1]"
                   >
                     <span>Thẻ tiếp</span>
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-4 border-t border-[#D5E3EC]/60 pt-2.5 text-[11px] text-[#64748B] dark:border-[#1E293B] dark:text-[#94A3B8]">
+                <div className="flex flex-wrap items-center justify-center gap-4 border-t border-[#D4E1EE]/70 pt-2.5 text-[11px] text-[#5B6E88] dark:border-[#18243C] dark:text-[#7E91B0]">
                   <span>
-                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0]">
+                    <kbd className="rounded border border-[#D4E1EE] bg-white px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#18243C] dark:bg-[#070B14] dark:text-[#E2E8F0]">
                       ←
                     </kbd>{' '}
                     /{' '}
-                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0]">
+                    <kbd className="rounded border border-[#D4E1EE] bg-white px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#18243C] dark:bg-[#070B14] dark:text-[#E2E8F0]">
                       →
                     </kbd>{' '}
                     Thẻ trước / tiếp
                   </span>
                   <span>
-                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0]">
+                    <kbd className="rounded border border-[#D4E1EE] bg-white px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#18243C] dark:bg-[#070B14] dark:text-[#E2E8F0]">
                       Space
                     </kbd>{' '}
                     /{' '}
-                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0]">
+                    <kbd className="rounded border border-[#D4E1EE] bg-white px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#18243C] dark:bg-[#070B14] dark:text-[#E2E8F0]">
                       Enter
                     </kbd>{' '}
                     Lật thẻ
                   </span>
                   <span>
-                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0]">
+                    <kbd className="rounded border border-[#D4E1EE] bg-white px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#18243C] dark:bg-[#070B14] dark:text-[#E2E8F0]">
                       G
                     </kbd>{' '}
                     Cờ xanh lá Đã thuộc
                   </span>
                   <span>
-                    <kbd className="rounded border border-[#D5E3EC] bg-[#F1F6F9] px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#334155] dark:bg-[#0B1120] dark:text-[#E2E8F0]">
+                    <kbd className="rounded border border-[#D4E1EE] bg-white px-1.5 py-0.5 font-mono text-[#1E293B] dark:border-[#18243C] dark:bg-[#070B14] dark:text-[#E2E8F0]">
                       F
                     </kbd>{' '}
                     Phân vân
@@ -950,13 +899,13 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                       transition={{ duration: 0.18 }}
                       className="mt-6 overflow-hidden"
                     >
-                      <div className="rounded-2xl border border-[#D5E3EC] bg-white p-6 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.05)] dark:border-[#1E293B] dark:bg-[#111827] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
+                      <div className="rounded-2xl border border-[#D4E1EE] bg-[#F8FAFC] p-6 shadow-xs dark:border-[#18243C] dark:bg-[#0C1322] dark:shadow-none">
                         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                          <span className="tabular-nums text-xs font-bold uppercase tracking-wide text-[#0F172A] dark:text-[#F8FAFC]">
+                          <span className="tabular-nums text-xs font-bold uppercase tracking-wide text-[#0B1324] dark:text-[#F8FAFC]">
                             Danh sách thẻ ({deck.length})
                           </span>
 
-                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#64748B] dark:text-[#94A3B8]">
+                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#5B6E88] dark:text-[#7E91B0]">
                             <span className="inline-flex items-center gap-1">
                               <span className="h-2.5 w-2.5 rounded-full bg-[#0D9488] dark:bg-[#14B8A6]" />
                               Đã thuộc
@@ -966,7 +915,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                               Đã học
                             </span>
                             <span className="inline-flex items-center gap-1">
-                              <span className="h-2.5 w-2.5 rounded-full bg-[#4F46E5] dark:bg-[#818CF8]" />
+                              <span className="h-2.5 w-2.5 rounded-full bg-[#4338CA] dark:bg-[#A5B4FC]" />
                               Phân vân
                             </span>
                           </div>
@@ -978,17 +927,17 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                             const isActive = idx === safeIndex;
 
                             let cellStyle =
-                              'border-[#D5E3EC] bg-[#F8FAFC] text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#0284C7]/20';
+                              'border-[#D4E1EE] bg-white text-[#1E293B] hover:border-[#0284C7] hover:bg-[#E0F2FE] dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#E2E8F0] dark:hover:border-[#38BDF8] dark:hover:bg-[#1C2D4A]';
 
                             if (st === 'hesitant') {
                               cellStyle =
-                                'border-[#C7D2FE] bg-[#EEF2FF] text-[#4F46E5] dark:border-[#818CF8]/50 dark:bg-[#1E1B4B]/60 dark:text-[#818CF8]';
+                                'border-[#A5B4FC] bg-[#EEF2FF] text-[#4338CA] dark:border-[#818CF8]/50 dark:bg-[#6366F1]/15 dark:text-[#A5B4FC]';
                             } else if (st === 'mastered') {
                               cellStyle =
-                                'border-[#5EEAD4] bg-[#F0FDFA] text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF]';
+                                'border-[#5EEAD4] bg-[#E6F7F5] text-[#0F766E] dark:border-[#14B8A6]/60 dark:bg-[#0D9488]/15 dark:text-[#2DD4BF]';
                             } else if (st === 'pass1' || st === 'studied') {
                               cellStyle =
-                                'border-[#BAE6FD] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/20 dark:text-[#38BDF8]';
+                                'border-[#7DD3FC] bg-[#E0F2FE] text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]';
                             }
 
                             return (
@@ -999,13 +948,13 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                                 onClick={() => jumpToCard(idx)}
                                 className={`tabular-nums relative flex h-8 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold transition-all ${cellStyle} ${
                                   isActive
-                                    ? 'ring-2 ring-[#0284C7] ring-offset-1 dark:ring-[#38BDF8] dark:ring-offset-[#111827]'
+                                    ? 'ring-2 ring-[#0284C7] ring-offset-1 dark:ring-[#38BDF8] dark:ring-offset-[#0C1322]'
                                     : ''
                                 }`}
                               >
                                 {idx + 1}
                                 {st === 'hesitant' && (
-                                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[#4F46E5] dark:bg-[#818CF8]" />
+                                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[#4338CA] dark:bg-[#A5B4FC]" />
                                 )}
                               </button>
                             );
@@ -1023,13 +972,13 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
       {/* Mobile Sticky Bottom Navigation Bar: [ < Trước ] | [ ↻ Lật thẻ ] | [ Tiếp > ] */}
       {currentQuestion && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D5E3EC] bg-white/95 px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(15,23,42,0.08)] backdrop-blur dark:border-[#1E293B] dark:bg-[#111827]/95 dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.5)] md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D4E1EE] bg-[#F8FAFC]/95 px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(15,23,42,0.08)] backdrop-blur dark:border-[#18243C] dark:bg-[#0C1322]/95 dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.5)] md:hidden">
           <div className="flex items-center gap-2">
             <button
               type="button"
               disabled={safeIndex === 0}
               onClick={goToPrev}
-              className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D5E3EC] bg-[#F1F6F9] px-3.5 py-2.5 text-xs font-semibold text-[#1E293B] transition disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#E2E8F0]"
+              className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D4E1EE] bg-white px-3.5 py-2.5 text-xs font-semibold text-[#1E293B] transition disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#E2E8F0]"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Trước</span>
@@ -1038,7 +987,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
             <button
               type="button"
               onClick={handleFlipCard}
-              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#BAE6FD] bg-[#E0F2FE] px-3 py-2.5 text-xs font-semibold text-[#0284C7] transition active:scale-[0.99] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/20 dark:text-[#38BDF8]"
+              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#7DD3FC] bg-[#E0F2FE] px-3 py-2.5 text-xs font-semibold text-[#0369A1] transition active:scale-[0.99] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]"
             >
               <RotateCw className="h-3.5 w-3.5" />
               <span>Lật thẻ</span>
@@ -1048,7 +997,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               type="button"
               disabled={safeIndex >= deck.length - 1}
               onClick={goToNext}
-              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#0284C7] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0369A1] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#38BDF8]/50"
+              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#0369A1] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0284C7] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#38BDF8]/50 dark:bg-[#0284C7] dark:hover:bg-[#0369A1]"
             >
               <span>Tiếp</span>
               <ChevronRight className="h-4 w-4" />
@@ -1068,7 +1017,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.16 }}
               onClick={() => setIsMobileSheetOpen(false)}
-              className="fixed inset-0 z-50 bg-[#0F172A]/50 backdrop-blur-[2px] dark:bg-[#0B1120]/75 md:hidden"
+              className="fixed inset-0 z-50 bg-[#0B1324]/50 backdrop-blur-[2px] dark:bg-[#070B14]/75 md:hidden"
             />
             <motion.div
               key="flashcard-sheet-drawer"
@@ -1079,13 +1028,13 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 32, stiffness: 360 }}
-              className="fixed inset-x-0 bottom-0 z-50 flex max-h-[82vh] flex-col rounded-t-3xl border-t border-[#D5E3EC] bg-white shadow-2xl dark:border-[#1E293B] dark:bg-[#111827] md:hidden"
+              className="fixed inset-x-0 bottom-0 z-50 flex max-h-[82vh] flex-col rounded-t-3xl border-t border-[#D4E1EE] bg-[#F8FAFC] shadow-2xl dark:border-[#18243C] dark:bg-[#0C1322] md:hidden"
             >
-              <div className="flex flex-col items-center border-b border-[#D5E3EC] px-4 pb-3 pt-2.5 dark:border-[#1E293B]">
-                <div className="mb-2.5 h-1 w-10 rounded-full bg-[#D5E3EC] dark:bg-[#334155]" />
+              <div className="flex flex-col items-center border-b border-[#D4E1EE] px-4 pb-3 pt-2.5 dark:border-[#18243C]">
+                <div className="mb-2.5 h-1 w-10 rounded-full bg-[#D4E1EE] dark:bg-[#253759]" />
                 <div className="flex w-full items-center justify-between gap-2">
                   <div>
-                    <h3 className="text-sm font-bold text-[#0F172A] dark:text-[#F8FAFC]">
+                    <h3 className="text-sm font-bold text-[#0B1324] dark:text-[#F8FAFC]">
                       {subjectMeta.code} • Bộ thẻ Flashcard
                     </h3>
                     <p className="text-xs text-[#0D9488] tabular-nums dark:text-[#14B8A6]">
@@ -1096,7 +1045,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                     type="button"
                     onClick={() => setIsMobileSheetOpen(false)}
                     aria-label="Đóng ngăn kéo"
-                    className="cursor-pointer rounded-xl border border-[#D5E3EC] bg-[#F1F6F9] p-1.5 text-[#64748B] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#E2E8F0]"
+                    className="cursor-pointer rounded-xl border border-[#D4E1EE] bg-white p-1.5 text-[#5B6E88] dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#E2E8F0]"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -1106,15 +1055,15 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               <div className="space-y-5 overflow-y-auto px-4 pb-6 pt-4">
                 {/* Filter & Shuffle */}
                 <div>
-                  <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#64748B] dark:text-[#94A3B8]">
+                  <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#5B6E88] dark:text-[#7E91B0]">
                     <span>Lọc trạng thái (Chương {selectedChapter})</span>
                     <button
                       type="button"
                       onClick={handleToggleShuffle}
                       className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold normal-case ${
                         isShuffled
-                          ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8] dark:bg-[#0284C7]/20 dark:text-[#38BDF8]'
-                          : 'border-[#D5E3EC] bg-[#F8FAFC] text-[#64748B] dark:border-[#334155] dark:bg-[#1E293B] dark:text-[#94A3B8]'
+                          ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0369A1] dark:border-[#38BDF8] dark:bg-[#0284C7]/20 dark:text-[#38BDF8]'
+                          : 'border-[#D4E1EE] bg-white text-[#5B6E88] dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#7E91B0]'
                       }`}
                     >
                       <Shuffle className="h-3 w-3" />
@@ -1142,8 +1091,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                           }}
                           className={`cursor-pointer rounded-xl border px-2 py-2 text-xs font-semibold tabular-nums transition ${
                             active
-                              ? 'border-[#0284C7] bg-[#0284C7] text-white'
-                              : 'border-[#D5E3EC] bg-[#F8FAFC] text-[#1E293B] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0]'
+                              ? 'border-[#0369A1] bg-[#0369A1] text-white dark:border-[#38BDF8]/50 dark:bg-[#0284C7]'
+                              : 'border-[#D4E1EE] bg-white text-[#1E293B] dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#E2E8F0]'
                           }`}
                         >
                           {item.label} ({item.count})
@@ -1155,7 +1104,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
                 {/* Chapter List */}
                 <div>
-                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#64748B] dark:text-[#94A3B8]">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#5B6E88] dark:text-[#7E91B0]">
                     Chọn chương
                   </div>
                   <div className="space-y-2">
@@ -1177,20 +1126,20 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                           }}
                           className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left transition ${
                             active
-                              ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8] dark:bg-[#0284C7]/20 dark:text-[#F8FAFC]'
-                              : 'border-[#D5E3EC] bg-[#F8FAFC] text-[#1E293B] dark:border-[#334155] dark:bg-[#1E293B]/50 dark:text-[#E2E8F0]'
+                              ? 'border-[#0284C7] bg-[#E0F2FE] text-[#0369A1] dark:border-[#38BDF8] dark:bg-[#0284C7]/20 dark:text-[#F8FAFC]'
+                              : 'border-[#D4E1EE] bg-white text-[#1E293B] dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#E2E8F0]'
                           }`}
                         >
                           <div className="min-w-0">
                             <div className="text-xs font-bold">
                               Chương {ch.chapter}{' '}
-                              <span className="font-normal text-[#64748B] dark:text-[#94A3B8]">
+                              <span className="font-normal text-[#5B6E88] dark:text-[#7E91B0]">
                                 (Thuộc {stat.mastered}/{stat.total})
                               </span>
                             </div>
                             <div className="truncate text-xs opacity-85">{ch.title}</div>
                           </div>
-                          <span className="shrink-0 rounded-full border border-[#5EEAD4] bg-[#F0FDFA] px-2 py-0.5 text-[11px] font-semibold text-[#115E59] tabular-nums dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF]">
+                          <span className="shrink-0 rounded-full border border-[#5EEAD4] bg-[#E6F7F5] px-2 py-0.5 text-[11px] font-semibold text-[#0F766E] tabular-nums dark:border-[#14B8A6]/60 dark:bg-[#0D9488]/15 dark:text-[#2DD4BF]">
                             {stat.pct}%
                           </span>
                         </button>
@@ -1202,7 +1151,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                 {/* Card Number Grid */}
                 {deck.length > 0 && (
                   <div>
-                    <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#64748B] dark:text-[#94A3B8]">
+                    <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#5B6E88] dark:text-[#7E91B0]">
                       Bảng số thẻ ({deck.length})
                     </div>
                     <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
@@ -1211,17 +1160,17 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                         const isActive = idx === safeIndex;
 
                         let cellStyle =
-                          'border-[#D5E3EC] bg-[#F8FAFC] text-[#1E293B] dark:border-[#334155] dark:bg-[#1E293B]/60 dark:text-[#E2E8F0]';
+                          'border-[#D4E1EE] bg-white text-[#1E293B] dark:border-[#18243C] dark:bg-[#111B2E] dark:text-[#E2E8F0]';
 
                         if (st === 'hesitant') {
                           cellStyle =
-                            'border-[#C7D2FE] bg-[#EEF2FF] text-[#4F46E5] dark:border-[#818CF8]/50 dark:bg-[#1E1B4B]/60 dark:text-[#818CF8]';
+                            'border-[#A5B4FC] bg-[#EEF2FF] text-[#4338CA] dark:border-[#818CF8]/50 dark:bg-[#6366F1]/15 dark:text-[#A5B4FC]';
                         } else if (st === 'mastered') {
                           cellStyle =
-                            'border-[#5EEAD4] bg-[#F0FDFA] text-[#115E59] dark:border-[#2DD4BF] dark:bg-[#134E4A]/40 dark:text-[#2DD4BF]';
+                            'border-[#5EEAD4] bg-[#E6F7F5] text-[#0F766E] dark:border-[#14B8A6]/60 dark:bg-[#0D9488]/15 dark:text-[#2DD4BF]';
                         } else if (st === 'pass1' || st === 'studied') {
                           cellStyle =
-                            'border-[#BAE6FD] bg-[#E0F2FE] text-[#0284C7] dark:border-[#38BDF8]/40 dark:bg-[#0284C7]/20 dark:text-[#38BDF8]';
+                            'border-[#7DD3FC] bg-[#E0F2FE] text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0284C7]/15 dark:text-[#38BDF8]';
                         }
 
                         return (
@@ -1234,7 +1183,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                             }}
                             className={`tabular-nums relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold transition ${cellStyle} ${
                               isActive
-                                ? 'ring-2 ring-[#0284C7] ring-offset-1 dark:ring-[#38BDF8] dark:ring-offset-[#111827]'
+                                ? 'ring-2 ring-[#0284C7] ring-offset-1 dark:ring-[#38BDF8] dark:ring-offset-[#0C1322]'
                                 : ''
                             }`}
                           >
