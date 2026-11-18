@@ -192,7 +192,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
             {/* Header */}
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#D5CFC2] bg-[#EAE6DD] px-5 py-4 dark:border-[#262925] dark:bg-[#161816]">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#93C5FD] bg-[#EFF6FF] text-[#1D4ED8] dark:border-[#3B82F6]/50 dark:bg-[#1E3A8A]/30 dark:text-[#93C5FD]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#FDBA74] bg-[#FFF7ED] text-[#9A3412] dark:border-[#FB923C]/50 dark:bg-[#7C2D12]/30 dark:text-[#FDBA74]">
                   <Cloud className="h-5 w-5" />
                 </div>
                 <div>
@@ -209,7 +209,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                 type="button"
                 onClick={onClose}
                 aria-label="Đóng hộp thoại"
-                className="cursor-pointer rounded-xl p-1.5 text-[#656058] transition hover:bg-[#EFF6FF] hover:text-[#1D4ED8] dark:text-[#9CA39B] dark:hover:bg-[#1E3A8A]/30 dark:hover:text-[#93C5FD]"
+                className="cursor-pointer rounded-xl p-1.5 text-[#656058] transition hover:bg-[#FFF7ED] hover:text-[#9A3412] dark:text-[#9CA39B] dark:hover:bg-[#7C2D12]/30 dark:hover:text-[#FDBA74]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -261,7 +261,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                     className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
                       copied
                         ? 'bg-[#059669] text-white dark:bg-[#10B981] dark:text-[#0F100E]'
-                        : 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] dark:border dark:border-[#3B82F6]/50 dark:bg-[#2563EB] dark:hover:bg-[#1D4ED8]'
+                        : 'bg-[#C2410C] text-white hover:bg-[#9A3412] dark:border dark:border-[#FB923C]/50 dark:bg-[#C2410C] dark:hover:bg-[#9A3412]'
                     }`}
                   >
                     {copied ? (
@@ -289,7 +289,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                   value={syncCode}
                   onClick={(e) => e.currentTarget.select()}
                   aria-label="Mã tiến độ hiện tại"
-                  className="w-full resize-none rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2 font-mono text-xs leading-relaxed text-[#292524] focus:border-[#2563EB] focus:outline-none dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:focus:border-[#3B82F6]"
+                  className="w-full resize-none rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2 font-mono text-xs leading-relaxed text-[#292524] focus:border-[#C2410C] focus:outline-none dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:focus:border-[#FB923C]"
                 />
               </section>
 
@@ -312,7 +312,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                   }}
                   placeholder="Dán mã bắt đầu bằng OT1:... vào đây"
                   aria-label="Ô nhập mã tiến độ"
-                  className="w-full resize-none rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2 font-mono text-xs leading-relaxed text-[#292524] placeholder:text-[#656058] focus:border-[#2563EB] focus:outline-none dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:placeholder:text-[#9CA39B] dark:focus:border-[#3B82F6]"
+                  className="w-full resize-none rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2 font-mono text-xs leading-relaxed text-[#292524] placeholder:text-[#656058] focus:border-[#C2410C] focus:outline-none dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:placeholder:text-[#9CA39B] dark:focus:border-[#FB923C]"
                 />
 
                 {importError && (
@@ -340,7 +340,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                     type="button"
                     onClick={handleImport}
                     disabled={!inputCode.trim()}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#2563EB] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#EAE6DD] disabled:text-[#656058] dark:border dark:border-[#3B82F6]/50 dark:bg-[#2563EB] dark:hover:bg-[#1D4ED8] dark:disabled:border-transparent dark:disabled:bg-[#1C1F1C] dark:disabled:text-[#9CA39B]"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#C2410C] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-[#9A3412] disabled:cursor-not-allowed disabled:bg-[#EAE6DD] disabled:text-[#656058] dark:border dark:border-[#FB923C]/50 dark:bg-[#C2410C] dark:hover:bg-[#9A3412] dark:disabled:border-transparent dark:disabled:bg-[#1C1F1C] dark:disabled:text-[#9CA39B]"
                   >
                     <Upload className="h-3.5 w-3.5" />
                     <span>Khôi phục tiến độ</span>
@@ -372,7 +372,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setConfirmReset(false)}
-                        className="cursor-pointer rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-1.5 text-xs font-semibold text-[#292524] transition hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#1D4ED8] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#3B82F6] dark:hover:bg-[#1E3A8A]/30"
+                        className="cursor-pointer rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-1.5 text-xs font-semibold text-[#292524] transition hover:border-[#C2410C] hover:bg-[#FFF7ED] hover:text-[#9A3412] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#FB923C] dark:hover:bg-[#7C2D12]/30"
                       >
                         Hủy
                       </button>

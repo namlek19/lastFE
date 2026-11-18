@@ -37,7 +37,7 @@ export const RichExplanation: React.FC<RichExplanationProps> = ({ question, clas
 
       {question.note && question.note.trim() !== '' && (
         <div className="mt-3.5 flex items-start gap-2 rounded-lg border border-[#D5CFC2] bg-white px-3.5 py-2.5 text-xs text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]">
-          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#2563EB] dark:text-[#60A5FA]" />
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#0369A1] dark:text-[#38BDF8]" />
           <span>{question.note}</span>
         </div>
       )}
