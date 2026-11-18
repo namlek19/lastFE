@@ -668,7 +668,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
 
           {/* Empty Filtered State vs Question Card */}
           {!currentQuestion ? (
-            <div className="rounded-2xl border border-[#BFB6A6] bg-white px-5 py-10 text-center ring-1 ring-[#18181B]/[0.04] shadow-[0_18px_40px_-12px_rgba(28,25,23,0.12),0_2px_6px_-1px_rgba(28,25,23,0.05)] dark:border-[#363D37] dark:bg-[#1E221F] dark:ring-white/[0.05] dark:shadow-[0_20px_44px_-12px_rgba(0,0,0,0.75)] sm:px-6 sm:py-12">
+            <div className="rounded-3xl border-2 border-[#284E3B] bg-white px-5 py-10 text-center shadow-[0_6px_0_0_#284E3B,0_20px_40px_-12px_rgba(28,25,23,0.16)] dark:border-2 dark:border-[#10B981]/80 dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#065F46,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:px-6 sm:py-12">
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
@@ -691,9 +691,9 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
               )}
             </div>
           ) : (
-            <div className="rounded-2xl border border-[#BFB6A6] bg-white p-4 ring-1 ring-[#18181B]/[0.04] shadow-[0_18px_40px_-12px_rgba(28,25,23,0.12),0_2px_6px_-1px_rgba(28,25,23,0.05)] dark:border-[#363D37] dark:bg-[#1E221F] dark:ring-white/[0.05] dark:shadow-[0_20px_44px_-12px_rgba(0,0,0,0.75)] sm:p-7 md:p-8">
+            <div className="rounded-3xl border-2 border-[#284E3B] bg-white p-4 shadow-[0_6px_0_0_#284E3B,0_20px_40px_-12px_rgba(28,25,23,0.16)] dark:border-2 dark:border-[#10B981]/80 dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#065F46,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:p-6 md:p-8">
               {/* Top Metadata Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E6E1D6] bg-[#FAF8F3] px-3 py-2 dark:border-[#2C322D] dark:bg-[#171A17] sm:px-3.5 sm:py-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-2.5 dark:border-[#2C322D] dark:bg-[#141714]">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <span className="tabular-nums rounded-lg bg-[#284E3B] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-white dark:border dark:border-[#52B788]/40 dark:bg-[#2D5A43] dark:text-[#ECFDF5] sm:px-3 sm:py-1">
                     Câu {safeIndex + 1}/{filteredQuestions.length}
@@ -768,9 +768,11 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
               </div>
 
               {/* Question Text */}
-              <h2 className="mt-3.5 max-w-[78ch] text-[17px] font-semibold leading-[1.6] text-[#18181B] dark:text-[#F5F5F4] sm:mt-5 sm:text-[19px] sm:leading-[1.65] md:text-[20px]">
-                {currentQuestion.question}
-              </h2>
+              <div className="mt-3.5 rounded-2xl border border-[#E2DDD2] border-l-4 border-l-[#284E3B] bg-[#FAF8F3] p-4 dark:border-[#2C322D] dark:border-l-4 dark:border-l-[#10B981] dark:bg-[#161917] sm:mt-5 sm:p-5">
+                <h2 className="max-w-[78ch] text-[17px] font-semibold leading-[1.6] text-[#18181B] dark:text-[#F5F5F4] sm:text-[19px] sm:leading-[1.65] md:text-[20px]">
+                  {currentQuestion.question}
+                </h2>
+              </div>
 
               {/* Options */}
               <div className="mt-4 space-y-2.5 sm:mt-6 sm:space-y-3.5">

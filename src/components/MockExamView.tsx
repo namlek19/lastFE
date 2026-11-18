@@ -1034,9 +1034,9 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
             </div>
 
             {/* Question Card (Focal Point Elevation) */}
-            <div className="w-full rounded-2xl border border-[#BFB6A6] bg-white p-4 ring-1 ring-[#18181B]/[0.04] shadow-[0_18px_40px_-12px_rgba(28,25,23,0.12),0_2px_6px_-1px_rgba(28,25,23,0.05)] dark:border-[#363D37] dark:bg-[#1E221F] dark:ring-white/[0.05] dark:shadow-[0_20px_44px_-12px_rgba(0,0,0,0.75)] sm:p-7 lg:p-9">
+            <div className="w-full rounded-3xl border-2 border-[#284E3B] bg-white p-4 shadow-[0_6px_0_0_#284E3B,0_20px_40px_-12px_rgba(28,25,23,0.16)] dark:border-2 dark:border-[#10B981]/80 dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#065F46,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:p-6 md:p-8">
               {/* Header Metadata */}
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E6E1D6] bg-[#FAF8F3] px-3 py-2 dark:border-[#2C322D] dark:bg-[#171A17] sm:px-3.5 sm:py-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-2.5 dark:border-[#2C322D] dark:bg-[#141714]">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <span className="rounded-lg bg-[#284E3B] px-2.5 py-0.5 text-xs font-bold text-white tabular-nums dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] sm:py-1">
                     Câu {currentIndex + 1} / {examQuestions.length}
@@ -1082,9 +1082,11 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               </div>
 
               {/* Question Prompt */}
-              <h3 className="mt-3.5 max-w-[78ch] text-[17px] font-semibold leading-[1.6] text-[#18181B] dark:text-[#F5F5F4] sm:mt-5 sm:text-[19px] sm:leading-[1.65] lg:text-[20px]">
-                {currentQuestion.question}
-              </h3>
+              <div className="mt-3.5 rounded-2xl border border-[#E2DDD2] border-l-4 border-l-[#284E3B] bg-[#FAF8F3] p-4 dark:border-[#2C322D] dark:border-l-4 dark:border-l-[#10B981] dark:bg-[#161917] sm:mt-5 sm:p-5">
+                <h3 className="max-w-[78ch] text-[17px] font-semibold leading-[1.6] text-[#18181B] dark:text-[#F5F5F4] sm:text-[19px] sm:leading-[1.65] lg:text-[20px]">
+                  {currentQuestion.question}
+                </h3>
+              </div>
 
               {/* Options List */}
               <div className="mt-4 space-y-2.5 sm:mt-6 sm:space-y-3.5">
@@ -1681,11 +1683,11 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   <article
                     key={q.id}
                     id={`exam-review-q-${q.id}`}
-                    className={`rounded-2xl border border-[#BFB6A6] bg-white p-4 ring-1 ring-[#18181B]/[0.04] shadow-[0_18px_40px_-12px_rgba(28,25,23,0.12),0_2px_6px_-1px_rgba(28,25,23,0.05)] transition dark:border-[#363D37] dark:bg-[#1E221F] dark:ring-white/[0.05] dark:shadow-[0_20px_44px_-12px_rgba(0,0,0,0.75)] sm:p-7 lg:p-8 ${
+                    className={`scroll-mt-24 rounded-3xl border-2 border-[#284E3B] bg-white p-4 shadow-[0_6px_0_0_#284E3B,0_20px_40px_-12px_rgba(28,25,23,0.16)] transition dark:border-2 dark:border-[#10B981]/80 dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#065F46,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:p-6 md:p-8 ${
                       isHighlighted ? 'ring-2 ring-[#284E3B]/40 dark:ring-[#10B981]/40' : ''
                     }`}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E6E1D6] bg-[#FAF8F3] px-3 py-2 dark:border-[#2C322D] dark:bg-[#171A17] sm:px-3.5 sm:py-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-2.5 dark:border-[#2C322D] dark:bg-[#141714]">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <span className="rounded-lg bg-[#284E3B] px-2.5 py-0.5 text-xs font-bold text-white tabular-nums dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] sm:py-1">
                           Câu {index + 1}
@@ -1727,9 +1729,11 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                       </button>
                     </div>
 
-                    <h4 className="mt-3.5 max-w-[78ch] text-[17px] font-semibold leading-[1.6] text-[#18181B] dark:text-[#F5F5F4] sm:mt-5 sm:text-[19px] sm:leading-[1.65]">
-                      {q.question}
-                    </h4>
+                    <div className="mt-3.5 rounded-2xl border border-[#E2DDD2] border-l-4 border-l-[#284E3B] bg-[#FAF8F3] p-4 dark:border-[#2C322D] dark:border-l-4 dark:border-l-[#10B981] dark:bg-[#161917] sm:mt-5 sm:p-5">
+                      <h4 className="max-w-[78ch] text-[17px] font-semibold leading-[1.6] text-[#18181B] dark:text-[#F5F5F4] sm:text-[19px] sm:leading-[1.65]">
+                        {q.question}
+                      </h4>
+                    </div>
 
                     <div className="mt-4 space-y-2.5 sm:mt-5 sm:space-y-3">
                       {q.options.map(opt => {

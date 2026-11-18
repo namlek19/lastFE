@@ -769,12 +769,12 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                       WebkitBackfaceVisibility: 'hidden',
                       transform: 'rotateY(0deg)',
                     }}
-                    className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-2xl border border-[#BFB6A6] bg-white p-4 ring-1 ring-[#18181B]/[0.04] shadow-[0_18px_40px_-12px_rgba(28,25,23,0.12),0_2px_6px_-1px_rgba(28,25,23,0.05)] dark:border-[#363D37] dark:bg-[#1E221F] dark:ring-white/[0.05] dark:shadow-[0_20px_44px_-12px_rgba(0,0,0,0.75)] sm:min-h-[390px] sm:p-7 md:p-8 ${
+                    className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#284E3B] bg-white p-4 shadow-[0_6px_0_0_#284E3B,0_20px_40px_-12px_rgba(28,25,23,0.16)] dark:border-2 dark:border-[#10B981]/80 dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#065F46,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:min-h-[390px] sm:p-6 md:p-8 ${
                       isFlipped ? 'pointer-events-none' : ''
                     }`}
                   >
                     {/* Top Bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E6E1D6] bg-[#FAF8F3] px-3 py-2 dark:border-[#2C322D] dark:bg-[#171A17] sm:px-3.5 sm:py-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-2.5 dark:border-[#2C322D] dark:bg-[#141714]">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <span className="tabular-nums rounded-lg bg-[#284E3B] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-white dark:border dark:border-[#52B788]/40 dark:bg-[#2D5A43] dark:text-[#ECFDF5] sm:px-3 sm:py-1">
                           Thẻ {safeIndex + 1} / {deck.length}
@@ -786,7 +786,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                     </div>
 
                     {/* Center Question Prompt */}
-                    <div className="my-auto flex flex-col items-center justify-center py-6 text-center sm:py-10">
+                    <div className="mx-auto my-4 flex w-full max-w-2xl flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-[#D5CFC2] bg-[#FAF8F3] px-5 py-6 text-center dark:border-[#2F3630] dark:bg-[#161917] sm:px-8 sm:py-8">
                       {currentQuestion.isMultiSelect && (
                         <span className="mb-3 inline-flex items-center rounded-full border border-[#A9C5B6] bg-[#E8F0EC] px-3 py-0.5 text-xs font-semibold text-[#284E3B] dark:border-[#10B981]/45 dark:bg-[#2D5A43]/25 dark:text-[#6EE7B7]">
                           Chọn nhiều đáp án ({currentQuestion.correctAnswers.length} ý đúng)
@@ -800,7 +800,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                     {/* Bottom Flip Hint */}
                     <div className="flex items-center justify-between gap-2 border-t border-[#D5CFC2]/80 pt-3 text-xs font-medium text-[#656058] dark:border-[#262925] dark:text-[#9CA39B]">
                       <span className="text-[11px] font-medium">Mặt trước</span>
-                      <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-1 text-xs font-semibold text-[#284E3B] dark:border-[#2C322D] dark:bg-[#141714] dark:text-[#6EE7B7]">
                         <RotateCw className="h-3.5 w-3.5 text-[#284E3B] dark:text-[#10B981]" />
                         <span>Chạm thẻ để lật</span>
                       </span>
@@ -814,12 +814,12 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                       WebkitBackfaceVisibility: 'hidden',
                       transform: 'rotateY(180deg)',
                     }}
-                    className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-2xl border-2 border-[#10B981] bg-white p-4 ring-4 ring-[#10B981]/10 shadow-[0_18px_40px_-12px_rgba(5,150,105,0.14)] dark:border-[#10B981]/80 dark:bg-[#1E221F] dark:ring-[#10B981]/15 dark:shadow-[0_20px_44px_-12px_rgba(0,0,0,0.75)] sm:min-h-[390px] sm:p-7 md:p-8 ${
+                    className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#059669] bg-white p-4 shadow-[0_6px_0_0_#059669,0_20px_40px_-12px_rgba(5,150,105,0.2)] dark:border-2 dark:border-[#10B981] dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#10B981,0_22px_44px_-12px_rgba(0,0,0,0.85)] sm:min-h-[390px] sm:p-6 md:p-8 ${
                       !isFlipped ? 'pointer-events-none' : ''
                     }`}
                   >
                     {/* Top Bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#A7F3D0] bg-[#ECFDF5]/80 px-3 py-2 dark:border-[#10B981]/35 dark:bg-[#064E3B]/30 sm:px-3.5 sm:py-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#A7F3D0] bg-[#ECFDF5] px-3.5 py-2.5 dark:border-[#059669]/50 dark:bg-[#064E3B]/35">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <span className="tabular-nums rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] sm:px-3 sm:py-1">
                           Đáp án • Thẻ {safeIndex + 1}/{deck.length}
