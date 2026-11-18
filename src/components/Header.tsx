@@ -30,13 +30,13 @@ export interface HeaderProps {
 const MODE_TABS: {
   id: StudyMode;
   label: string;
-  mobileLabel: string;
+  shortLabel: string;
   Icon: React.ComponentType<{ className?: string }>;
 }[] = [
-  { id: 'chapter', label: 'Học theo chương', mobileLabel: 'Theo chương', Icon: BookOpen },
-  { id: 'rolling', label: 'Học cuốn chiếu', mobileLabel: 'Cuốn chiếu', Icon: Layers },
-  { id: 'flashcard', label: 'Flashcard', mobileLabel: 'Flashcard', Icon: CreditCard },
-  { id: 'exam', label: 'Thi thử trộn đề', mobileLabel: 'Thi thử', Icon: ClipboardCheck },
+  { id: 'chapter', label: 'Học theo chương', shortLabel: 'Theo chương', Icon: BookOpen },
+  { id: 'rolling', label: 'Học cuốn chiếu', shortLabel: 'Cuốn chiếu', Icon: Layers },
+  { id: 'flashcard', label: 'Flashcard', shortLabel: 'Flashcard', Icon: CreditCard },
+  { id: 'exam', label: 'Thi thử trộn đề', shortLabel: 'Thi thử', Icon: ClipboardCheck },
 ];
 
 const SUBJECT_ORDER: SubjectId[] = ['mln131', 'vnr202'];
@@ -101,33 +101,34 @@ export const Header: React.FC<HeaderProps> = ({
     };
   }, [isShortcutOpen, isRuleInfoOpen]);
 
+  const activeSubjectMeta = SUBJECTS[subject];
+
   return (
-    <header className="z-40 mb-3.5 border-b border-[#D2DACB] bg-[#E8ECE4] shadow-[0_6px_20px_-4px_rgba(30,58,42,0.06)] dark:border-[#222E27] dark:bg-[#131A16] dark:shadow-[0_10px_24px_-6px_rgba(0,0,0,0.55)] md:sticky md:top-0 md:mb-8">
-      <div className="mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-12">
-        {/* Top Row: Compact Brand, Subject Switcher & Utility Actions */}
-        <div className="flex w-full items-center justify-between gap-2 py-2.5 md:py-3">
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3.5">
-            {/* Brand Title */}
+    <header className="z-40 mb-3.5 border-b border-[#D5CFC2] bg-[#EAE6DD] shadow-[0_6px_20px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_24px_-6px_rgba(0,0,0,0.55)] md:sticky md:top-0 md:mb-6 lg:mb-7">
+      <div className="mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-10 xl:px-12">
+        {/* Main Row: Single-Row Desktop Header (>= 1024px) & Top Row on Mobile/Tablet */}
+        <div className="flex w-full items-center justify-between gap-2 py-2.5 lg:gap-3 lg:py-3">
+          {/* Left Cluster: Compact Brand + Subject Switcher */}
+          <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#2E6F4E] text-white shadow-sm dark:border dark:border-[#52B788]/50 dark:bg-[#357A58] sm:h-9 sm:w-9">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#284E3B] text-white shadow-sm dark:border dark:border-[#52B788]/50 dark:bg-[#2D5A43] sm:h-9 sm:w-9">
                 <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div className="hidden leading-tight sm:block">
-                <span className="block text-sm font-bold tracking-tight text-[#142018] dark:text-[#F3F6F4] sm:text-base">
-                  Ôn thi Trắc nghiệm
+                <span className="block text-sm font-bold tracking-tight text-[#18181B] dark:text-[#F5F5F4] sm:text-base lg:text-sm xl:text-[15px]">
+                  Ôn thi<span className="hidden 2xl:inline"> Trắc nghiệm</span>
                 </span>
-                <span className="hidden text-[11px] text-[#5C6E60] dark:text-[#8B9E91] sm:block">
-                  MLN131 &amp; VNR202 •{' '}
-                  <span className="font-medium text-[#2E6F4E] dark:text-[#74C69D]">from Namblee</span>
+                <span className="block text-[11px] font-medium text-[#284E3B] dark:text-[#6EE7B7]">
+                  from Namblee
                 </span>
               </div>
             </div>
 
-            {/* Subject Switcher Pills */}
+            {/* Subject Switcher Pills (Compact Code Only) */}
             <div
               role="group"
               aria-label="Chọn môn học"
-              className="inline-flex items-center gap-0.5 rounded-xl border border-[#D2DACB] bg-[#F2F4EF] p-0.5 dark:border-[#222E27] dark:bg-[#0D120F] sm:gap-1 sm:p-1"
+              className="inline-flex shrink-0 items-center gap-0.5 rounded-xl border border-[#D5CFC2] bg-[#F4F2EC] p-0.5 dark:border-[#262925] dark:bg-[#0F100E] sm:gap-1 sm:p-1"
             >
               {SUBJECT_ORDER.map((subjId) => {
                 const meta = SUBJECTS[subjId];
@@ -138,35 +139,56 @@ export const Header: React.FC<HeaderProps> = ({
                     type="button"
                     onClick={() => onSelectSubject(subjId)}
                     aria-pressed={isActive}
-                    className={`inline-flex cursor-pointer items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-semibold transition sm:gap-1.5 sm:px-3 sm:py-1.5 ${
+                    title={`${meta.code} • ${meta.name} (${meta.totalQuestions} câu)`}
+                    className={`inline-flex cursor-pointer items-center rounded-lg border px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition sm:px-3 sm:py-1.5 ${
                       isActive
-                        ? 'border-transparent bg-[#2E6F4E] text-white shadow-sm hover:bg-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58] dark:hover:bg-[#2B6649]'
-                        : 'border-transparent text-[#243329] hover:bg-[#E3EFE8] hover:text-[#23583D] dark:text-[#DDE5DF] dark:hover:bg-[#1E2B24] dark:hover:text-[#74C69D]'
+                        ? 'border-transparent bg-[#284E3B] text-white shadow-sm hover:bg-[#1F3F2F] dark:border-[#52B788]/50 dark:bg-[#2D5A43] dark:hover:bg-[#234735]'
+                        : 'border-transparent text-[#292524] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:text-[#E7E5E4] dark:hover:bg-[#242925] dark:hover:text-[#6EE7B7]'
                     }`}
                   >
                     <span>{meta.code}</span>
-                    <span
-                      className={`hidden tabular-nums text-[11px] font-medium sm:inline ${
-                        isActive ? 'text-[#E3EFE8]' : 'text-[#5C6E60] dark:text-[#8B9E91]'
-                      }`}
-                    >
-                      ({meta.totalQuestions} câu)
-                    </span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Right Cluster: Mastery Badge + Rule Info, Shortcuts Popover (Desktop only), Sync Modal Button, Theme Toggle */}
+          {/* Center Cluster: 4 Study Mode Tabs (Desktop >= 1024px) */}
+          <nav
+            aria-label="Chế độ học tập"
+            className="hidden shrink-0 items-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#F4F2EC] p-1 dark:border-[#262925] dark:bg-[#0F100E] lg:flex"
+          >
+            {MODE_TABS.map(({ id, label, shortLabel, Icon }) => {
+              const isActive = mode === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onSelectMode(id)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-semibold whitespace-nowrap transition lg:px-3 xl:px-3.5 2xl:text-[13px] ${
+                    isActive
+                      ? 'border-[#284E3B] bg-[#284E3B] text-white shadow-sm hover:border-[#1F3F2F] hover:bg-[#1F3F2F] dark:border-[#52B788]/50 dark:bg-[#2D5A43] dark:hover:bg-[#234735]'
+                      : 'border-transparent text-[#656058] hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:text-[#9CA39B] dark:hover:border-[#10B981] dark:hover:bg-[#242925] dark:hover:text-[#6EE7B7]'
+                  }`}
+                >
+                  <Icon className="hidden h-3.5 w-3.5 shrink-0 xl:block" />
+                  <span className="xl:hidden">{shortLabel}</span>
+                  <span className="hidden xl:inline">{label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Right Cluster: Mastery Badge + Rule Info, Shortcuts Popover, Sync Modal Button, Theme Toggle */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {/* Overall Mastery Badge + Info Popover */}
+            {/* Overall Mastery Badge (Dopamine Emerald) + Info Popover */}
             <div ref={ruleInfoContainerRef} className="relative flex items-center gap-1">
               <div
-                className="inline-flex items-center gap-1 rounded-full border border-[#68B99A] bg-[#E1F3EC] px-2.5 py-1 text-[11px] font-semibold text-[#0F5C41] tabular-nums dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7] sm:gap-1.5 sm:px-3 sm:text-xs"
-                title={`Đã thuộc ${masteredCount} trên ${activeQuestions.length} câu môn ${SUBJECTS[subject].code}`}
+                className="inline-flex items-center gap-1 rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-1 text-[11px] font-semibold text-[#047857] tabular-nums whitespace-nowrap dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] sm:gap-1.5 sm:px-3 sm:text-xs"
+                title={`Đã thuộc ${masteredCount} trên ${activeQuestions.length} câu môn ${activeSubjectMeta.code}`}
               >
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#1F8A65] dark:text-[#6EE7B7]" />
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#059669] dark:text-[#34D399]" />
                 <span>
                   {masteredCount}/{activeQuestions.length}
                   <span className="hidden sm:inline"> Đã thuộc</span>
@@ -182,8 +204,8 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Xem quy tắc đạt Đã thuộc"
                 className={`inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border text-xs transition sm:h-7 sm:w-7 ${
                   isRuleInfoOpen
-                    ? 'border-[#2E6F4E] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]'
-                    : 'border-[#D2DACB] bg-[#F7F8F5] text-[#5C6E60] hover:border-[#2E6F4E] hover:bg-[#E3EFE8] hover:text-[#23583D] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#8B9E91] dark:hover:border-[#52B788] dark:hover:bg-[#1E2B24] dark:hover:text-[#74C69D]'
+                    ? 'border-[#284E3B] bg-[#E8F0EC] text-[#284E3B] dark:border-[#52B788]/50 dark:bg-[#2D5A43]/25 dark:text-[#6EE7B7]'
+                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#10B981] dark:hover:bg-[#242925] dark:hover:text-[#34D399]'
                 }`}
               >
                 <Info className="h-3.5 w-3.5" />
@@ -193,20 +215,28 @@ export const Header: React.FC<HeaderProps> = ({
                 <div
                   role="dialog"
                   aria-label="Quy tắc tính tiến độ"
-                  className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-[#BCC9B4] bg-[#FFFFFF] p-4 shadow-[0_14px_34px_-8px_rgba(30,58,42,0.10)] dark:border-[#31453A] dark:bg-[#1B2620] dark:shadow-[0_14px_36px_-8px_rgba(0,0,0,0.65)] sm:w-80"
+                  className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-[#C6BEB0] bg-[#FFFFFF] p-4 shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] dark:border-[#323833] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)] sm:w-80"
                 >
-                  <div className="mb-2.5 flex items-center justify-between border-b border-[#D2DACB] pb-2 dark:border-[#222E27]">
-                    <span className="text-xs font-bold text-[#142018] dark:text-[#F3F6F4]">
+                  <div className="mb-2.5 flex items-center justify-between border-b border-[#D5CFC2] pb-2 dark:border-[#262925]">
+                    <span className="text-xs font-bold text-[#18181B] dark:text-[#F5F5F4]">
                       Quy tắc tính tiến độ học tập
                     </span>
-                    <span className="rounded-md border border-[#9BC4AE] bg-[#E3EFE8] px-1.5 py-0.5 text-[10px] font-semibold text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]">
+                    <span className="rounded-md border border-[#9DC0AE] bg-[#E8F0EC] px-1.5 py-0.5 text-[10px] font-semibold text-[#284E3B] dark:border-[#52B788]/50 dark:bg-[#2D5A43]/25 dark:text-[#6EE7B7]">
                       Đồng bộ 2 chiều
                     </span>
                   </div>
 
-                  <div className="space-y-3 text-xs leading-relaxed text-[#243329] dark:text-[#DDE5DF]">
-                    <div className="rounded-xl border border-[#D2DACB] bg-[#F7F8F5] p-2.5 dark:border-[#25332B] dark:bg-[#17201B]">
-                      <div className="mb-1 font-bold text-[#2E6F4E] dark:text-[#74C69D]">
+                  <p className="mb-2.5 text-[11px] text-[#656058] dark:text-[#9CA39B]">
+                    <span className="font-semibold text-[#18181B] dark:text-[#F5F5F4]">
+                      {activeSubjectMeta.code}
+                    </span>{' '}
+                    • {activeSubjectMeta.name} ({activeSubjectMeta.chapters.length} chương,{' '}
+                    {activeQuestions.length} câu)
+                  </p>
+
+                  <div className="space-y-3 text-xs leading-relaxed text-[#292524] dark:text-[#E7E5E4]">
+                    <div className="rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
+                      <div className="mb-1 font-bold text-[#284E3B] dark:text-[#6EE7B7]">
                         1. Học theo chương &amp; Học cuốn chiếu
                       </div>
                       <ul className="space-y-1 text-[11px]">
@@ -218,15 +248,15 @@ export const Header: React.FC<HeaderProps> = ({
                         </li>
                         <li>
                           • Trả lời đúng <strong>2 lần liên tiếp</strong> (không bấm phân vân) →{' '}
-                          <span className="font-semibold text-[#0F5C41] dark:text-[#6EE7B7]">
+                          <span className="font-semibold text-[#047857] dark:text-[#34D399]">
                             ✓ Đã thuộc (● ●)
                           </span>
                         </li>
                       </ul>
                     </div>
 
-                    <div className="rounded-xl border border-[#D2DACB] bg-[#F7F8F5] p-2.5 dark:border-[#25332B] dark:bg-[#17201B]">
-                      <div className="mb-1 font-bold text-[#0F5C41] dark:text-[#6EE7B7]">
+                    <div className="rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
+                      <div className="mb-1 font-bold text-[#047857] dark:text-[#34D399]">
                         2. Flashcard (Lật thẻ nhanh)
                       </div>
                       <ul className="space-y-1 text-[11px]">
@@ -238,7 +268,7 @@ export const Header: React.FC<HeaderProps> = ({
                         </li>
                         <li>
                           • Bấm nút <strong>Cờ xanh lá</strong> →{' '}
-                          <span className="font-semibold text-[#0F5C41] dark:text-[#6EE7B7]">
+                          <span className="font-semibold text-[#047857] dark:text-[#34D399]">
                             ✓ Đã thuộc
                           </span>
                         </li>
@@ -249,45 +279,46 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* Keyboard Shortcuts Popover — Desktop Only */}
+            {/* Keyboard Shortcuts Popover — Desktop / Tablet */}
             <div ref={shortcutContainerRef} className="relative hidden md:block">
               <button
                 type="button"
                 onClick={() => setIsShortcutOpen((prev) => !prev)}
                 aria-expanded={isShortcutOpen}
                 aria-haspopup="true"
+                aria-label="Phím tắt bàn phím"
                 title="Phím tắt bàn phím"
-                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-medium transition ${
+                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-2 py-1.5 text-xs font-medium whitespace-nowrap transition xl:px-2.5 ${
                   isShortcutOpen
-                    ? 'border-[#2E6F4E] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]'
-                    : 'border-[#D2DACB] bg-[#F7F8F5] text-[#243329] hover:border-[#2E6F4E] hover:bg-[#E3EFE8] hover:text-[#23583D] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF] dark:hover:border-[#52B788] dark:hover:bg-[#1E2B24] dark:hover:text-[#74C69D]'
+                    ? 'border-[#284E3B] bg-[#E8F0EC] text-[#284E3B] dark:border-[#52B788]/50 dark:bg-[#2D5A43]/25 dark:text-[#6EE7B7]'
+                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#10B981] dark:hover:bg-[#242925] dark:hover:text-[#34D399]'
                 }`}
               >
                 <Keyboard className="h-3.5 w-3.5 shrink-0" />
-                <span>Phím tắt</span>
+                <span className="hidden md:inline lg:hidden xl:inline">Phím tắt</span>
               </button>
 
               {isShortcutOpen && (
                 <div
                   role="dialog"
                   aria-label="Hướng dẫn phím tắt"
-                  className="absolute right-0 top-full z-50 mt-2 w-76 rounded-2xl border border-[#BCC9B4] bg-[#FFFFFF] p-4 shadow-[0_14px_34px_-8px_rgba(30,58,42,0.10)] dark:border-[#31453A] dark:bg-[#1B2620] dark:shadow-[0_14px_36px_-8px_rgba(0,0,0,0.65)]"
+                  className="absolute right-0 top-full z-50 mt-2 w-76 rounded-2xl border border-[#C6BEB0] bg-[#FFFFFF] p-4 shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] dark:border-[#323833] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)]"
                 >
-                  <div className="mb-2.5 flex items-center justify-between border-b border-[#D2DACB] pb-2 dark:border-[#222E27]">
-                    <span className="text-xs font-bold text-[#142018] dark:text-[#F3F6F4]">
+                  <div className="mb-2.5 flex items-center justify-between border-b border-[#D5CFC2] pb-2 dark:border-[#262925]">
+                    <span className="text-xs font-bold text-[#18181B] dark:text-[#F5F5F4]">
                       Phím tắt trên máy tính
                     </span>
-                    <span className="text-[11px] text-[#5C6E60] dark:text-[#8B9E91]">PC</span>
+                    <span className="text-[11px] text-[#656058] dark:text-[#9CA39B]">PC</span>
                   </div>
-                  <ul className="space-y-2 text-xs text-[#243329] dark:text-[#DDE5DF]">
+                  <ul className="space-y-2 text-xs text-[#292524] dark:text-[#E7E5E4]">
                     <li className="flex items-center justify-between gap-2">
                       <span>Chọn đáp án</span>
                       <span className="flex items-center gap-1">
-                        <kbd className="rounded border border-[#D2DACB] bg-[#F7F8F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#142018] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#F3F6F4]">
+                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
                           1–4
                         </kbd>
-                        <span className="text-[#5C6E60] dark:text-[#8B9E91]">/</span>
-                        <kbd className="rounded border border-[#D2DACB] bg-[#F7F8F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#142018] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#F3F6F4]">
+                        <span className="text-[#656058] dark:text-[#9CA39B]">/</span>
+                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
                           A–D
                         </kbd>
                       </span>
@@ -295,11 +326,11 @@ export const Header: React.FC<HeaderProps> = ({
                     <li className="flex items-center justify-between gap-2">
                       <span>Kiểm tra / Lật thẻ / Tiếp</span>
                       <span className="flex items-center gap-1">
-                        <kbd className="rounded border border-[#D2DACB] bg-[#F7F8F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#142018] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#F3F6F4]">
+                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
                           Enter
                         </kbd>
-                        <span className="text-[#5C6E60] dark:text-[#8B9E91]">/</span>
-                        <kbd className="rounded border border-[#D2DACB] bg-[#F7F8F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#142018] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#F3F6F4]">
+                        <span className="text-[#656058] dark:text-[#9CA39B]">/</span>
+                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
                           Space
                         </kbd>
                       </span>
@@ -307,24 +338,24 @@ export const Header: React.FC<HeaderProps> = ({
                     <li className="flex items-center justify-between gap-2">
                       <span>Chuyển câu / Thẻ trước-tiếp</span>
                       <span className="flex items-center gap-1">
-                        <kbd className="rounded border border-[#D2DACB] bg-[#F7F8F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#142018] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#F3F6F4]">
+                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
                           ←
                         </kbd>
-                        <span className="text-[#5C6E60] dark:text-[#8B9E91]">/</span>
-                        <kbd className="rounded border border-[#D2DACB] bg-[#F7F8F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#142018] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#F3F6F4]">
+                        <span className="text-[#656058] dark:text-[#9CA39B]">/</span>
+                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
                           →
                         </kbd>
                       </span>
                     </li>
                     <li className="flex items-center justify-between gap-2">
                       <span>Cờ xanh lá Đã thuộc (Flashcard)</span>
-                      <kbd className="rounded border border-[#D2DACB] bg-[#F7F8F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#142018] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#F3F6F4]">
+                      <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
                         G
                       </kbd>
                     </li>
                     <li className="flex items-center justify-between gap-2">
                       <span>Đánh dấu Phân vân</span>
-                      <kbd className="rounded border border-[#D2DACB] bg-[#F7F8F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#142018] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#F3F6F4]">
+                      <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
                         F
                       </kbd>
                     </li>
@@ -339,10 +370,10 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenSyncModal}
               aria-label="Đồng bộ tiến độ"
               title="Đồng bộ tiến độ"
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#9BC4AE] bg-[#E3EFE8] p-1.5 text-xs font-semibold text-[#23583D] transition hover:border-[#2E6F4E] hover:bg-[#9BC4AE]/40 dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D] dark:hover:border-[#52B788] dark:hover:bg-[#357A58]/35 sm:px-3 sm:py-1.5"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#9DC0AE] bg-[#E8F0EC] p-1.5 text-xs font-semibold text-[#284E3B] whitespace-nowrap transition hover:border-[#284E3B] hover:bg-[#9DC0AE]/35 dark:border-[#52B788]/50 dark:bg-[#2D5A43]/25 dark:text-[#6EE7B7] dark:hover:border-[#10B981] dark:hover:bg-[#2D5A43]/40 sm:px-2.5 sm:py-1.5 lg:p-1.5 2xl:px-3 2xl:py-1.5"
             >
-              <Cloud className="h-4 w-4 shrink-0 sm:h-3.5 sm:w-3.5" />
-              <span className="hidden sm:inline">Đồng bộ tiến độ</span>
+              <Cloud className="h-4 w-4 shrink-0 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 2xl:h-3.5 2xl:w-3.5" />
+              <span className="hidden sm:inline lg:hidden 2xl:inline">Đồng bộ tiến độ</span>
             </button>
 
             {/* Light / Dark Mode Toggle */}
@@ -352,62 +383,41 @@ export const Header: React.FC<HeaderProps> = ({
               aria-pressed={theme === 'dark'}
               aria-label={theme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
               title={theme === 'dark' ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối'}
-              className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#D2DACB] bg-[#F7F8F5] p-1.5 text-xs font-medium text-[#243329] transition hover:border-[#2E6F4E] hover:bg-[#E3EFE8] hover:text-[#23583D] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF] dark:hover:border-[#52B788] dark:hover:bg-[#1E2B24] dark:hover:text-[#74C69D]"
+              className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1.5 text-xs font-medium text-[#292524] transition hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#10B981] dark:hover:bg-[#242925] dark:hover:text-[#34D399]"
             >
               {theme === 'dark' ? (
                 <Sun className="h-4 w-4 text-[#FCD34D]" />
               ) : (
-                <Moon className="h-4 w-4 text-[#2E6F4E]" />
+                <Moon className="h-4 w-4 text-[#284E3B]" />
               )}
             </button>
           </div>
         </div>
 
-        {/* Bottom Row: 4 Study Mode Tabs (grid-cols-4 full width on Mobile, flex tabs + subject summary on Desktop) */}
+        {/* Row 2 (Mobile & Tablet only, < 1024px): 4 Mode Tabs grid */}
         <nav
           aria-label="Chế độ học tập"
-          className="border-t border-[#D2DACB] py-2 dark:border-[#222E27] md:flex md:w-full md:items-center md:justify-between md:py-2.5"
+          className="grid grid-cols-4 gap-1 border-t border-[#D5CFC2] py-2 dark:border-[#262925] lg:hidden"
         >
-          <div className="grid grid-cols-4 gap-1 md:flex md:items-center md:gap-2">
-            {MODE_TABS.map(({ id, label, mobileLabel, Icon }) => {
-              const isActive = mode === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => onSelectMode(id)}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`inline-flex cursor-pointer items-center justify-center gap-1 rounded-xl border px-1.5 py-1.5 text-xs font-semibold whitespace-nowrap transition md:shrink-0 md:gap-2 md:px-4 md:text-sm ${
-                    isActive
-                      ? 'border-[#2E6F4E] bg-[#2E6F4E] text-white shadow-sm hover:border-[#23583D] hover:bg-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58] dark:hover:bg-[#2B6649]'
-                      : 'border-transparent bg-[#F7F8F5] text-[#5C6E60] hover:border-[#2E6F4E] hover:bg-[#E3EFE8] hover:text-[#23583D] dark:bg-[#17201B] dark:text-[#8B9E91] dark:hover:border-[#52B788] dark:hover:bg-[#1E2B24] dark:hover:text-[#74C69D] md:bg-transparent md:hover:bg-[#E3EFE8] dark:md:bg-transparent dark:md:hover:bg-[#1E2B24]'
-                  }`}
-                >
-                  <Icon className="hidden h-4 w-4 shrink-0 md:block" />
-                  <span className="truncate md:hidden">{mobileLabel}</span>
-                  <span className="hidden md:inline">{label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="hidden shrink-0 items-center gap-2 whitespace-nowrap text-xs text-[#5C6E60] dark:text-[#8B9E91] md:flex">
-            <span className="rounded-md border border-[#D2DACB] bg-[#F7F8F5] px-2 py-0.5 font-semibold text-[#243329] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF]">
-              {SUBJECTS[subject].code}
-            </span>
-            <span className="lg:hidden">{SUBJECTS[subject].chapters.length} chương</span>
-            <span className="hidden lg:inline 2xl:hidden">
-              {SUBJECTS[subject].shortName} • {SUBJECTS[subject].chapters.length} chương
-            </span>
-            <span className="hidden 2xl:inline">
-              {SUBJECTS[subject].name} • {SUBJECTS[subject].chapters.length} chương
-            </span>
-            <span className="hidden xl:inline text-[#BCC9B4] dark:text-[#31453A]">•</span>
-            <span className="hidden xl:inline">
-              Đúng 2 lần liên tiếp →{' '}
-              <span className="font-semibold text-[#0F5C41] dark:text-[#6EE7B7]">Đã thuộc</span>
-            </span>
-          </div>
+          {MODE_TABS.map(({ id, shortLabel, Icon }) => {
+            const isActive = mode === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => onSelectMode(id)}
+                aria-current={isActive ? 'page' : undefined}
+                className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-1.5 py-1.5 text-xs font-semibold whitespace-nowrap transition sm:px-2.5 sm:text-[13px] ${
+                  isActive
+                    ? 'border-[#284E3B] bg-[#284E3B] text-white shadow-sm hover:border-[#1F3F2F] hover:bg-[#1F3F2F] dark:border-[#52B788]/50 dark:bg-[#2D5A43] dark:hover:bg-[#234735]'
+                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#10B981] dark:hover:bg-[#242925] dark:hover:text-[#6EE7B7]'
+                }`}
+              >
+                <Icon className="hidden h-3.5 w-3.5 shrink-0 sm:block" />
+                <span className="truncate">{shortLabel}</span>
+              </button>
+            );
+          })}
         </nav>
       </div>
     </header>

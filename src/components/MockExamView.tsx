@@ -500,23 +500,23 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
     const isStartDisabled = isMasteredMode && masteredCount === 0;
 
     return (
-      <div className="w-full space-y-6 md:space-y-8">
-        <div className="flex w-full flex-col items-start justify-between gap-8 lg:flex-row lg:gap-12">
+      <div className="w-full">
+        <div className="flex w-full flex-col items-start gap-6 lg:flex-row lg:gap-8 xl:gap-10">
           {/* Main Exam Setup Card */}
-          <section className="w-full flex-1 rounded-2xl border border-[#D2DACB] bg-[#E8ECE4] p-4 shadow-[0_8px_24px_-4px_rgba(20,32,24,0.06)] dark:border-[#222E27] dark:bg-[#131A16] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-8 lg:max-w-[1040px]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#D2DACB] pb-4 dark:border-[#222E27] sm:pb-5">
+          <section className="w-full min-w-0 flex-1 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-4 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-8">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#D5CFC2] pb-4 dark:border-[#262925] sm:pb-5">
               <div>
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap ${
                     isMasteredMode
-                      ? 'border-[#68B99A] bg-[#E1F3EC] text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7]'
-                      : 'border-[#9BC4AE] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]'
+                      ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                      : 'border-[#284E3B]/30 bg-[#E8F0EC] text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7]'
                   }`}
                 >
                   {isMasteredMode ? (
-                    <Sparkles className="h-3.5 w-3.5 text-[#1F8A65] dark:text-[#6EE7B7]" />
+                    <Sparkles className="h-3.5 w-3.5 text-[#059669] dark:text-[#34D399]" />
                   ) : (
-                    <ListChecks className="h-3.5 w-3.5 text-[#2E6F4E] dark:text-[#74C69D]" />
+                    <ListChecks className="h-3.5 w-3.5 text-[#284E3B] dark:text-[#6EE7B7]" />
                   )}
                   {isMasteredMode
                     ? currentPlannedQuestions > 0
@@ -524,13 +524,13 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                       : 'Ôn các câu đã học'
                     : `Đề thi thử ${subjectMeta.examTotal} câu`}
                 </span>
-                <h2 className="mt-2.5 text-lg font-bold text-[#142018] dark:text-[#F3F6F4] sm:text-xl">
+                <h2 className="mt-2.5 text-lg font-bold text-[#18181B] dark:text-[#F5F5F4] sm:text-xl">
                   Thi thử trộn đề — {subjectMeta.code}
                 </h2>
               </div>
 
-              <div className="flex items-center gap-2 rounded-xl border border-[#D2DACB] bg-[#F7F8F5] px-3 py-1.5 text-xs font-medium text-[#142018] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF] sm:px-3.5 sm:py-2">
-                <Clock className="h-4 w-4 text-[#2E6F4E] dark:text-[#74C69D]" />
+              <div className="flex items-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-1.5 text-xs font-medium text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] sm:px-3.5 sm:py-2">
+                <Clock className="h-4 w-4 text-[#284E3B] dark:text-[#6EE7B7]" />
                 <span className="tabular-nums">
                   {currentPlannedMinutes > 0
                     ? `Thời lượng chuẩn: ${currentPlannedMinutes} phút`
@@ -541,7 +541,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
 
             {/* 2-Mode Exam Selector Cards (Mobile-First grid-cols-1 sm:grid-cols-2 gap-3) */}
             <div className="mt-4 sm:mt-5">
-              <div className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-[#5C6E60] dark:text-[#8B9E91]">
+              <div className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
                 Chọn chế độ đề thi
               </div>
 
@@ -552,16 +552,16 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   onClick={() => setExamType('standard')}
                   className={`flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 text-left transition sm:p-4 ${
                     examType === 'standard'
-                      ? 'border-[#2E6F4E] bg-[#E3EFE8] ring-1 ring-[#2E6F4E] dark:border-[#52B788] dark:bg-[#357A58]/20 dark:ring-[#52B788]'
-                      : 'border-[#D2DACB] bg-[#F7F8F5] hover:border-[#2E6F4E] hover:bg-[#E3EFE8]/60 dark:border-[#25332B] dark:bg-[#17201B] dark:hover:border-[#52B788] dark:hover:bg-[#223029]'
+                      ? 'border-[#284E3B] bg-[#E8F0EC] ring-1 ring-[#284E3B] dark:border-[#6EE7B7]/60 dark:bg-[#2D5A43]/35 dark:ring-[#6EE7B7]/60'
+                      : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#284E3B] hover:bg-[#E8F0EC]/70 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#6EE7B7]/60 dark:hover:bg-[#252A26]'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className={`text-sm font-bold ${
                         examType === 'standard'
-                          ? 'text-[#23583D] dark:text-[#74C69D]'
-                          : 'text-[#142018] dark:text-[#F3F6F4]'
+                          ? 'text-[#284E3B] dark:text-[#6EE7B7]'
+                          : 'text-[#18181B] dark:text-[#F5F5F4]'
                       }`}
                     >
                       Đề chuẩn đề cương (random)
@@ -569,8 +569,8 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     <span
                       className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
                         examType === 'standard'
-                          ? 'border-[#2E6F4E] bg-[#2E6F4E] text-white dark:border-[#52B788] dark:bg-[#357A58]'
-                          : 'border-[#C5D1BE] dark:border-[#31453A]'
+                          ? 'border-[#284E3B] bg-[#284E3B] text-white dark:border-[#6EE7B7] dark:bg-[#2D5A43]'
+                          : 'border-[#C6BEB0] dark:border-[#323833]'
                       }`}
                     >
                       {examType === 'standard' && (
@@ -579,7 +579,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     </span>
                   </div>
                   <div className="mt-3 flex items-center gap-2">
-                    <span className="rounded-md border border-[#9BC4AE] bg-[#E3EFE8] px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-[#23583D] tabular-nums dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]">
+                    <span className="rounded-md border border-[#284E3B]/30 bg-[#E8F0EC] px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-[#284E3B] tabular-nums dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/35 dark:text-[#6EE7B7]">
                       60 câu • 60 phút
                     </span>
                   </div>
@@ -591,16 +591,16 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   onClick={() => setExamType('mastered')}
                   className={`flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 text-left transition sm:p-4 ${
                     examType === 'mastered'
-                      ? 'border-[#1F8A65] bg-[#E1F3EC] ring-1 ring-[#1F8A65] dark:border-[#52B788] dark:bg-[#2E9E73]/15 dark:ring-[#52B788]'
-                      : 'border-[#D2DACB] bg-[#F7F8F5] hover:border-[#1F8A65] hover:bg-[#E1F3EC]/60 dark:border-[#25332B] dark:bg-[#17201B] dark:hover:border-[#52B788] dark:hover:bg-[#223029]'
+                      ? 'border-[#10B981] bg-[#D1FAE5] ring-1 ring-[#10B981] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:ring-[#10B981]'
+                      : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#10B981] hover:bg-[#D1FAE5]/60 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#10B981] dark:hover:bg-[#064E3B]/30'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className={`text-sm font-bold ${
                         examType === 'mastered'
-                          ? 'text-[#0F5C41] dark:text-[#6EE7B7]'
-                          : 'text-[#142018] dark:text-[#F3F6F4]'
+                          ? 'text-[#064E3B] dark:text-[#34D399]'
+                          : 'text-[#18181B] dark:text-[#F5F5F4]'
                       }`}
                     >
                       Ôn các câu đã học
@@ -608,8 +608,8 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     <span
                       className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
                         examType === 'mastered'
-                          ? 'border-[#1F8A65] bg-[#1F8A65] text-white dark:border-[#52B788] dark:bg-[#38A179] dark:text-[#0D120F]'
-                          : 'border-[#C5D1BE] dark:border-[#31453A]'
+                          ? 'border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]'
+                          : 'border-[#C6BEB0] dark:border-[#323833]'
                       }`}
                     >
                       {examType === 'mastered' && (
@@ -618,7 +618,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     </span>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <span className="rounded-md border border-[#68B99A] bg-[#E1F3EC] px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-[#0F5C41] tabular-nums dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7]">
+                    <span className="rounded-md border border-[#10B981] bg-[#D1FAE5] px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-[#064E3B] tabular-nums dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]">
                       Kho đã thuộc: {masteredCount} câu
                     </span>
                   </div>
@@ -629,9 +629,9 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
             {/* Mode Details: Standard Chapter Quota Matrix vs Mastered Pool Summary */}
             {!isMasteredMode ? (
               <div className="mt-5 sm:mt-6">
-                <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#5C6E60] dark:text-[#8B9E91]">
+                <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
                   <span>Cấu trúc phân bổ câu hỏi</span>
-                  <span className="tabular-nums text-[#23583D] dark:text-[#74C69D]">
+                  <span className="tabular-nums text-[#284E3B] dark:text-[#6EE7B7]">
                     Tổng {subjectMeta.examTotal} câu
                   </span>
                 </div>
@@ -642,12 +642,12 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     return (
                       <div
                         key={ch.chapter}
-                        className="flex items-center justify-between gap-2 rounded-xl border border-[#D2DACB] bg-[#F7F8F5] px-3 py-2.5 dark:border-[#25332B] dark:bg-[#17201B] sm:px-4 sm:py-3"
+                        className="flex items-center justify-between gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C] sm:px-4 sm:py-3"
                       >
-                        <span className="text-xs font-semibold text-[#23583D] dark:text-[#74C69D]">
+                        <span className="text-xs font-semibold text-[#284E3B] dark:text-[#6EE7B7]">
                           Chương {ch.chapter}
                         </span>
-                        <span className="shrink-0 rounded-lg border border-[#68B99A] bg-[#E1F3EC] px-2.5 py-0.5 text-xs font-bold text-[#0F5C41] tabular-nums dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7]">
+                        <span className="shrink-0 rounded-lg border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold text-[#064E3B] tabular-nums dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]">
                           {quota} câu
                         </span>
                       </div>
@@ -657,29 +657,29 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               </div>
             ) : (
               <div className="mt-5 space-y-3.5 sm:mt-6">
-                <div className="rounded-xl border border-[#68B99A] bg-[#E1F3EC]/75 p-4 dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 sm:p-5">
+                <div className="rounded-xl border border-[#10B981] bg-[#D1FAE5]/70 p-4 dark:border-[#10B981] dark:bg-[#064E3B]/45 sm:p-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-[#1F8A65] dark:text-[#6EE7B7]" />
-                      <span className="text-sm font-bold text-[#0F5C41] tabular-nums dark:text-[#6EE7B7]">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-[#059669] dark:text-[#34D399]" />
+                      <span className="text-sm font-bold text-[#064E3B] tabular-nums dark:text-[#34D399]">
                         Kho đã thuộc: {masteredCount} câu
                       </span>
                     </div>
                     {masteredCount > 0 && (
-                      <span className="rounded-full border border-[#68B99A] bg-white px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#0F5C41] tabular-nums dark:border-[#52B788]/60 dark:bg-[#17201B] dark:text-[#6EE7B7]">
+                      <span className="rounded-full border border-[#10B981] bg-white px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#064E3B] tabular-nums dark:border-[#10B981]/60 dark:bg-[#1C1F1C] dark:text-[#34D399]">
                         Đề thi thử {currentPlannedQuestions} câu • {currentPlannedMinutes} phút
                       </span>
                     )}
                   </div>
 
                   {masteredCount > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#68B99A]/60 pt-3 dark:border-[#52B788]/30">
+                    <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#10B981]/40 pt-3 dark:border-[#10B981]/30">
                       {subjectMeta.chapters.map(ch => {
                         const chMastered = masteredPool.filter(q => q.chapter === ch.chapter).length;
                         return (
                           <span
                             key={ch.chapter}
-                            className="rounded-md border border-[#68B99A] bg-white px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-[#0F5C41] tabular-nums dark:border-[#52B788]/60 dark:bg-[#17201B] dark:text-[#6EE7B7]"
+                            className="rounded-md border border-[#10B981] bg-white px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-[#064E3B] tabular-nums dark:border-[#10B981]/60 dark:bg-[#1C1F1C] dark:text-[#34D399]"
                           >
                             Chương {ch.chapter}: {chMastered} câu
                           </span>
@@ -690,7 +690,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 </div>
 
                 {masteredCount === 0 && (
-                  <div className="flex items-start gap-3 rounded-xl border border-[#9BC4AE] bg-[#E3EFE8] p-4 text-xs leading-relaxed text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D] sm:text-sm">
+                  <div className="flex items-start gap-3 rounded-xl border border-[#284E3B]/30 bg-[#E8F0EC] p-4 text-xs leading-relaxed text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7] sm:text-sm">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                     <p className="font-medium">
                       Bạn chưa có câu nào đạt trạng thái Đã thuộc ở môn này. Hãy học ở tab Theo
@@ -702,7 +702,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
             )}
 
             {/* Timer Toggle + Start Action */}
-            <div className="mt-5 flex flex-col gap-3.5 rounded-xl border border-[#D2DACB] bg-[#F7F8F5] p-4 dark:border-[#25332B] dark:bg-[#17201B] sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-5">
+            <div className="mt-5 flex flex-col gap-3.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-4 dark:border-[#2C302B] dark:bg-[#1C1F1C] sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-5">
               <button
                 type="button"
                 onClick={() => setTimerEnabled(prev => !prev)}
@@ -711,21 +711,21 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors ${
                     timerEnabled
-                      ? 'border-[#9BC4AE] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]'
-                      : 'border-[#D2DACB] bg-[#E8ECE4] text-[#5C6E60] dark:border-[#222E27] dark:bg-[#131A16] dark:text-[#8B9E91]'
+                      ? 'border-[#284E3B]/30 bg-[#E8F0EC] text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7]'
+                      : 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B]'
                   }`}
                 >
                   {timerEnabled ? <Timer className="h-5 w-5" /> : <TimerOff className="h-5 w-5" />}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[#142018] dark:text-[#F3F6F4]">
+                <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[#18181B] dark:text-[#F5F5F4]">
                   <span>
                     Đếm ngược {currentPlannedMinutes > 0 ? currentPlannedMinutes : 45} phút
                   </span>
                   <span
                     className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
                       timerEnabled
-                        ? 'border-[#9BC4AE] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]'
-                        : 'border-[#D2DACB] bg-[#E8ECE4] text-[#5C6E60] dark:border-[#222E27] dark:bg-[#131A16] dark:text-[#8B9E91]'
+                        ? 'border-[#284E3B]/30 bg-[#E8F0EC] text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7]'
+                        : 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B]'
                     }`}
                   >
                     {timerEnabled ? 'Đang bật' : 'Đang tắt'}
@@ -737,7 +737,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 type="button"
                 disabled={isStartDisabled}
                 onClick={startNewExam}
-                className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#2E6F4E] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#23583D] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#52B788]/50 dark:bg-[#357A58] dark:hover:bg-[#2B6649] sm:w-auto sm:py-3"
+                className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#284E3B] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1F3F2F] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] dark:hover:bg-[#234835] sm:w-auto sm:py-3"
               >
                 <Play className="h-4 w-4 fill-current" />
                 Bắt đầu làm bài
@@ -746,28 +746,28 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
           </section>
 
           {/* Recent Exam History Card */}
-          <section className="flex w-full shrink-0 flex-col rounded-2xl border border-[#D2DACB] bg-[#E8ECE4] p-4 shadow-[0_8px_24px_-4px_rgba(20,32,24,0.06)] dark:border-[#222E27] dark:bg-[#131A16] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-8 lg:w-[420px] xl:w-[460px]">
-            <div className="flex items-center justify-between border-b border-[#D2DACB] pb-4 dark:border-[#222E27] sm:pb-5">
+          <section className="flex w-full shrink-0 flex-col rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-4 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-8 lg:w-[400px] xl:w-[440px]">
+            <div className="flex items-center justify-between border-b border-[#D5CFC2] pb-4 dark:border-[#262925] sm:pb-5">
               <div className="flex items-center gap-2">
-                <History className="h-4 w-4 text-[#2E6F4E] dark:text-[#74C69D]" />
-                <h3 className="text-base font-bold text-[#142018] dark:text-[#F3F6F4]">
+                <History className="h-4 w-4 text-[#284E3B] dark:text-[#6EE7B7]" />
+                <h3 className="text-base font-bold text-[#18181B] dark:text-[#F5F5F4]">
                   Lịch sử thi gần đây
                 </h3>
               </div>
-              <span className="rounded-full border border-[#68B99A] bg-[#E1F3EC] px-2.5 py-0.5 text-xs font-semibold text-[#0F5C41] tabular-nums dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7]">
+              <span className="rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-semibold text-[#064E3B] tabular-nums dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]">
                 {subjectHistory.length} lượt
               </span>
             </div>
 
             {subjectHistory.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center py-10 text-center sm:py-12">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#9BC4AE] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#284E3B]/30 bg-[#E8F0EC] text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7]">
                   <Award className="h-6 w-6" />
                 </div>
-                <p className="mt-3 text-sm font-medium text-[#142018] dark:text-[#F3F6F4]">
+                <p className="mt-3 text-sm font-medium text-[#18181B] dark:text-[#F5F5F4]">
                   Chưa có bài thi thử {subjectMeta.code} nào
                 </p>
-                <p className="mt-1 max-w-xs text-xs text-[#5C6E60] dark:text-[#8B9E91]">
+                <p className="mt-1 max-w-xs text-xs text-[#656058] dark:text-[#9CA39B]">
                   Hoàn thành một đề thi để xem điểm số và phân tích từng chương tại đây.
                 </p>
               </div>
@@ -779,41 +779,41 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   return (
                     <div
                       key={item.id}
-                      className="rounded-xl border border-[#C5D1BE] bg-white p-3.5 transition hover:border-[#2E6F4E] dark:border-[#25332B] dark:bg-[#17201B] dark:hover:border-[#52B788] sm:p-4"
+                      className="rounded-xl border border-[#C6BEB0] bg-white p-3.5 transition hover:border-[#284E3B] dark:border-[#323833] dark:bg-[#1E221F] dark:hover:border-[#10B981] sm:p-4"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex min-w-0 items-center gap-2.5">
                           <span
                             className={`inline-flex shrink-0 items-center justify-center rounded-lg border px-2.5 py-1 text-sm font-bold tabular-nums ${
                               passed
-                                ? 'border-[#68B99A] bg-[#E1F3EC] text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7]'
-                                : 'border-[#F2B8AE] bg-[#FDF0ED] text-[#C2412D] dark:border-[#F28472]/50 dark:bg-[#E05A47]/15 dark:text-[#FCA5A5]'
+                                ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                                : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
                             }`}
                           >
                             {item.scoreOn10.toFixed(1)}đ
                           </span>
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="text-sm font-semibold text-[#142018] tabular-nums dark:text-[#F3F6F4]">
+                              <span className="text-sm font-semibold text-[#18181B] tabular-nums dark:text-[#F5F5F4]">
                                 {item.correctCount}/{item.totalQuestions} câu đúng
                               </span>
                               <span
                                 className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${
                                   isItemMasteredMode
-                                    ? 'border-[#68B99A] bg-[#E1F3EC] text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7]'
-                                    : 'border-[#9BC4AE] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]'
+                                    ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                                    : 'border-[#284E3B]/30 bg-[#E8F0EC] text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7]'
                                 }`}
                               >
                                 {isItemMasteredMode ? 'Ôn đã thuộc' : 'Đề đề cương'}
                               </span>
                             </div>
-                            <div className="mt-0.5 text-xs text-[#5C6E60] dark:text-[#8B9E91]">
+                            <div className="mt-0.5 text-xs text-[#656058] dark:text-[#9CA39B]">
                               {formatDateTimeVi(item.timestamp)}
                             </div>
                           </div>
                         </div>
-                        <div className="shrink-0 text-right text-xs text-[#5C6E60] tabular-nums dark:text-[#8B9E91]">
-                          <div className="font-medium text-[#243329] dark:text-[#DDE5DF]">
+                        <div className="shrink-0 text-right text-xs text-[#656058] tabular-nums dark:text-[#9CA39B]">
+                          <div className="font-medium text-[#292524] dark:text-[#E7E5E4]">
                             {formatClock(item.durationSeconds)}
                           </div>
                           <div>Thời gian làm</div>
@@ -827,7 +827,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                           .map(([ch, stat]) => (
                             <span
                               key={ch}
-                              className="rounded-md border border-[#D2DACB] bg-[#F7F8F5] px-2 py-0.5 text-[11px] font-medium text-[#5C6E60] tabular-nums dark:border-[#25332B] dark:bg-[#131A16] dark:text-[#8B9E91]"
+                              className="rounded-md border border-[#D5CFC2] bg-[#FAF9F5] px-2 py-0.5 text-[11px] font-medium text-[#656058] tabular-nums dark:border-[#2C302B] dark:bg-[#161816] dark:text-[#9CA39B]"
                             >
                               C{ch}: {stat.correct}/{stat.total}
                             </span>
@@ -854,198 +854,204 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
 
     return (
       <>
-        <div className="w-full space-y-3 lg:space-y-6">
-          {/* Mobile / Tablet Compact 1-Line Toolbar (< 1024px) */}
-          <div className="flex w-full items-center justify-between gap-2 lg:hidden">
-            <button
-              type="button"
-              onClick={() => setIsMobileSheetOpen(true)}
-              className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-1.5 rounded-xl border border-[#D2DACB] bg-[#E8ECE4] px-3 py-2 text-left text-xs font-semibold text-[#142018] shadow-xs transition active:scale-[0.99] dark:border-[#222E27] dark:bg-[#131A16] dark:text-[#F3F6F4]"
-            >
-              <span className="flex min-w-0 items-center gap-2">
-                <Menu className="h-4 w-4 shrink-0 text-[#2E6F4E] dark:text-[#74C69D]" />
-                <span className="truncate tabular-nums">
-                  Câu {currentIndex + 1}/{examQuestions.length} • Đã làm {answeredCount}
-                </span>
+        <div className="flex w-full flex-col items-start gap-6 lg:flex-row lg:gap-8 xl:gap-10">
+          {/* Desktop Navigator Sidebar */}
+          <aside className="hidden w-full shrink-0 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-6 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] lg:sticky lg:top-20 lg:order-1 lg:block lg:w-[360px] xl:w-[380px]">
+            <div className="flex items-center justify-between border-b border-[#D5CFC2] pb-3.5 dark:border-[#262925]">
+              <h4 className="text-sm font-bold text-[#18181B] tabular-nums dark:text-[#F5F5F4]">
+                Bảng câu hỏi ({examQuestions.length} câu)
+              </h4>
+              <span className="text-xs font-medium text-[#656058] tabular-nums dark:text-[#9CA39B]">
+                Còn {unansweredCount} câu trống
               </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-[#5C6E60] dark:text-[#8B9E91]" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setTimerEnabled(prev => !prev)}
-              title={timerEnabled ? 'Đang bật đếm ngược (chạm để tắt)' : 'Đang tắt đếm ngược (chạm để bật)'}
-              className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-bold tabular-nums transition ${!timerEnabled
-                  ? 'border-[#D2DACB] bg-[#E8ECE4] text-[#5C6E60] dark:border-[#222E27] dark:bg-[#131A16] dark:text-[#8B9E91]'
-                  : isLowTime
-                    ? 'animate-pulse border-[#F2B8AE] bg-[#FDF0ED] text-[#C2412D] dark:border-[#F28472]/50 dark:bg-[#E05A47]/15 dark:text-[#FCA5A5]'
-                    : 'border-[#9BC4AE] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]'
-                }`}
-            >
-              <Clock className="h-3.5 w-3.5 shrink-0" />
-              <span>{timerEnabled ? formatClock(remainingSeconds) : formatClock(elapsedSeconds)}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={requestSubmit}
-              className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-xl bg-[#2E6F4E] px-3 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#23583D] dark:border dark:border-[#52B788]/50 dark:bg-[#357A58] dark:hover:bg-[#2B6649]"
-            >
-              <Send className="h-3.5 w-3.5" />
-              <span>Nộp</span>
-            </button>
-          </div>
-
-          {/* Desktop Sticky Top Bar (>= 1024px) */}
-          <div className="sticky top-28 z-20 hidden w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D2DACB] bg-[#E8ECE4]/95 px-5 py-3.5 shadow-[0_8px_24px_-4px_rgba(20,32,24,0.06)] backdrop-blur dark:border-[#222E27] dark:bg-[#131A16]/95 dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.6)] lg:flex">
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Countdown Timer + Toggle */}
-              <div className="flex items-center gap-2">
-                <div
-                  className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-bold tabular-nums transition-colors ${!timerEnabled
-                      ? 'border-[#D2DACB] bg-[#F7F8F5] text-[#5C6E60] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#8B9E91]'
-                      : isLowTime
-                        ? 'animate-pulse border-[#F2B8AE] bg-[#FDF0ED] text-[#C2412D] dark:border-[#F28472]/50 dark:bg-[#E05A47]/15 dark:text-[#FCA5A5]'
-                        : 'border-[#9BC4AE] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]'
-                    }`}
-                >
-                  <Clock className="h-4 w-4 shrink-0" />
-                  <span>
-                    {timerEnabled ? formatClock(remainingSeconds) : formatClock(elapsedSeconds)}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setTimerEnabled(prev => !prev)}
-                  title={timerEnabled ? 'Tắt đồng hồ đếm ngược' : 'Bật đồng hồ đếm ngược'}
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D2DACB] bg-[#F7F8F5] px-2.5 py-1.5 text-xs font-medium text-[#5C6E60] transition hover:border-[#2E6F4E] hover:bg-[#E3EFE8] hover:text-[#23583D] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#8B9E91] dark:hover:border-[#52B788] dark:hover:bg-[#223029] dark:hover:text-[#74C69D]"
-                >
-                  {timerEnabled ? (
-                    <>
-                      <TimerOff className="h-3.5 w-3.5" />
-                      <span>Tắt đếm ngược</span>
-                    </>
-                  ) : (
-                    <>
-                      <Timer className="h-3.5 w-3.5 text-[#2E6F4E] dark:text-[#74C69D]" />
-                      <span>Bật đếm ngược</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Answered Progress */}
-              <div className="flex items-center gap-2.5 border-l border-[#D2DACB] pl-3 dark:border-[#222E27]">
-                <span className="text-xs font-semibold text-[#243329] tabular-nums dark:text-[#DDE5DF]">
-                  Đã làm: <span className="text-[#0F5C41] dark:text-[#6EE7B7]">{answeredCount}</span>/{examQuestions.length} câu
-                </span>
-                <div className="h-2 w-24 overflow-hidden rounded-full bg-[#D2DACB] dark:bg-[#0D120F]">
-                  <div
-                    className="h-full rounded-full bg-[#1F8A65] transition-all duration-200 dark:bg-[#38A179]"
-                    style={{
-                      width: `${Math.round((answeredCount / examQuestions.length) * 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={requestSubmit}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#2E6F4E] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#23583D] dark:border dark:border-[#52B788]/50 dark:bg-[#357A58] dark:hover:bg-[#2B6649]"
-            >
-              <Send className="h-4 w-4" />
-              Nộp bài
-            </button>
-          </div>
+            <div className="mt-4 grid grid-cols-6 gap-2.5">
+              {examQuestions.map((q, idx) => {
+                const isCurrent = idx === currentIndex;
+                const isAnswered = (answers[q.id]?.length ?? 0) > 0;
+                const flagged = Boolean(progress.questions[q.id]?.flagged);
 
-          {/* Main Active 2-Column Layout: Left 60-Cell Navigator Sidebar + Right Question Card */}
-          <div className="flex w-full flex-col items-start justify-between gap-8 lg:flex-row lg:gap-12">
-            {/* Desktop Navigator Sidebar */}
-            <aside className="hidden w-full shrink-0 rounded-2xl border border-[#D2DACB] bg-[#E8ECE4] p-6 shadow-[0_8px_24px_-4px_rgba(20,32,24,0.06)] dark:border-[#222E27] dark:bg-[#131A16] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] lg:sticky lg:top-28 lg:order-1 lg:block lg:w-[340px]">
-              <div className="flex items-center justify-between border-b border-[#D2DACB] pb-3.5 dark:border-[#222E27]">
-                <h4 className="text-sm font-bold text-[#142018] tabular-nums dark:text-[#F3F6F4]">
-                  Bảng câu hỏi ({examQuestions.length} câu)
-                </h4>
-                <span className="text-xs font-medium text-[#5C6E60] tabular-nums dark:text-[#8B9E91]">
-                  Còn {unansweredCount} câu trống
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold tabular-nums transition ${
+                      isAnswered
+                        ? 'border-[#284E3B]/40 bg-[#E8F0EC] text-[#284E3B] dark:border-[#6EE7B7]/40 dark:bg-[#2D5A43]/35 dark:text-[#6EE7B7]'
+                        : flagged
+                          ? 'border-[#C4B5FD] bg-[#EDE9FE] text-[#6D28D9] dark:border-[#8B5CF6]/50 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE]'
+                          : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#284E3B] hover:bg-[#E8F0EC]/70 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#10B981] dark:hover:bg-[#252A26]'
+                    } ${flagged && isAnswered ? 'border-[#6D28D9] dark:border-[#8B5CF6]' : ''} ${
+                      isCurrent
+                        ? 'z-10 ring-2 ring-[#284E3B] ring-offset-1 ring-offset-[#EAE6DD] dark:ring-[#10B981] dark:ring-offset-[#161816]'
+                        : ''
+                    }`}
+                  >
+                    {idx + 1}
+                    {flagged && (
+                      <span
+                        className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#6D28D9] ring-2 ring-[#EAE6DD] dark:bg-[#DDD6FE] dark:ring-[#161816]"
+                        aria-label="Phân vân"
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2.5 border-t border-[#D5CFC2] pt-3.5 text-[11px] text-[#656058] dark:border-[#262925] dark:text-[#9CA39B]">
+              <div className="flex items-center gap-1.5">
+                <span className="h-3.5 w-3.5 rounded border border-[#284E3B] ring-1 ring-[#284E3B] dark:border-[#10B981] dark:ring-[#10B981]" />
+                <span>Đang xem</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-3.5 w-3.5 rounded border border-[#284E3B]/40 bg-[#E8F0EC] dark:border-[#6EE7B7]/40 dark:bg-[#2D5A43]/35" />
+                <span>Đã chọn</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="relative h-3.5 w-3.5 rounded border border-[#C4B5FD] bg-[#EDE9FE] dark:border-[#8B5CF6]/50 dark:bg-[#8B5CF6]/20">
+                  <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-[#6D28D9] dark:bg-[#DDD6FE]" />
                 </span>
+                <span>Phân vân</span>
               </div>
-
-              <div className="mt-4 grid grid-cols-6 gap-2.5">
-                {examQuestions.map((q, idx) => {
-                  const isCurrent = idx === currentIndex;
-                  const isAnswered = (answers[q.id]?.length ?? 0) > 0;
-                  const flagged = Boolean(progress.questions[q.id]?.flagged);
-
-                  return (
-                    <button
-                      key={q.id}
-                      type="button"
-                      onClick={() => setCurrentIndex(idx)}
-                      className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold tabular-nums transition ${isAnswered
-                          ? 'border-[#9BC4AE] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]'
-                          : flagged
-                            ? 'border-[#C9B3E6] bg-[#F3EDF9] text-[#6D28D9] dark:border-[#C084FC]/50 dark:bg-[#A855F7]/15 dark:text-[#D8B4FE]'
-                            : 'border-[#D2DACB] bg-[#F7F8F5] text-[#243329] hover:border-[#2E6F4E] hover:bg-[#E3EFE8]/60 dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF] dark:hover:border-[#52B788] dark:hover:bg-[#223029]'
-                        } ${flagged && isAnswered ? 'border-[#6D28D9] dark:border-[#C084FC]' : ''} ${isCurrent ? 'z-10 ring-2 ring-[#2E6F4E] ring-offset-1 ring-offset-[#E8ECE4] dark:ring-[#52B788] dark:ring-offset-[#131A16]' : ''
-                        }`}
-                    >
-                      {idx + 1}
-                      {flagged && (
-                        <span
-                          className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#6D28D9] ring-2 ring-[#E8ECE4] dark:bg-[#D8B4FE] dark:ring-[#131A16]"
-                          aria-label="Phân vân"
-                        />
-                      )}
-                    </button>
-                  );
-                })}
+              <div className="flex items-center gap-1.5">
+                <span className="h-3.5 w-3.5 rounded border border-[#D5CFC2] bg-[#FAF9F5] dark:border-[#2C302B] dark:bg-[#1C1F1C]" />
+                <span>Chưa làm</span>
               </div>
+            </div>
+          </aside>
 
-              <div className="mt-4 grid grid-cols-2 gap-2.5 border-t border-[#D2DACB] pt-3.5 text-[11px] text-[#5C6E60] dark:border-[#222E27] dark:text-[#8B9E91]">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-3.5 w-3.5 rounded border border-[#2E6F4E] ring-1 ring-[#2E6F4E] dark:border-[#52B788] dark:ring-[#52B788]" />
-                  <span>Đang xem</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="h-3.5 w-3.5 rounded border border-[#9BC4AE] bg-[#E3EFE8] dark:border-[#52B788]/50 dark:bg-[#357A58]/20" />
-                  <span>Đã chọn</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="relative h-3.5 w-3.5 rounded border border-[#C9B3E6] bg-[#F3EDF9] dark:border-[#C084FC]/50 dark:bg-[#A855F7]/15">
-                    <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-[#6D28D9] dark:bg-[#D8B4FE]" />
+          {/* Right Column: Top Toolbars + Question Card */}
+          <div className="w-full min-w-0 flex-1 space-y-4 lg:order-2">
+            {/* Mobile / Tablet Compact 1-Line Toolbar (< 1024px) */}
+            <div className="flex w-full items-center justify-between gap-2 lg:hidden">
+              <button
+                type="button"
+                onClick={() => setIsMobileSheetOpen(true)}
+                className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#EAE6DD] px-3 py-2 text-left text-xs font-semibold text-[#18181B] shadow-xs transition active:scale-[0.99] dark:border-[#262925] dark:bg-[#161816] dark:text-[#F5F5F4]"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <Menu className="h-4 w-4 shrink-0 text-[#284E3B] dark:text-[#6EE7B7]" />
+                  <span className="truncate tabular-nums">
+                    Câu {currentIndex + 1}/{examQuestions.length} • Đã làm {answeredCount}
                   </span>
-                  <span>Phân vân</span>
+                </span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-[#656058] dark:text-[#9CA39B]" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTimerEnabled(prev => !prev)}
+                title={timerEnabled ? 'Đang bật đếm ngược (chạm để tắt)' : 'Đang tắt đếm ngược (chạm để bật)'}
+                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-bold tabular-nums transition ${
+                  !timerEnabled
+                    ? 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B]'
+                    : isLowTime
+                      ? 'animate-pulse border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
+                      : 'border-[#284E3B]/35 bg-[#E8F0EC] text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7]'
+                }`}
+              >
+                <Clock className="h-3.5 w-3.5 shrink-0" />
+                <span>{timerEnabled ? formatClock(remainingSeconds) : formatClock(elapsedSeconds)}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={requestSubmit}
+                className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-xl bg-[#284E3B] px-3 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#1F3F2F] dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] dark:hover:bg-[#234835]"
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span>Nộp</span>
+              </button>
+            </div>
+
+            {/* Desktop Sticky Top Bar (>= 1024px) */}
+            <div className="sticky top-20 z-20 hidden w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD]/95 px-5 py-3.5 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] backdrop-blur dark:border-[#262925] dark:bg-[#161816]/95 dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.6)] lg:flex">
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Countdown Timer + Toggle */}
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-bold tabular-nums transition-colors ${
+                      !timerEnabled
+                        ? 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
+                        : isLowTime
+                          ? 'animate-pulse border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
+                          : 'border-[#284E3B]/35 bg-[#E8F0EC] text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7]'
+                    }`}
+                  >
+                    <Clock className="h-4 w-4 shrink-0" />
+                    <span>
+                      {timerEnabled ? formatClock(remainingSeconds) : formatClock(elapsedSeconds)}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setTimerEnabled(prev => !prev)}
+                    title={timerEnabled ? 'Tắt đồng hồ đếm ngược' : 'Bật đồng hồ đếm ngược'}
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-2.5 py-1.5 text-xs font-medium text-[#656058] transition hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#10B981] dark:hover:bg-[#252A26] dark:hover:text-[#6EE7B7]"
+                  >
+                    {timerEnabled ? (
+                      <>
+                        <TimerOff className="h-3.5 w-3.5" />
+                        <span>Tắt đếm ngược</span>
+                      </>
+                    ) : (
+                      <>
+                        <Timer className="h-3.5 w-3.5 text-[#284E3B] dark:text-[#6EE7B7]" />
+                        <span>Bật đếm ngược</span>
+                      </>
+                    )}
+                  </button>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="h-3.5 w-3.5 rounded border border-[#D2DACB] bg-[#F7F8F5] dark:border-[#25332B] dark:bg-[#17201B]" />
-                  <span>Chưa làm</span>
+
+                {/* Answered Progress */}
+                <div className="flex items-center gap-2.5 border-l border-[#D5CFC2] pl-3 dark:border-[#262925]">
+                  <span className="text-xs font-semibold text-[#292524] tabular-nums dark:text-[#E7E5E4]">
+                    Đã làm: <span className="text-[#059669] dark:text-[#34D399]">{answeredCount}</span>/{examQuestions.length} câu
+                  </span>
+                  <div className="h-2 w-24 overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
+                    <div
+                      className="h-full rounded-full bg-[#059669] transition-all duration-200 dark:bg-[#10B981]"
+                      style={{
+                        width: `${Math.round((answeredCount / examQuestions.length) * 100)}%`,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-            </aside>
+
+              <button
+                type="button"
+                onClick={requestSubmit}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#284E3B] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1F3F2F] dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] dark:hover:bg-[#234835]"
+              >
+                <Send className="h-4 w-4" />
+                Nộp bài
+              </button>
+            </div>
 
             {/* Question Card (Focal Point Elevation) */}
-            <div className="w-full min-w-0 flex-1 rounded-2xl border border-[#BCC9B4] border-t-2 border-t-[#2E6F4E] bg-white p-4 shadow-[0_14px_34px_-8px_rgba(30,58,42,0.10)] dark:border-[#31453A] dark:border-t-2 dark:border-t-[#52B788] dark:bg-[#1B2620] dark:shadow-[0_14px_36px_-8px_rgba(0,0,0,0.65)] sm:p-7 lg:order-2 lg:max-w-[1040px] lg:p-9">
+            <div className="w-full rounded-2xl border border-[#C6BEB0] border-t-2 border-t-[#284E3B] bg-white p-4 shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] dark:border-[#323833] dark:border-t-2 dark:border-t-[#10B981] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)] sm:p-7 lg:p-9">
               {/* Header Metadata */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D2DACB] pb-3 dark:border-[#31453A] sm:pb-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D5CFC2] pb-3 dark:border-[#323833] sm:pb-4">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <span className="rounded-lg bg-[#2E6F4E] px-2.5 py-0.5 text-xs font-bold text-white tabular-nums dark:border dark:border-[#52B788]/50 dark:bg-[#357A58] sm:py-1">
+                  <span className="rounded-lg bg-[#284E3B] px-2.5 py-0.5 text-xs font-bold text-white tabular-nums dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] sm:py-1">
                     Câu {currentIndex + 1} / {examQuestions.length}
                   </span>
-                  <span className="rounded-lg border border-[#9BC4AE] bg-[#E3EFE8] px-2.5 py-0.5 text-[11px] font-semibold text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D] sm:py-1 sm:text-xs">
+                  <span className="rounded-lg border border-[#284E3B]/30 bg-[#E8F0EC] px-2.5 py-0.5 text-[11px] font-semibold text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7] sm:py-1 sm:text-xs">
                     Chương {currentQuestion.chapter}
                     <span className="hidden sm:inline">: {currentQuestion.chapterTitle}</span>
                   </span>
                   {currentQuestion.isMultiSelect && (
-                    <span className="rounded-lg border border-[#68B99A] bg-[#E1F3EC] px-2.5 py-0.5 text-[11px] font-semibold text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7] sm:py-1 sm:text-xs">
+                    <span className="rounded-lg border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-[11px] font-semibold text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399] sm:py-1 sm:text-xs">
                       Chọn nhiều đáp án
                     </span>
                   )}
                   {isFlagged && (
-                    <span className="inline-flex items-center gap-1 rounded-lg border border-[#C9B3E6] bg-[#F3EDF9] px-2 py-0.5 text-[11px] font-semibold text-[#6D28D9] dark:border-[#C084FC]/50 dark:bg-[#A855F7]/15 dark:text-[#D8B4FE] md:hidden">
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-[#C4B5FD] bg-[#EDE9FE] px-2 py-0.5 text-[11px] font-semibold text-[#6D28D9] dark:border-[#8B5CF6]/50 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE] md:hidden">
                       <Flag className="h-3 w-3 fill-current" />
                       Phân vân
                     </span>
@@ -1055,15 +1061,16 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onToggleFlag(currentQuestion.id)}
-                  className={`hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition md:inline-flex ${isFlagged
-                      ? 'border-[#C9B3E6] bg-[#F3EDF9] text-[#6D28D9] dark:border-[#C084FC]/50 dark:bg-[#A855F7]/15 dark:text-[#D8B4FE]'
-                      : 'border-[#C5D1BE] bg-[#F5F7F2] text-[#5C6E60] hover:border-[#C9B3E6] hover:bg-[#F3EDF9] hover:text-[#6D28D9] dark:border-[#384F42] dark:bg-[#223029] dark:text-[#8B9E91] dark:hover:border-[#C084FC]/50 dark:hover:bg-[#A855F7]/15 dark:hover:text-[#D8B4FE]'
-                    }`}
+                  className={`hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition md:inline-flex ${
+                    isFlagged
+                      ? 'border-[#C4B5FD] bg-[#EDE9FE] text-[#6D28D9] dark:border-[#8B5CF6]/50 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE]'
+                      : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#656058] hover:border-[#C4B5FD] hover:bg-[#EDE9FE] hover:text-[#6D28D9] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#9CA39B] dark:hover:border-[#8B5CF6]/50 dark:hover:bg-[#8B5CF6]/20 dark:hover:text-[#DDD6FE]'
+                  }`}
                 >
                   <Flag
                     className={`h-3.5 w-3.5 ${
                       isFlagged
-                        ? 'fill-[#6D28D9] text-[#6D28D9] dark:fill-[#D8B4FE] dark:text-[#D8B4FE]'
+                        ? 'fill-[#6D28D9] text-[#6D28D9] dark:fill-[#DDD6FE] dark:text-[#DDD6FE]'
                         : ''
                     }`}
                   />
@@ -1075,7 +1082,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               </div>
 
               {/* Question Prompt */}
-              <h3 className="mt-3.5 text-[17px] font-semibold leading-[1.6] text-[#142018] dark:text-[#F3F6F4] sm:mt-5 sm:text-[19px] sm:leading-[1.65] lg:text-[20px]">
+              <h3 className="mt-3.5 max-w-[78ch] text-[17px] font-semibold leading-[1.6] text-[#18181B] dark:text-[#F5F5F4] sm:mt-5 sm:text-[19px] sm:leading-[1.65] lg:text-[20px]">
                 {currentQuestion.question}
               </h3>
 
@@ -1088,23 +1095,25 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                       key={opt.key}
                       type="button"
                       onClick={() => handleSelectOption(currentQuestion, opt.key)}
-                      className={`group flex w-full cursor-pointer items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${isSelected
-                          ? 'border-[#2E6F4E] bg-[#E3EFE8] text-[#142018] ring-1 ring-[#2E6F4E] dark:border-[#52B788] dark:bg-[#263B31] dark:text-[#F3F6F4] dark:ring-[#52B788]'
-                          : 'border-[#C5D1BE] bg-[#F5F7F2] text-[#243329] hover:border-[#2E6F4E] hover:bg-[#E6F0EA] md:hover:translate-x-1 dark:border-[#384F42] dark:bg-[#223029] dark:text-[#DDE5DF] dark:hover:border-[#52B788] dark:hover:bg-[#2A3C33]'
-                        }`}
+                      className={`group flex w-full cursor-pointer items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${
+                        isSelected
+                          ? 'border-[#284E3B] bg-[#E8F0EC] text-[#18181B] ring-1 ring-[#284E3B] dark:border-[#34D399] dark:bg-[#1E352B] dark:text-[#F5F5F4] dark:ring-[#34D399]'
+                          : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#292524] hover:border-[#284E3B] hover:bg-[#EBF3EE] md:hover:translate-x-1 dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#E7E5E4] dark:hover:border-[#10B981] dark:hover:bg-[#2B332E]'
+                      }`}
                     >
                       <span
-                        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition sm:h-7 sm:w-7 ${isSelected
-                            ? 'border-[#2E6F4E] bg-[#2E6F4E] text-white dark:border-[#52B788] dark:bg-[#357A58]'
-                            : 'border-[#B8C7B0] bg-white text-[#2E6F4E] group-hover:border-[#2E6F4E] group-hover:bg-[#2E6F4E] group-hover:text-white dark:border-[#384F42] dark:bg-[#151E19] dark:text-[#74C69D] dark:group-hover:border-[#52B788] dark:group-hover:bg-[#357A58] dark:group-hover:text-white'
-                          }`}
+                        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition sm:h-7 sm:w-7 ${
+                          isSelected
+                            ? 'border-[#284E3B] bg-[#284E3B] text-white dark:border-[#34D399] dark:bg-[#10B981] dark:text-[#052E16]'
+                            : 'border-[#C6BEB0] bg-white text-[#284E3B] group-hover:border-[#284E3B] group-hover:bg-[#284E3B] group-hover:text-white dark:border-[#353B36] dark:bg-[#161816] dark:text-[#6EE7B7] dark:group-hover:border-[#10B981] dark:group-hover:bg-[#10B981] dark:group-hover:text-[#052E16]'
+                        }`}
                       >
                         {opt.key}
                       </span>
                       <span className="flex-1 pt-0.5 text-[15px] font-medium leading-relaxed sm:text-[16px]">
                         {opt.text}
                       </span>
-                      <span className="mt-1 hidden font-mono text-[11px] text-[#5C6E60] dark:text-[#8B9E91] md:inline-block">
+                      <span className="mt-1 hidden font-mono text-[11px] text-[#656058] dark:text-[#9CA39B] md:inline-block">
                         {optIdx + 1}
                       </span>
                     </button>
@@ -1113,18 +1122,18 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               </div>
 
               {/* Desktop Bottom Navigation */}
-              <div className="mt-7 hidden w-full flex-wrap items-center justify-between gap-3 border-t border-[#D2DACB] pt-5 dark:border-[#31453A] md:flex">
+              <div className="mt-7 hidden w-full flex-wrap items-center justify-between gap-3 border-t border-[#D5CFC2] pt-5 dark:border-[#323833] md:flex">
                 <button
                   type="button"
                   disabled={currentIndex === 0}
                   onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#C5D1BE] bg-[#F5F7F2] px-4 py-2.5 text-sm font-medium text-[#243329] transition hover:border-[#2E6F4E] hover:bg-[#E6F0EA] hover:text-[#23583D] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#384F42] dark:bg-[#223029] dark:text-[#DDE5DF] dark:hover:border-[#52B788] dark:hover:bg-[#2A3C33] dark:hover:text-[#74C69D]"
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#F8F6F0] px-4 py-2.5 text-sm font-medium text-[#292524] transition hover:border-[#284E3B] hover:bg-[#EBF3EE] hover:text-[#284E3B] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#E7E5E4] dark:hover:border-[#10B981] dark:hover:bg-[#2B332E] dark:hover:text-[#6EE7B7]"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Câu trước
                 </button>
 
-                <div className="flex items-center gap-3 text-xs text-[#5C6E60] dark:text-[#8B9E91]">
+                <div className="flex items-center gap-3 text-xs text-[#656058] dark:text-[#9CA39B]">
                   <span>1–5 / A–E: Chọn</span>
                   <span>•</span>
                   <span>Space / Enter: Câu tiếp</span>
@@ -1138,7 +1147,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     onClick={() =>
                       setCurrentIndex(prev => Math.min(examQuestions.length - 1, prev + 1))
                     }
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#2E6F4E] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#23583D] dark:border dark:border-[#52B788]/50 dark:bg-[#357A58] dark:hover:bg-[#2B6649]"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#284E3B] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1F3F2F] dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] dark:hover:bg-[#234835]"
                   >
                     Câu tiếp
                     <ChevronRight className="h-4 w-4" />
@@ -1147,7 +1156,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   <button
                     type="button"
                     onClick={requestSubmit}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#1F8A65] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0F5C41] dark:bg-[#38A179] dark:text-[#0D120F] dark:hover:bg-[#52B788]"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#059669] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#047857] dark:bg-[#10B981] dark:text-[#052E16] dark:hover:bg-[#34D399]"
                   >
                     <Send className="h-4 w-4" />
                     Nộp bài ngay
@@ -1159,13 +1168,13 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
         </div>
 
         {/* Mobile Sticky Bottom Navigation Bar */}
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D2DACB] bg-[#E8ECE4]/95 px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(20,32,24,0.08)] backdrop-blur dark:border-[#222E27] dark:bg-[#131A16]/95 dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.5)] md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D5CFC2] bg-[#EAE6DD]/95 px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(28,25,23,0.08)] backdrop-blur dark:border-[#262925] dark:bg-[#161816]/95 dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.5)] md:hidden">
           <div className="flex w-full items-center justify-between gap-2">
             <button
               type="button"
               disabled={currentIndex === 0}
               onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
-              className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D2DACB] bg-[#F7F8F5] px-3 py-2.5 text-xs font-semibold text-[#243329] transition disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF]"
+              className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2.5 text-xs font-semibold text-[#292524] transition disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Trước</span>
@@ -1175,10 +1184,11 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               type="button"
               onClick={() => onToggleFlag(currentQuestion.id)}
               aria-pressed={isFlagged}
-              className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${isFlagged
-                  ? 'border-[#C9B3E6] bg-[#F3EDF9] text-[#6D28D9] dark:border-[#C084FC]/50 dark:bg-[#A855F7]/15 dark:text-[#D8B4FE]'
-                  : 'border-[#D2DACB] bg-[#F7F8F5] text-[#5C6E60] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#8B9E91]'
-                }`}
+              className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
+                isFlagged
+                  ? 'border-[#C4B5FD] bg-[#EDE9FE] text-[#6D28D9] dark:border-[#8B5CF6]/50 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE]'
+                  : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
+              }`}
             >
               <Flag className={`h-3.5 w-3.5 ${isFlagged ? 'fill-current' : ''}`} />
               <span>Phân vân</span>
@@ -1190,7 +1200,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 onClick={() =>
                   setCurrentIndex(prev => Math.min(examQuestions.length - 1, prev + 1))
                 }
-                className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#2E6F4E] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#23583D] dark:border dark:border-[#52B788]/50 dark:bg-[#357A58] dark:hover:bg-[#2B6649]"
+                className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#284E3B] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#1F3F2F] dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] dark:hover:bg-[#234835]"
               >
                 <span>Câu tiếp</span>
                 <ChevronRight className="h-4 w-4" />
@@ -1199,7 +1209,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               <button
                 type="button"
                 onClick={requestSubmit}
-                className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#1F8A65] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0F5C41] dark:bg-[#38A179] dark:text-[#0D120F] dark:hover:bg-[#52B788]"
+                className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#059669] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#047857] dark:bg-[#10B981] dark:text-[#052E16] dark:hover:bg-[#34D399]"
               >
                 <Send className="h-4 w-4" />
                 <span>Nộp bài ngay</span>
@@ -1219,7 +1229,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.16 }}
                 onClick={() => setIsMobileSheetOpen(false)}
-                className="fixed inset-0 z-50 bg-[#142018]/50 backdrop-blur-[2px] dark:bg-[#090D0B]/75 lg:hidden"
+                className="fixed inset-0 z-50 bg-[#18181B]/50 backdrop-blur-[2px] dark:bg-[#0B0D0B]/75 lg:hidden"
               />
               <motion.div
                 key="exam-sheet-drawer"
@@ -1230,16 +1240,16 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 32, stiffness: 360 }}
-                className="fixed inset-x-0 bottom-0 z-50 flex max-h-[82vh] flex-col rounded-t-3xl border-t border-[#D2DACB] bg-[#E8ECE4] shadow-2xl dark:border-[#222E27] dark:bg-[#131A16] lg:hidden"
+                className="fixed inset-x-0 bottom-0 z-50 flex max-h-[82vh] flex-col rounded-t-3xl border-t border-[#D5CFC2] bg-[#EAE6DD] shadow-2xl dark:border-[#262925] dark:bg-[#161816] lg:hidden"
               >
-                <div className="flex flex-col items-center border-b border-[#D2DACB] px-4 pb-3 pt-2.5 dark:border-[#222E27]">
-                  <div className="mb-2.5 h-1 w-10 rounded-full bg-[#C5D1BE] dark:bg-[#31453A]" />
+                <div className="flex flex-col items-center border-b border-[#D5CFC2] px-4 pb-3 pt-2.5 dark:border-[#262925]">
+                  <div className="mb-2.5 h-1 w-10 rounded-full bg-[#C6BEB0] dark:bg-[#323833]" />
                   <div className="flex w-full items-center justify-between gap-2">
                     <div>
-                      <h3 className="text-sm font-bold text-[#142018] dark:text-[#F3F6F4]">
+                      <h3 className="text-sm font-bold text-[#18181B] dark:text-[#F5F5F4]">
                         Bảng câu hỏi ({examQuestions.length} câu)
                       </h3>
-                      <p className="text-xs text-[#5C6E60] tabular-nums dark:text-[#8B9E91]">
+                      <p className="text-xs text-[#656058] tabular-nums dark:text-[#9CA39B]">
                         Đã chọn {answeredCount} • Còn {unansweredCount} câu trống
                       </p>
                     </div>
@@ -1247,7 +1257,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                       type="button"
                       onClick={() => setIsMobileSheetOpen(false)}
                       aria-label="Đóng ngăn kéo"
-                      className="cursor-pointer rounded-xl border border-[#D2DACB] bg-[#F7F8F5] p-1.5 text-[#5C6E60] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF]"
+                      className="cursor-pointer rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1.5 text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -1255,17 +1265,17 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 </div>
 
                 <div className="space-y-4 overflow-y-auto px-4 pb-6 pt-4">
-                  <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#5C6E60] dark:text-[#8B9E91]">
+                  <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#656058] dark:text-[#9CA39B]">
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="h-3 w-3 rounded border border-[#9BC4AE] bg-[#E3EFE8] dark:border-[#52B788]/50 dark:bg-[#357A58]/20" />
+                      <span className="h-3 w-3 rounded border border-[#284E3B]/40 bg-[#E8F0EC] dark:border-[#6EE7B7]/40 dark:bg-[#2D5A43]/35" />
                       Đã chọn
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="h-3 w-3 rounded border border-[#C9B3E6] bg-[#F3EDF9] dark:border-[#C084FC]/50 dark:bg-[#A855F7]/15" />
+                      <span className="h-3 w-3 rounded border border-[#C4B5FD] bg-[#EDE9FE] dark:border-[#8B5CF6]/50 dark:bg-[#8B5CF6]/20" />
                       Phân vân
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="h-3 w-3 rounded border border-[#D2DACB] bg-[#F7F8F5] dark:border-[#25332B] dark:bg-[#17201B]" />
+                      <span className="h-3 w-3 rounded border border-[#D5CFC2] bg-[#FAF9F5] dark:border-[#2C302B] dark:bg-[#1C1F1C]" />
                       Chưa làm
                     </span>
                   </div>
@@ -1284,18 +1294,22 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                             setCurrentIndex(idx);
                             setIsMobileSheetOpen(false);
                           }}
-                          className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold tabular-nums transition ${isAnswered
-                              ? 'border-[#9BC4AE] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]'
+                          className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold tabular-nums transition ${
+                            isAnswered
+                              ? 'border-[#284E3B]/40 bg-[#E8F0EC] text-[#284E3B] dark:border-[#6EE7B7]/40 dark:bg-[#2D5A43]/35 dark:text-[#6EE7B7]'
                               : flagged
-                                ? 'border-[#C9B3E6] bg-[#F3EDF9] text-[#6D28D9] dark:border-[#C084FC]/50 dark:bg-[#A855F7]/15 dark:text-[#D8B4FE]'
-                                : 'border-[#D2DACB] bg-[#F7F8F5] text-[#243329] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF]'
-                            } ${flagged && isAnswered ? 'border-[#6D28D9] dark:border-[#C084FC]' : ''} ${isCurrent ? 'z-10 ring-2 ring-[#2E6F4E] ring-offset-1 ring-offset-[#E8ECE4] dark:ring-[#52B788] dark:ring-offset-[#131A16]' : ''
-                            }`}
+                                ? 'border-[#C4B5FD] bg-[#EDE9FE] text-[#6D28D9] dark:border-[#8B5CF6]/50 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE]'
+                                : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
+                          } ${flagged && isAnswered ? 'border-[#6D28D9] dark:border-[#8B5CF6]' : ''} ${
+                            isCurrent
+                              ? 'z-10 ring-2 ring-[#284E3B] ring-offset-1 ring-offset-[#EAE6DD] dark:ring-[#10B981] dark:ring-offset-[#161816]'
+                              : ''
+                          }`}
                         >
                           {idx + 1}
                           {flagged && (
                             <span
-                              className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#6D28D9] ring-2 ring-[#E8ECE4] dark:bg-[#D8B4FE] dark:ring-[#131A16]"
+                              className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#6D28D9] ring-2 ring-[#EAE6DD] dark:bg-[#DDD6FE] dark:ring-[#161816]"
                               aria-label="Phân vân"
                             />
                           )}
@@ -1311,19 +1325,19 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
 
         {/* Submit Confirmation Modal */}
         {confirmSubmitOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#142018]/50 p-4 backdrop-blur-[2px] dark:bg-[#090D0B]/75">
-            <div className="w-full max-w-md rounded-2xl border border-[#BCC9B4] bg-white p-5 shadow-xl dark:border-[#31453A] dark:bg-[#1B2620] dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65)] sm:p-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/50 p-4 backdrop-blur-[2px] dark:bg-[#0B0D0B]/75">
+            <div className="w-full max-w-md rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-5 shadow-xl dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65)] sm:p-6">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#F2B8AE] bg-[#FDF0ED] text-[#C2412D] dark:border-[#F28472]/50 dark:bg-[#E05A47]/15 dark:text-[#FCA5A5]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]">
                   <AlertTriangle className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[#142018] dark:text-[#F3F6F4]">
+                  <h3 className="text-base font-bold text-[#18181B] dark:text-[#F5F5F4]">
                     Xác nhận nộp bài?
                   </h3>
-                  <p className="mt-1 text-sm text-[#5C6E60] dark:text-[#8B9E91]">
+                  <p className="mt-1 text-sm text-[#656058] dark:text-[#9CA39B]">
                     Bạn còn{' '}
-                    <span className="font-semibold text-[#C2412D] tabular-nums dark:text-[#FCA5A5]">
+                    <span className="font-semibold text-[#BE123C] tabular-nums dark:text-[#FDA4AF]">
                       {unansweredCount} câu
                     </span>{' '}
                     chưa chọn đáp án. Những câu bỏ trống sẽ được tính là chưa đúng khi chấm điểm.
@@ -1335,14 +1349,14 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setConfirmSubmitOpen(false)}
-                  className="cursor-pointer rounded-xl border border-[#C5D1BE] bg-[#F5F7F2] px-4 py-2 text-sm font-medium text-[#243329] hover:border-[#2E6F4E] hover:bg-[#E6F0EA] dark:border-[#384F42] dark:bg-[#223029] dark:text-[#DDE5DF] dark:hover:border-[#52B788]"
+                  className="cursor-pointer rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2 text-sm font-medium text-[#292524] transition hover:border-[#284E3B] hover:bg-[#E8F0EC] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#10B981]"
                 >
                   Tiếp tục làm bài
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmitExam}
-                  className="cursor-pointer rounded-xl bg-[#2E6F4E] px-4 py-2 text-sm font-semibold text-white hover:bg-[#23583D] dark:border dark:border-[#52B788]/50 dark:bg-[#357A58] dark:hover:bg-[#2B6649]"
+                  className="cursor-pointer rounded-xl bg-[#284E3B] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#1F3F2F] dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] dark:hover:bg-[#234835]"
                 >
                   Xác nhận nộp bài
                 </button>
@@ -1371,14 +1385,14 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
     <>
       <div className="w-full space-y-6 lg:space-y-8">
         {/* Top Score Summary & Actions */}
-        <section className="rounded-2xl border border-[#D2DACB] bg-[#E8ECE4] p-4 shadow-[0_8px_24px_-4px_rgba(20,32,24,0.06)] dark:border-[#222E27] dark:bg-[#131A16] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-7 lg:p-8">
+        <section className="rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-4 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-7 lg:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
             <div className="flex items-center gap-3.5 sm:gap-4">
               <div
                 className={`flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl border sm:h-20 sm:w-20 ${
                   scoreOn10 >= 5
-                    ? 'border-[#68B99A] bg-[#E1F3EC] text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7]'
-                    : 'border-[#F2B8AE] bg-[#FDF0ED] text-[#C2412D] dark:border-[#F28472]/50 dark:bg-[#E05A47]/15 dark:text-[#FCA5A5]'
+                    ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                    : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
                 }`}
               >
                 <span className="text-xl font-extrabold leading-none tabular-nums sm:text-2xl">
@@ -1391,25 +1405,25 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
 
               <div>
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#9BC4AE] bg-[#E3EFE8] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]">
-                    <Award className="h-3.5 w-3.5 text-[#2E6F4E] dark:text-[#74C69D]" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#284E3B]/30 bg-[#E8F0EC] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7]">
+                    <Award className="h-3.5 w-3.5 text-[#284E3B] dark:text-[#6EE7B7]" />
                     Kết quả thi thử {subjectMeta.code}
                   </span>
                   <span
                     className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${
                       isResultMasteredMode
-                        ? 'border-[#68B99A] bg-[#E1F3EC] text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7]'
-                        : 'border-[#9BC4AE] bg-[#E3EFE8] text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D]'
+                        ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                        : 'border-[#284E3B]/30 bg-[#E8F0EC] text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7]'
                     }`}
                   >
                     {isResultMasteredMode ? 'Ôn đã thuộc' : 'Đề đề cương'}
                   </span>
                 </div>
-                <h2 className="mt-1.5 text-lg font-bold text-[#142018] tabular-nums dark:text-[#F3F6F4] sm:text-xl">
+                <h2 className="mt-1.5 text-lg font-bold text-[#18181B] tabular-nums dark:text-[#F5F5F4] sm:text-xl">
                   Đúng {correctTotal}/{totalCount} câu (
                   {totalCount > 0 ? Math.round((correctTotal / totalCount) * 100) : 0}%)
                 </h2>
-                <p className="mt-0.5 text-xs text-[#5C6E60] tabular-nums dark:text-[#8B9E91] sm:text-sm">
+                <p className="mt-0.5 text-xs text-[#656058] tabular-nums dark:text-[#9CA39B] sm:text-sm">
                   Thời gian hoàn thành: {formatDurationVi(spentSeconds)} ({formatClock(spentSeconds)})
                 </p>
               </div>
@@ -1424,8 +1438,8 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   onClick={handleFlagWrongQuestions}
                   className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold transition sm:w-auto sm:text-sm ${
                     bulkFlaggedConfirm !== null
-                      ? 'border-[#C9B3E6] bg-[#F3EDF9] text-[#6D28D9] dark:border-[#C084FC]/50 dark:bg-[#A855F7]/15 dark:text-[#D8B4FE]'
-                      : 'border-[#6D28D9] bg-[#6D28D9] text-white shadow-xs hover:bg-[#5B21B6] dark:border-[#C084FC]/60 dark:bg-[#6D28D9] dark:hover:bg-[#5B21B6]'
+                      ? 'border-[#C4B5FD] bg-[#EDE9FE] text-[#6D28D9] dark:border-[#8B5CF6]/50 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE]'
+                      : 'border-[#6D28D9] bg-[#6D28D9] text-white shadow-xs hover:bg-[#5B21B6] dark:border-[#8B5CF6]/60 dark:bg-[#6D28D9] dark:hover:bg-[#5B21B6]'
                   }`}
                 >
                   <Flag className="h-4 w-4 shrink-0 fill-current" />
@@ -1440,7 +1454,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               <button
                 type="button"
                 onClick={handleScrollToReview}
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#D2DACB] bg-[#F7F8F5] px-4 py-2.5 text-xs font-medium text-[#243329] transition hover:border-[#2E6F4E] hover:bg-[#E3EFE8] hover:text-[#23583D] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF] dark:hover:border-[#52B788] dark:hover:bg-[#223029] dark:hover:text-[#74C69D] sm:w-auto sm:text-sm"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-xs font-medium text-[#292524] transition hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#10B981] dark:hover:bg-[#252A26] dark:hover:text-[#6EE7B7] sm:w-auto sm:text-sm"
               >
                 <Eye className="h-4 w-4 shrink-0" />
                 <span>Xem lại bài làm</span>
@@ -1449,7 +1463,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               <button
                 type="button"
                 onClick={() => setPhase('lobby')}
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#2E6F4E] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#23583D] dark:border dark:border-[#52B788]/50 dark:bg-[#357A58] dark:hover:bg-[#2B6649] sm:w-auto sm:text-sm"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#284E3B] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1F3F2F] dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] dark:hover:bg-[#234835] sm:w-auto sm:text-sm"
               >
                 <RotateCcw className="h-4 w-4 shrink-0" />
                 <span>Thi đề khác</span>
@@ -1458,7 +1472,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
           </div>
 
           {bulkFlaggedConfirm !== null && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl border border-[#C9B3E6] bg-[#F3EDF9] px-3.5 py-2.5 text-xs font-medium text-[#6D28D9] dark:border-[#C084FC]/50 dark:bg-[#A855F7]/15 dark:text-[#D8B4FE] sm:text-sm">
+            <div className="mt-4 flex items-center gap-2 rounded-xl border border-[#C4B5FD] bg-[#EDE9FE] px-3.5 py-2.5 text-xs font-medium text-[#6D28D9] dark:border-[#8B5CF6]/50 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE] sm:text-sm">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               <span>
                 Đã cập nhật {bulkFlaggedConfirm} câu làm sai từ trạng thái{' '}
@@ -1468,54 +1482,54 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
           )}
 
           {/* Chapter Breakdown Table + Desktop 60-cell Navigator */}
-          <div className="mt-5 flex w-full flex-col justify-between gap-8 border-t border-[#D2DACB] pt-5 dark:border-[#222E27] sm:mt-7 sm:pt-7 lg:flex-row lg:gap-12">
+          <div className="mt-5 flex w-full flex-col gap-6 border-t border-[#D5CFC2] pt-5 dark:border-[#262925] sm:mt-7 sm:pt-7 lg:flex-row lg:gap-8 xl:gap-10">
             {/* Detailed Score Breakdown Table by Chapter */}
             <div className="min-w-0 flex-1">
-              <h3 className="mb-3 text-sm font-bold text-[#142018] dark:text-[#F3F6F4] sm:mb-3.5">
+              <h3 className="mb-3 text-sm font-bold text-[#18181B] dark:text-[#F5F5F4] sm:mb-3.5">
                 Chi tiết điểm theo từng chương
               </h3>
-              <div className="overflow-hidden rounded-xl border border-[#D2DACB] dark:border-[#25332B]">
+              <div className="overflow-hidden rounded-xl border border-[#D5CFC2] dark:border-[#2C302B]">
                 <table className="w-full text-left text-xs sm:text-sm">
-                  <thead className="bg-[#F7F8F5] text-[11px] font-semibold uppercase text-[#5C6E60] dark:bg-[#1B2620] dark:text-[#8B9E91] sm:text-xs">
+                  <thead className="bg-[#FAF9F5] text-[11px] font-semibold uppercase text-[#656058] dark:bg-[#1C1F1C] dark:text-[#9CA39B] sm:text-xs">
                     <tr>
                       <th className="px-3 py-2.5 sm:px-4 sm:py-3">Chương</th>
                       <th className="px-3 py-2.5 text-right sm:px-4 sm:py-3">Đúng / Tổng</th>
                       <th className="w-28 px-3 py-2.5 sm:w-40 sm:px-4 sm:py-3">Tỷ lệ</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#D2DACB] bg-white dark:divide-[#222E27] dark:bg-[#17201B]">
+                  <tbody className="divide-y divide-[#D5CFC2] bg-white dark:divide-[#262925] dark:bg-[#1E221F]">
                     {subjectMeta.chapters.map(ch => {
                       const stat = breakdown[ch.chapter] ?? { correct: 0, total: 0 };
                       const pct = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0;
                       const barColor =
                         pct >= 80
-                          ? 'bg-[#1F8A65] dark:bg-[#38A179]'
+                          ? 'bg-[#059669] dark:bg-[#10B981]'
                           : pct >= 50
-                            ? 'bg-[#2E6F4E] dark:bg-[#52B788]'
-                            : 'bg-[#C2412D] dark:bg-[#E05A47]';
+                            ? 'bg-[#284E3B] dark:bg-[#2D5A43]'
+                            : 'bg-[#BE123C] dark:bg-[#FB7185]';
 
                       return (
                         <tr key={ch.chapter}>
                           <td className="px-3 py-2.5 sm:px-4 sm:py-3">
-                            <div className="font-semibold text-[#142018] dark:text-[#F3F6F4]">
+                            <div className="font-semibold text-[#18181B] dark:text-[#F5F5F4]">
                               Chương {ch.chapter}
                             </div>
-                            <div className="line-clamp-1 text-[11px] text-[#5C6E60] dark:text-[#8B9E91] sm:text-xs">
+                            <div className="line-clamp-1 text-[11px] text-[#656058] dark:text-[#9CA39B] sm:text-xs">
                               {ch.title}
                             </div>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2.5 text-right font-semibold text-[#243329] tabular-nums dark:text-[#DDE5DF] sm:px-4 sm:py-3">
+                          <td className="whitespace-nowrap px-3 py-2.5 text-right font-semibold text-[#292524] tabular-nums dark:text-[#E7E5E4] sm:px-4 sm:py-3">
                             {stat.correct}/{stat.total}
                           </td>
                           <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                             <div className="flex items-center gap-2">
-                              <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#D2DACB] dark:bg-[#0D120F]">
+                              <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
                                 <div
                                   className={`h-full rounded-full ${barColor}`}
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>
-                              <span className="w-8 text-right text-[11px] font-semibold text-[#5C6E60] tabular-nums dark:text-[#8B9E91] sm:w-9 sm:text-xs">
+                              <span className="w-8 text-right text-[11px] font-semibold text-[#656058] tabular-nums dark:text-[#9CA39B] sm:w-9 sm:text-xs">
                                 {pct}%
                               </span>
                             </div>
@@ -1531,10 +1545,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
             {/* Desktop Results Navigator (hidden on Mobile/Tablet — moved to Bottom Sheet) */}
             <div className="hidden shrink-0 lg:block lg:w-[380px]">
               <div className="mb-3.5 flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#142018] tabular-nums dark:text-[#F3F6F4]">
+                <h3 className="text-sm font-bold text-[#18181B] tabular-nums dark:text-[#F5F5F4]">
                   Bản đồ kết quả {gradedItems.length} câu
                 </h3>
-                <span className="text-xs text-[#5C6E60] dark:text-[#8B9E91]">
+                <span className="text-xs text-[#656058] dark:text-[#9CA39B]">
                   Nhấn vào ô để xem chi tiết
                 </span>
               </div>
@@ -1546,15 +1560,20 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     onClick={() =>
                       handleJumpToReviewQuestion(item.question.id, item.isCorrect, item.isFlagged)
                     }
-                    className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-bold tabular-nums transition ${item.isCorrect
-                        ? 'border-[#68B99A] bg-[#E1F3EC] text-[#0F5C41] hover:bg-[#D0ECDF] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7] dark:hover:bg-[#2E9E73]/30'
-                        : 'border-[#F2B8AE] bg-[#FDF0ED] text-[#C2412D] hover:bg-[#FCE3DD] dark:border-[#F28472]/50 dark:bg-[#E05A47]/15 dark:text-[#FCA5A5] dark:hover:bg-[#E05A47]/25'
-                      } ${focusedReviewId === item.question.id ? 'ring-2 ring-[#2E6F4E] ring-offset-1 ring-offset-[#E8ECE4] dark:ring-[#52B788] dark:ring-offset-[#131A16]' : ''}`}
+                    className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-bold tabular-nums transition ${
+                      item.isCorrect
+                        ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] hover:bg-[#A7F3D0] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399] dark:hover:bg-[#064E3B]/80'
+                        : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] hover:bg-[#FECDD3] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF] dark:hover:bg-[#E11D48]/30'
+                    } ${
+                      focusedReviewId === item.question.id
+                        ? 'ring-2 ring-[#284E3B] ring-offset-1 ring-offset-[#EAE6DD] dark:ring-[#10B981] dark:ring-offset-[#161816]'
+                        : ''
+                    }`}
                   >
                     {item.index + 1}
                     {item.isFlagged && (
                       <span
-                        className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#6D28D9] ring-2 ring-[#E8ECE4] dark:bg-[#D8B4FE] dark:ring-[#131A16]"
+                        className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#6D28D9] ring-2 ring-[#EAE6DD] dark:bg-[#DDD6FE] dark:ring-[#161816]"
                         aria-label="Phân vân"
                       />
                     )}
@@ -1562,17 +1581,17 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 ))}
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-4 text-[11px] text-[#5C6E60] dark:text-[#8B9E91]">
+              <div className="mt-4 flex flex-wrap items-center gap-4 text-[11px] text-[#656058] dark:text-[#9CA39B]">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded border border-[#68B99A] bg-[#E1F3EC] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15" />
+                  <span className="h-3 w-3 rounded border border-[#10B981] bg-[#D1FAE5] dark:border-[#10B981] dark:bg-[#064E3B]/55" />
                   Đúng ({correctTotal})
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded border border-[#F2B8AE] bg-[#FDF0ED] dark:border-[#F28472]/50 dark:bg-[#E05A47]/15" />
+                  <span className="h-3 w-3 rounded border border-[#FDA4AF] bg-[#FFE4E6] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20" />
                   Sai / Bỏ trống ({wrongCount})
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#6D28D9] dark:bg-[#D8B4FE]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#6D28D9] dark:bg-[#DDD6FE]" />
                   Phân vân ({flaggedInExamCount})
                 </span>
               </div>
@@ -1587,10 +1606,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
             <button
               type="button"
               onClick={() => setIsMobileResultsSheetOpen(true)}
-              className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#D2DACB] bg-[#E8ECE4] px-3.5 py-2.5 text-left text-xs font-semibold text-[#142018] shadow-xs transition active:scale-[0.99] dark:border-[#222E27] dark:bg-[#131A16] dark:text-[#F3F6F4]"
+              className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-2.5 text-left text-xs font-semibold text-[#18181B] shadow-xs transition active:scale-[0.99] dark:border-[#262925] dark:bg-[#161816] dark:text-[#F5F5F4]"
             >
               <span className="flex min-w-0 items-center gap-2">
-                <Menu className="h-4 w-4 shrink-0 text-[#2E6F4E] dark:text-[#74C69D]" />
+                <Menu className="h-4 w-4 shrink-0 text-[#284E3B] dark:text-[#6EE7B7]" />
                 <span className="truncate tabular-nums">
                   Bản đồ {gradedItems.length} câu &amp; Lọc (
                   {reviewFilter === 'wrong'
@@ -1601,13 +1620,13 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   )
                 </span>
               </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-[#5C6E60] dark:text-[#8B9E91]" />
+              <ChevronDown className="h-4 w-4 shrink-0 text-[#656058] dark:text-[#9CA39B]" />
             </button>
           </div>
 
           {/* Desktop Review Filter Tabs */}
           <div className="hidden flex-wrap items-center justify-between gap-3 lg:flex">
-            <div className="inline-flex rounded-xl border border-[#D2DACB] bg-[#E8ECE4] p-1 shadow-[0_8px_24px_-4px_rgba(20,32,24,0.06)] dark:border-[#222E27] dark:bg-[#131A16] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
+            <div className="inline-flex rounded-xl border border-[#D5CFC2] bg-[#EAE6DD] p-1 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
               {(
                 [
                   { id: 'wrong', label: 'Câu làm sai', count: wrongCount },
@@ -1621,17 +1640,19 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     key={tab.id}
                     type="button"
                     onClick={() => setReviewFilter(tab.id)}
-                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition ${active
-                        ? 'bg-[#2E6F4E] text-white shadow-xs hover:bg-[#23583D] dark:bg-[#357A58] dark:hover:bg-[#2B6649]'
-                        : 'text-[#243329] hover:bg-[#E3EFE8] hover:text-[#23583D] dark:text-[#DDE5DF] dark:hover:bg-[#223029] dark:hover:text-[#74C69D]'
-                      }`}
+                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                      active
+                        ? 'bg-[#284E3B] text-white shadow-xs hover:bg-[#1F3F2F] dark:bg-[#2D5A43] dark:hover:bg-[#234835]'
+                        : 'text-[#292524] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:text-[#E7E5E4] dark:hover:bg-[#252A26] dark:hover:text-[#6EE7B7]'
+                    }`}
                   >
                     <span>{tab.label}</span>
                     <span
-                      className={`rounded-full px-1.5 py-0.5 text-[11px] tabular-nums ${active
+                      className={`rounded-full px-1.5 py-0.5 text-[11px] tabular-nums ${
+                        active
                           ? 'bg-white/20 text-white'
-                          : 'border border-[#D2DACB] bg-[#F7F8F5] text-[#5C6E60] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#8B9E91]'
-                        }`}
+                          : 'border border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
+                      }`}
                     >
                       {tab.count}
                     </span>
@@ -1642,9 +1663,9 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
           </div>
 
           {filteredReviewItems.length === 0 ? (
-            <div className="rounded-2xl border border-[#D2DACB] bg-[#E8ECE4] p-8 text-center shadow-[0_8px_24px_-4px_rgba(20,32,24,0.06)] dark:border-[#222E27] dark:bg-[#131A16] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-10">
-              <CheckCircle2 className="mx-auto h-10 w-10 text-[#1F8A65] dark:text-[#6EE7B7]" />
-              <p className="mt-3 text-base font-semibold text-[#142018] dark:text-[#F3F6F4]">
+            <div className="rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-8 text-center shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-10">
+              <CheckCircle2 className="mx-auto h-10 w-10 text-[#059669] dark:text-[#34D399]" />
+              <p className="mt-3 text-base font-semibold text-[#18181B] dark:text-[#F5F5F4]">
                 {reviewFilter === 'wrong'
                   ? 'Tuyệt vời! Bạn không làm sai câu nào trong đề thi này.'
                   : 'Không có câu hỏi nào đang được đánh dấu phân vân.'}
@@ -1660,27 +1681,27 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   <article
                     key={q.id}
                     id={`exam-review-q-${q.id}`}
-                    className={`rounded-2xl border border-[#BCC9B4] border-t-2 border-t-[#2E6F4E] bg-white p-4 shadow-[0_14px_34px_-8px_rgba(30,58,42,0.10)] transition dark:border-[#31453A] dark:border-t-2 dark:border-t-[#52B788] dark:bg-[#1B2620] dark:shadow-[0_14px_36px_-8px_rgba(0,0,0,0.65)] sm:p-7 lg:p-8 ${
-                      isHighlighted ? 'ring-2 ring-[#2E6F4E]/40 dark:ring-[#52B788]/40' : ''
+                    className={`rounded-2xl border border-[#C6BEB0] border-t-2 border-t-[#284E3B] bg-white p-4 shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] transition dark:border-[#323833] dark:border-t-2 dark:border-t-[#10B981] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)] sm:p-7 lg:p-8 ${
+                      isHighlighted ? 'ring-2 ring-[#284E3B]/40 dark:ring-[#10B981]/40' : ''
                     }`}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D2DACB] pb-3 dark:border-[#31453A] sm:pb-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D5CFC2] pb-3 dark:border-[#323833] sm:pb-4">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                        <span className="rounded-lg bg-[#2E6F4E] px-2.5 py-0.5 text-xs font-bold text-white tabular-nums dark:border dark:border-[#52B788]/50 dark:bg-[#357A58] sm:py-1">
+                        <span className="rounded-lg bg-[#284E3B] px-2.5 py-0.5 text-xs font-bold text-white tabular-nums dark:border dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43] sm:py-1">
                           Câu {index + 1}
                         </span>
-                        <span className="rounded-lg border border-[#9BC4AE] bg-[#E3EFE8] px-2.5 py-0.5 text-[11px] font-semibold text-[#23583D] dark:border-[#52B788]/50 dark:bg-[#357A58]/20 dark:text-[#74C69D] sm:py-1 sm:text-xs">
+                        <span className="rounded-lg border border-[#284E3B]/30 bg-[#E8F0EC] px-2.5 py-0.5 text-[11px] font-semibold text-[#284E3B] dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]/30 dark:text-[#6EE7B7] sm:py-1 sm:text-xs">
                           Chương {q.chapter}
                           <span className="hidden sm:inline">: {q.chapterTitle}</span>
                         </span>
                         {isCorrect ? (
-                          <span className="inline-flex items-center gap-1 rounded-lg border border-[#68B99A] bg-[#E1F3EC] px-2.5 py-0.5 text-[11px] font-semibold text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7] sm:py-1 sm:text-xs">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-[#1F8A65] dark:text-[#6EE7B7]" />
+                          <span className="inline-flex items-center gap-1 rounded-lg border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-[11px] font-semibold text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399] sm:py-1 sm:text-xs">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-[#059669] dark:text-[#34D399]" />
                             Đúng
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-lg border border-[#F2B8AE] bg-[#FDF0ED] px-2.5 py-0.5 text-[11px] font-semibold text-[#C2412D] dark:border-[#F28472]/50 dark:bg-[#E05A47]/15 dark:text-[#FCA5A5] sm:py-1 sm:text-xs">
-                            <XCircle className="h-3.5 w-3.5 text-[#C2412D] dark:text-[#FCA5A5]" />
+                          <span className="inline-flex items-center gap-1 rounded-lg border border-[#FDA4AF] bg-[#FFE4E6] px-2.5 py-0.5 text-[11px] font-semibold text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF] sm:py-1 sm:text-xs">
+                            <XCircle className="h-3.5 w-3.5 text-[#BE123C] dark:text-[#FDA4AF]" />
                             {isSkipped ? 'Bỏ trống' : 'Sai'}
                           </span>
                         )}
@@ -1689,15 +1710,16 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                       <button
                         type="button"
                         onClick={() => onToggleFlag(q.id)}
-                        className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-semibold transition sm:px-3 ${isFlagged
-                            ? 'border-[#C9B3E6] bg-[#F3EDF9] text-[#6D28D9] dark:border-[#C084FC]/50 dark:bg-[#A855F7]/15 dark:text-[#D8B4FE]'
-                            : 'border-[#C5D1BE] bg-[#F5F7F2] text-[#5C6E60] hover:border-[#C9B3E6] hover:bg-[#F3EDF9] hover:text-[#6D28D9] dark:border-[#384F42] dark:bg-[#223029] dark:text-[#8B9E91] dark:hover:border-[#C084FC]/50 dark:hover:bg-[#A855F7]/15 dark:hover:text-[#D8B4FE]'
-                          }`}
+                        className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-semibold transition sm:px-3 ${
+                          isFlagged
+                            ? 'border-[#C4B5FD] bg-[#EDE9FE] text-[#6D28D9] dark:border-[#8B5CF6]/50 dark:bg-[#8B5CF6]/20 dark:text-[#DDD6FE]'
+                            : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#656058] hover:border-[#C4B5FD] hover:bg-[#EDE9FE] hover:text-[#6D28D9] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#9CA39B] dark:hover:border-[#8B5CF6]/50 dark:hover:bg-[#8B5CF6]/20 dark:hover:text-[#DDD6FE]'
+                        }`}
                       >
                         <Flag
                           className={`h-3.5 w-3.5 ${
                             isFlagged
-                              ? 'fill-[#6D28D9] text-[#6D28D9] dark:fill-[#D8B4FE] dark:text-[#D8B4FE]'
+                              ? 'fill-[#6D28D9] text-[#6D28D9] dark:fill-[#DDD6FE] dark:text-[#DDD6FE]'
                               : ''
                           }`}
                         />
@@ -1705,7 +1727,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                       </button>
                     </div>
 
-                    <h4 className="mt-3.5 text-[17px] font-semibold leading-[1.6] text-[#142018] dark:text-[#F3F6F4] sm:mt-5 sm:text-[19px] sm:leading-[1.65]">
+                    <h4 className="mt-3.5 max-w-[78ch] text-[17px] font-semibold leading-[1.6] text-[#18181B] dark:text-[#F5F5F4] sm:mt-5 sm:text-[19px] sm:leading-[1.65]">
                       {q.question}
                     </h4>
 
@@ -1719,20 +1741,20 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                           .includes(opt.key.toUpperCase());
 
                         let rowStyle =
-                          'border-[#C5D1BE] bg-[#F5F7F2] text-[#243329] dark:border-[#384F42] dark:bg-[#223029] dark:text-[#DDE5DF]';
+                          'border-[#D5CFC2] bg-[#F8F6F0] text-[#292524] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#E7E5E4]';
                         let badgeStyle =
-                          'border-[#B8C7B0] bg-white text-[#243329] dark:border-[#384F42] dark:bg-[#151E19] dark:text-[#DDE5DF]';
+                          'border-[#C6BEB0] bg-white text-[#292524] dark:border-[#353B36] dark:bg-[#161816] dark:text-[#E7E5E4]';
 
                         if (isCorrectOpt) {
                           rowStyle =
-                            'border-[#68B99A] bg-[#E1F3EC] text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7]';
+                            'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#ECFDF5]';
                           badgeStyle =
-                            'border-[#1F8A65] bg-[#1F8A65] text-white dark:border-[#38A179] dark:bg-[#38A179] dark:text-[#0D120F]';
+                            'border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]';
                         } else if (isUserSelected) {
                           rowStyle =
-                            'border-[#F2B8AE] bg-[#FDF0ED] text-[#C2412D] dark:border-[#F28472]/50 dark:bg-[#E05A47]/15 dark:text-[#FCA5A5]';
+                            'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]';
                           badgeStyle =
-                            'border-[#C2412D] bg-[#C2412D] text-white dark:border-[#F28472] dark:bg-[#E05A47] dark:text-white';
+                            'border-[#BE123C] bg-[#BE123C] text-white dark:border-[#FB7185] dark:bg-[#E11D48] dark:text-white';
                         }
 
                         return (
@@ -1755,16 +1777,17 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                               <div className="ml-9 flex shrink-0 items-center gap-1.5 text-[11px] font-semibold sm:ml-0">
                                 {isUserSelected && (
                                   <span
-                                    className={`rounded-md border px-2 py-0.5 ${isCorrectOpt
-                                        ? 'border-[#68B99A] bg-white text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/20 dark:text-[#6EE7B7]'
-                                        : 'border-[#F2B8AE] bg-white text-[#C2412D] dark:border-[#F28472]/50 dark:bg-[#E05A47]/20 dark:text-[#FCA5A5]'
-                                      }`}
+                                    className={`rounded-md border px-2 py-0.5 ${
+                                      isCorrectOpt
+                                        ? 'border-[#10B981] bg-white text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/80 dark:text-[#34D399]'
+                                        : 'border-[#FDA4AF] bg-white text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/25 dark:text-[#FDA4AF]'
+                                    }`}
                                   >
                                     Bạn chọn
                                   </span>
                                 )}
                                 {isCorrectOpt && (
-                                  <span className="rounded-md border border-[#68B99A] bg-white px-2 py-0.5 text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/20 dark:text-[#6EE7B7]">
+                                  <span className="rounded-md border border-[#10B981] bg-white px-2 py-0.5 text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/80 dark:text-[#34D399]">
                                     Đáp án đúng
                                   </span>
                                 )}
@@ -1797,7 +1820,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.16 }}
               onClick={() => setIsMobileResultsSheetOpen(false)}
-              className="fixed inset-0 z-50 bg-[#142018]/50 backdrop-blur-[2px] dark:bg-[#090D0B]/75 lg:hidden"
+              className="fixed inset-0 z-50 bg-[#18181B]/50 backdrop-blur-[2px] dark:bg-[#0B0D0B]/75 lg:hidden"
             />
             <motion.div
               key="results-sheet-drawer"
@@ -1808,16 +1831,16 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 32, stiffness: 360 }}
-              className="fixed inset-x-0 bottom-0 z-50 flex max-h-[82vh] flex-col rounded-t-3xl border-t border-[#D2DACB] bg-[#E8ECE4] shadow-2xl dark:border-[#222E27] dark:bg-[#131A16] lg:hidden"
+              className="fixed inset-x-0 bottom-0 z-50 flex max-h-[82vh] flex-col rounded-t-3xl border-t border-[#D5CFC2] bg-[#EAE6DD] shadow-2xl dark:border-[#262925] dark:bg-[#161816] lg:hidden"
             >
-              <div className="flex flex-col items-center border-b border-[#D2DACB] px-4 pb-3 pt-2.5 dark:border-[#222E27]">
-                <div className="mb-2.5 h-1 w-10 rounded-full bg-[#C5D1BE] dark:bg-[#31453A]" />
+              <div className="flex flex-col items-center border-b border-[#D5CFC2] px-4 pb-3 pt-2.5 dark:border-[#262925]">
+                <div className="mb-2.5 h-1 w-10 rounded-full bg-[#C6BEB0] dark:bg-[#323833]" />
                 <div className="flex w-full items-center justify-between gap-2">
                   <div>
-                    <h3 className="text-sm font-bold text-[#142018] tabular-nums dark:text-[#F3F6F4]">
+                    <h3 className="text-sm font-bold text-[#18181B] tabular-nums dark:text-[#F5F5F4]">
                       Bản đồ kết quả {gradedItems.length} câu
                     </h3>
-                    <p className="text-xs text-[#5C6E60] tabular-nums dark:text-[#8B9E91]">
+                    <p className="text-xs text-[#656058] tabular-nums dark:text-[#9CA39B]">
                       Đúng {correctTotal} • Sai {wrongCount} • Phân vân {flaggedInExamCount}
                     </p>
                   </div>
@@ -1825,7 +1848,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     type="button"
                     onClick={() => setIsMobileResultsSheetOpen(false)}
                     aria-label="Đóng ngăn kéo"
-                    className="cursor-pointer rounded-xl border border-[#D2DACB] bg-[#F7F8F5] p-1.5 text-[#5C6E60] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF]"
+                    className="cursor-pointer rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1.5 text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -1835,7 +1858,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               <div className="space-y-5 overflow-y-auto px-4 pb-6 pt-4">
                 {/* 3 Filter Tabs */}
                 <div>
-                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#5C6E60] dark:text-[#8B9E91]">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
                     Bộ lọc xem lại
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -1855,10 +1878,11 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                             setReviewFilter(tab.id);
                             setIsMobileResultsSheetOpen(false);
                           }}
-                          className={`cursor-pointer rounded-xl border px-2 py-2 text-xs font-semibold tabular-nums transition ${active
-                              ? 'border-[#2E6F4E] bg-[#2E6F4E] text-white dark:border-[#52B788]/50 dark:bg-[#357A58]'
-                              : 'border-[#D2DACB] bg-[#F7F8F5] text-[#243329] dark:border-[#25332B] dark:bg-[#17201B] dark:text-[#DDE5DF]'
-                            }`}
+                          className={`cursor-pointer rounded-xl border px-2 py-2 text-xs font-semibold tabular-nums transition ${
+                            active
+                              ? 'border-[#284E3B] bg-[#284E3B] text-white dark:border-[#6EE7B7]/35 dark:bg-[#2D5A43]'
+                              : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
+                          }`}
                         >
                           {tab.label} ({tab.count})
                         </button>
@@ -1869,7 +1893,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
 
                 {/* 60-cell Grid */}
                 <div>
-                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#5C6E60] dark:text-[#8B9E91]">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
                     Nhấn số câu để cuộn tới câu đó
                   </div>
                   <div className="grid grid-cols-6 gap-2 sm:grid-cols-10">
@@ -1881,15 +1905,20 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                           setIsMobileResultsSheetOpen(false);
                           handleJumpToReviewQuestion(item.question.id, item.isCorrect, item.isFlagged);
                         }}
-                        className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-bold tabular-nums transition ${item.isCorrect
-                            ? 'border-[#68B99A] bg-[#E1F3EC] text-[#0F5C41] dark:border-[#52B788]/60 dark:bg-[#2E9E73]/15 dark:text-[#6EE7B7]'
-                            : 'border-[#F2B8AE] bg-[#FDF0ED] text-[#C2412D] dark:border-[#F28472]/50 dark:bg-[#E05A47]/15 dark:text-[#FCA5A5]'
-                          } ${focusedReviewId === item.question.id ? 'ring-2 ring-[#2E6F4E] ring-offset-1 ring-offset-[#E8ECE4] dark:ring-[#52B788] dark:ring-offset-[#131A16]' : ''}`}
+                        className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-bold tabular-nums transition ${
+                          item.isCorrect
+                            ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                            : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
+                        } ${
+                          focusedReviewId === item.question.id
+                            ? 'ring-2 ring-[#284E3B] ring-offset-1 ring-offset-[#EAE6DD] dark:ring-[#10B981] dark:ring-offset-[#161816]'
+                            : ''
+                        }`}
                       >
                         {item.index + 1}
                         {item.isFlagged && (
                           <span
-                            className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#6D28D9] ring-2 ring-[#E8ECE4] dark:bg-[#D8B4FE] dark:ring-[#131A16]"
+                            className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#6D28D9] ring-2 ring-[#EAE6DD] dark:bg-[#DDD6FE] dark:ring-[#161816]"
                             aria-label="Phân vân"
                           />
                         )}
