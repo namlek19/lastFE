@@ -14,8 +14,8 @@ export const RichExplanation: React.FC<RichExplanationProps> = ({ question, clas
     <div
       className={`rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-3.5 text-[14px] leading-relaxed text-[#292524] dark:border-[#262925] dark:bg-[#161816] dark:text-[#E7E5E4] sm:p-5 sm:text-[15px] ${className}`}
     >
-      <div className="mb-2 flex items-center gap-2 font-semibold text-[#284E3B] dark:text-[#6EE7B7]">
-        <BookOpen className="h-4 w-4 shrink-0 text-[#284E3B] dark:text-[#6EE7B7]" />
+      <div className="mb-2 flex items-center gap-2 font-semibold text-[#B45309] dark:text-[#FBBF24]">
+        <BookOpen className="h-4 w-4 shrink-0 text-[#B45309] dark:text-[#FBBF24]" />
         <span>Giải thích chi tiết</span>
       </div>
 
@@ -25,7 +25,7 @@ export const RichExplanation: React.FC<RichExplanationProps> = ({ question, clas
             return (
               <mark
                 key={idx}
-                className="mx-0.5 rounded-md border border-[#10B981] bg-[#D1FAE5] px-1.5 py-0.5 font-semibold text-[#064E3B] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#6EE7B7]"
+                className="mx-0.5 rounded-md border border-[#F59E0B] bg-[#FEF3C7] px-1.5 py-0.5 font-semibold text-[#92400E] dark:border-[#F59E0B]/60 dark:bg-[#F59E0B]/20 dark:text-[#FDE68A]"
               >
                 {part.slice(2, -2)}
               </mark>
@@ -37,7 +37,7 @@ export const RichExplanation: React.FC<RichExplanationProps> = ({ question, clas
 
       {question.note && question.note.trim() !== '' && (
         <div className="mt-3.5 flex items-start gap-2 rounded-lg border border-[#D5CFC2] bg-white px-3.5 py-2.5 text-xs text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]">
-          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#284E3B] dark:text-[#6EE7B7]" />
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#2563EB] dark:text-[#60A5FA]" />
           <span>{question.note}</span>
         </div>
       )}

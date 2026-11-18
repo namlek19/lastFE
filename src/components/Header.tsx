@@ -111,14 +111,14 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Left Cluster: Compact Brand + Subject Switcher */}
           <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#284E3B] text-white shadow-sm dark:border dark:border-[#52B788]/50 dark:bg-[#2D5A43] sm:h-9 sm:w-9">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-white shadow-sm dark:border dark:border-[#3B82F6]/50 dark:bg-[#2563EB] sm:h-9 sm:w-9">
                 <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div className="hidden leading-tight sm:block">
                 <span className="block text-sm font-bold tracking-tight text-[#18181B] dark:text-[#F5F5F4] sm:text-base lg:text-sm xl:text-[15px]">
                   Ôn thi<span className="hidden 2xl:inline"> Trắc nghiệm</span>
                 </span>
-                <span className="block text-[11px] font-medium text-[#284E3B] dark:text-[#6EE7B7]">
+                <span className="block text-[11px] font-medium text-[#2563EB] dark:text-[#60A5FA]">
                   from Namblee
                 </span>
               </div>
@@ -142,8 +142,8 @@ export const Header: React.FC<HeaderProps> = ({
                     title={`${meta.code} • ${meta.name} (${meta.totalQuestions} câu)`}
                     className={`inline-flex cursor-pointer items-center rounded-lg border px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition sm:px-3 sm:py-1.5 ${
                       isActive
-                        ? 'border-transparent bg-[#284E3B] text-white shadow-sm hover:bg-[#1F3F2F] dark:border-[#52B788]/50 dark:bg-[#2D5A43] dark:hover:bg-[#234735]'
-                        : 'border-transparent text-[#292524] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:text-[#E7E5E4] dark:hover:bg-[#242925] dark:hover:text-[#6EE7B7]'
+                        ? 'border-transparent bg-[#2563EB] text-white shadow-sm hover:bg-[#1D4ED8] dark:border-[#3B82F6]/50 dark:bg-[#2563EB] dark:hover:bg-[#1D4ED8]'
+                        : 'border-transparent text-[#292524] hover:bg-[#EFF6FF] hover:text-[#1D4ED8] dark:text-[#E7E5E4] dark:hover:bg-[#1E3A8A]/30 dark:hover:text-[#93C5FD]'
                     }`}
                   >
                     <span>{meta.code}</span>
@@ -168,8 +168,8 @@ export const Header: React.FC<HeaderProps> = ({
                   aria-current={isActive ? 'page' : undefined}
                   className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-semibold whitespace-nowrap transition lg:px-3 xl:px-3.5 2xl:text-[13px] ${
                     isActive
-                      ? 'border-[#284E3B] bg-[#284E3B] text-white shadow-sm hover:border-[#1F3F2F] hover:bg-[#1F3F2F] dark:border-[#52B788]/50 dark:bg-[#2D5A43] dark:hover:bg-[#234735]'
-                      : 'border-transparent text-[#656058] hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:text-[#9CA39B] dark:hover:border-[#10B981] dark:hover:bg-[#242925] dark:hover:text-[#6EE7B7]'
+                      ? 'border-[#2563EB] bg-[#2563EB] text-white shadow-sm hover:border-[#1D4ED8] hover:bg-[#1D4ED8] dark:border-[#3B82F6]/50 dark:bg-[#2563EB] dark:hover:bg-[#1D4ED8]'
+                      : 'border-transparent text-[#656058] hover:border-[#93C5FD] hover:bg-[#EFF6FF] hover:text-[#1D4ED8] dark:text-[#9CA39B] dark:hover:border-[#3B82F6]/50 dark:hover:bg-[#1E3A8A]/30 dark:hover:text-[#93C5FD]'
                   }`}
                 >
                   <Icon className="hidden h-3.5 w-3.5 shrink-0 xl:block" />
@@ -204,8 +204,8 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Xem quy tắc đạt Đã thuộc"
                 className={`inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border text-xs transition sm:h-7 sm:w-7 ${
                   isRuleInfoOpen
-                    ? 'border-[#284E3B] bg-[#E8F0EC] text-[#284E3B] dark:border-[#52B788]/50 dark:bg-[#2D5A43]/25 dark:text-[#6EE7B7]'
-                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#10B981] dark:hover:bg-[#242925] dark:hover:text-[#34D399]'
+                    ? 'border-[#2563EB] bg-[#EFF6FF] text-[#1D4ED8] dark:border-[#3B82F6]/50 dark:bg-[#1E3A8A]/30 dark:text-[#93C5FD]'
+                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#1D4ED8] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#3B82F6] dark:hover:bg-[#1E3A8A]/30 dark:hover:text-[#93C5FD]'
                 }`}
               >
                 <Info className="h-3.5 w-3.5" />
@@ -221,7 +221,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <span className="text-xs font-bold text-[#18181B] dark:text-[#F5F5F4]">
                       Quy tắc tính tiến độ học tập
                     </span>
-                    <span className="rounded-md border border-[#9DC0AE] bg-[#E8F0EC] px-1.5 py-0.5 text-[10px] font-semibold text-[#284E3B] dark:border-[#52B788]/50 dark:bg-[#2D5A43]/25 dark:text-[#6EE7B7]">
+                    <span className="rounded-md border border-[#93C5FD] bg-[#EFF6FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#1D4ED8] dark:border-[#3B82F6]/50 dark:bg-[#1E3A8A]/30 dark:text-[#93C5FD]">
                       Đồng bộ 2 chiều
                     </span>
                   </div>
@@ -236,7 +236,7 @@ export const Header: React.FC<HeaderProps> = ({
 
                   <div className="space-y-3 text-xs leading-relaxed text-[#292524] dark:text-[#E7E5E4]">
                     <div className="rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
-                      <div className="mb-1 font-bold text-[#284E3B] dark:text-[#6EE7B7]">
+                      <div className="mb-1 font-bold text-[#2563EB] dark:text-[#60A5FA]">
                         1. Học theo chương &amp; Học cuốn chiếu
                       </div>
                       <ul className="space-y-1 text-[11px]">
@@ -256,7 +256,7 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
 
                     <div className="rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
-                      <div className="mb-1 font-bold text-[#047857] dark:text-[#34D399]">
+                      <div className="mb-1 font-bold text-[#0369A1] dark:text-[#38BDF8]">
                         2. Flashcard (Lật thẻ nhanh)
                       </div>
                       <ul className="space-y-1 text-[11px]">
@@ -290,8 +290,8 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Phím tắt bàn phím"
                 className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-2 py-1.5 text-xs font-medium whitespace-nowrap transition xl:px-2.5 ${
                   isShortcutOpen
-                    ? 'border-[#284E3B] bg-[#E8F0EC] text-[#284E3B] dark:border-[#52B788]/50 dark:bg-[#2D5A43]/25 dark:text-[#6EE7B7]'
-                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#10B981] dark:hover:bg-[#242925] dark:hover:text-[#34D399]'
+                    ? 'border-[#2563EB] bg-[#EFF6FF] text-[#1D4ED8] dark:border-[#3B82F6]/50 dark:bg-[#1E3A8A]/30 dark:text-[#93C5FD]'
+                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#1D4ED8] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#3B82F6] dark:hover:bg-[#1E3A8A]/30 dark:hover:text-[#93C5FD]'
                 }`}
               >
                 <Keyboard className="h-3.5 w-3.5 shrink-0" />
@@ -370,7 +370,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenSyncModal}
               aria-label="Đồng bộ tiến độ"
               title="Đồng bộ tiến độ"
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#9DC0AE] bg-[#E8F0EC] p-1.5 text-xs font-semibold text-[#284E3B] whitespace-nowrap transition hover:border-[#284E3B] hover:bg-[#9DC0AE]/35 dark:border-[#52B788]/50 dark:bg-[#2D5A43]/25 dark:text-[#6EE7B7] dark:hover:border-[#10B981] dark:hover:bg-[#2D5A43]/40 sm:px-2.5 sm:py-1.5 lg:p-1.5 2xl:px-3 2xl:py-1.5"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#93C5FD] bg-[#EFF6FF] p-1.5 text-xs font-semibold text-[#1D4ED8] whitespace-nowrap transition hover:border-[#2563EB] hover:bg-[#DBEAFE] dark:border-[#3B82F6]/50 dark:bg-[#1E3A8A]/30 dark:text-[#93C5FD] dark:hover:border-[#3B82F6] dark:hover:bg-[#1E3A8A]/50 sm:px-2.5 sm:py-1.5 lg:p-1.5 2xl:px-3 2xl:py-1.5"
             >
               <Cloud className="h-4 w-4 shrink-0 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 2xl:h-3.5 2xl:w-3.5" />
               <span className="hidden sm:inline lg:hidden 2xl:inline">Đồng bộ tiến độ</span>
@@ -383,12 +383,12 @@ export const Header: React.FC<HeaderProps> = ({
               aria-pressed={theme === 'dark'}
               aria-label={theme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
               title={theme === 'dark' ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối'}
-              className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1.5 text-xs font-medium text-[#292524] transition hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#10B981] dark:hover:bg-[#242925] dark:hover:text-[#34D399]"
+              className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1.5 text-xs font-medium text-[#292524] transition hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#1D4ED8] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#3B82F6] dark:hover:bg-[#1E3A8A]/30 dark:hover:text-[#93C5FD]"
             >
               {theme === 'dark' ? (
                 <Sun className="h-4 w-4 text-[#FCD34D]" />
               ) : (
-                <Moon className="h-4 w-4 text-[#284E3B]" />
+                <Moon className="h-4 w-4 text-[#2563EB]" />
               )}
             </button>
           </div>
@@ -409,8 +409,8 @@ export const Header: React.FC<HeaderProps> = ({
                 aria-current={isActive ? 'page' : undefined}
                 className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-1.5 py-1.5 text-xs font-semibold whitespace-nowrap transition sm:px-2.5 sm:text-[13px] ${
                   isActive
-                    ? 'border-[#284E3B] bg-[#284E3B] text-white shadow-sm hover:border-[#1F3F2F] hover:bg-[#1F3F2F] dark:border-[#52B788]/50 dark:bg-[#2D5A43] dark:hover:bg-[#234735]'
-                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#284E3B] hover:bg-[#E8F0EC] hover:text-[#284E3B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#10B981] dark:hover:bg-[#242925] dark:hover:text-[#6EE7B7]'
+                    ? 'border-[#2563EB] bg-[#2563EB] text-white shadow-sm hover:border-[#1D4ED8] hover:bg-[#1D4ED8] dark:border-[#3B82F6]/50 dark:bg-[#2563EB] dark:hover:bg-[#1D4ED8]'
+                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#93C5FD] hover:bg-[#EFF6FF] hover:text-[#1D4ED8] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#3B82F6]/50 dark:hover:bg-[#1E3A8A]/30 dark:hover:text-[#93C5FD]'
                 }`}
               >
                 <Icon className="hidden h-3.5 w-3.5 shrink-0 sm:block" />

@@ -19,7 +19,7 @@
   a:focus-visible,
   textarea:focus-visible,
   input:focus-visible {
-    outline: 2px solid #284E3B;
+    outline: 2px solid #2563EB;
     outline-offset: 2px;
   }
 
@@ -27,7 +27,7 @@
   .dark a:focus-visible,
   .dark textarea:focus-visible,
   .dark input:focus-visible {
-    outline: 2px solid #10B981;
+    outline: 2px solid #3B82F6;
     outline-offset: 2px;
   }
 
@@ -60,7 +60,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #284E3B;
+  background: #2563EB;
 }
 
 .dark ::-webkit-scrollbar-thumb {
@@ -68,5 +68,5 @@
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #10B981;
+  background: #3B82F6;
 }
