@@ -268,9 +268,14 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
               {/* Export Section */}
               <section className="rounded-2xl border border-[#C6BEB0] bg-[#FFFFFF] p-4 dark:border-[#323833] dark:bg-[#1E221F]">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold text-[#18181B] dark:text-[#F5F5F4]">
-                    Sao chép mã tiến độ
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-[#18181B] dark:text-[#F5F5F4]">
+                      Sao chép mã tiến độ
+                    </h3>
+                    <span className="rounded-full border border-[#D5CFC2] bg-[#FAF9F5] px-2 py-0.5 tabular-nums text-[11px] font-semibold text-[#656058] dark:border-[#2C302B] dark:bg-[#161816] dark:text-[#9CA39B]">
+                      {syncCode.length} ký tự
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={handleCopyCode}
@@ -301,8 +306,11 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                 <textarea
                   ref={exportTextareaRef}
                   readOnly
-                  rows={3}
+                  rows={2}
                   value={syncCode}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   onClick={(e) => e.currentTarget.select()}
                   aria-label="Mã tiến độ hiện tại"
                   className="w-full resize-none rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2 font-mono text-xs leading-relaxed text-[#292524] focus:border-[#4338CA] focus:outline-none dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:focus:border-[#818CF8]"
@@ -319,14 +327,17 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                 </p>
 
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={inputCode}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   onChange={(e) => {
                     setInputCode(e.target.value);
                     if (importError) setImportError(null);
                     if (importSuccess) setImportSuccess(null);
                   }}
-                  placeholder="Dán mã bắt đầu bằng OT1:... vào đây"
+                  placeholder="Dán mã đồng bộ (OT2-... hoặc OT1:...) vào đây"
                   aria-label="Ô nhập mã tiến độ"
                   className="w-full resize-none rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2 font-mono text-xs leading-relaxed text-[#292524] placeholder:text-[#656058] focus:border-[#4338CA] focus:outline-none dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:placeholder:text-[#9CA39B] dark:focus:border-[#818CF8]"
                 />
