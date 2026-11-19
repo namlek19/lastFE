@@ -74,7 +74,7 @@ const VARIANT_CONFIG: Record<SakugaVariant, SakugaThemeTokens> = {
   },
 };
 
-interface SakugaParticlesProps {
+export interface SakugaParticlesProps {
   isMiss: boolean;
   showShards: boolean;
   accentFill: string;
@@ -83,7 +83,7 @@ interface SakugaParticlesProps {
   className: string;
 }
 
-const SakugaParticles: React.FC<SakugaParticlesProps> = ({
+export const SakugaParticles: React.FC<SakugaParticlesProps> = ({
   isMiss,
   showShards,
   accentFill,
