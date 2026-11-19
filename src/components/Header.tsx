@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   BookOpen,
   Check,
@@ -37,13 +38,28 @@ const MODE_TABS: {
   shortLabel: string;
   Icon: React.ComponentType<{ className?: string }>;
 }[] = [
-  { id: 'chapter', label: 'Học theo chương', shortLabel: 'Theo chương', Icon: BookOpen },
-  { id: 'rolling', label: 'Học cuốn chiếu', shortLabel: 'Cuốn chiếu', Icon: Layers },
-  { id: 'flashcard', label: 'Flashcard', shortLabel: 'Flashcard', Icon: CreditCard },
-  { id: 'exam', label: 'Thi thử trộn đề', shortLabel: 'Thi thử', Icon: ClipboardCheck },
-];
+    { id: 'chapter', label: 'Học theo chương', shortLabel: 'Theo chương', Icon: BookOpen },
+    { id: 'rolling', label: 'Học cuốn chiếu', shortLabel: 'Cuốn chiếu', Icon: Layers },
+    { id: 'flashcard', label: 'Flashcard', shortLabel: 'Flashcard', Icon: CreditCard },
+    { id: 'exam', label: 'Thi thử trộn đề', shortLabel: 'Thi thử', Icon: ClipboardCheck },
+  ];
 
 const SUBJECT_ORDER: SubjectId[] = ['vnr202', 'mln131'];
+
+const TIER_BADGE_STYLES: Record<StudyTier, { pill: string; icon: string }> = {
+  lazymax: {
+    pill: 'border-[#059669] bg-[#D1FAE5] text-[#047857] shadow-[3px_3px_0_0_#6EE7B7] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] dark:shadow-[3px_3px_0_0_#065F46]',
+    icon: 'text-[#059669] dark:text-[#34D399]',
+  },
+  lazy: {
+    pill: 'border-[#D97706] bg-[#FEF3C7] text-[#92400E] shadow-[3px_3px_0_0_#FCD34D] dark:border-[#F59E0B] dark:bg-[#92400E]/45 dark:text-[#FDE68A] dark:shadow-[3px_3px_0_0_#92400E]',
+    icon: 'text-[#D97706] dark:text-[#FBBF24]',
+  },
+  hardcore: {
+    pill: 'border-[#E11D48] bg-[#FFE4E6] text-[#BE123C] shadow-[3px_3px_0_0_#FDA4AF] dark:border-[#FB7185] dark:bg-[#881337]/45 dark:text-[#FFE4E6] dark:shadow-[3px_3px_0_0_#881337]',
+    icon: 'text-[#E11D48] dark:text-[#FB7185]',
+  },
+};
 
 export const Header: React.FC<HeaderProps> = ({
   subject,
@@ -59,8 +75,17 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isRuleInfoOpen, setIsRuleInfoOpen] = useState(false);
   const [isSubjectMenuOpen, setIsSubjectMenuOpen] = useState(false);
+  const [badgeBounceSeq, setBadgeBounceSeq] = useState(0);
   const ruleInfoContainerRef = useRef<HTMLDivElement>(null);
   const subjectContainerRef = useRef<HTMLDivElement>(null);
+  const prevTierRef = useRef<StudyTier>(tier);
+
+  useEffect(() => {
+    if (prevTierRef.current !== tier) {
+      prevTierRef.current = tier;
+      setBadgeBounceSeq((seq) => seq + 1);
+    }
+  }, [tier]);
 
   const activeQuestions = useMemo(() => getQuestionsBySubject(subject), [subject]);
 
@@ -143,9 +168,8 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <span>{activeSubjectMeta.code}</span>
                 <ChevronDown
-                  className={`h-3.5 w-3.5 shrink-0 transition-transform duration-150 ${
-                    isSubjectMenuOpen ? 'rotate-180' : ''
-                  }`}
+                  className={`h-3.5 w-3.5 shrink-0 transition-transform duration-150 ${isSubjectMenuOpen ? 'rotate-180' : ''
+                    }`}
                 />
               </button>
 
@@ -168,11 +192,10 @@ export const Header: React.FC<HeaderProps> = ({
                           onSelectSubject(subjId);
                           setIsSubjectMenuOpen(false);
                         }}
-                        className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl px-3 py-2 text-left transition ${
-                          isActive
+                        className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl px-3 py-2 text-left transition ${isActive
                             ? 'bg-[#EEF2FF] text-[#3730A3] dark:bg-[#312E81]/45 dark:text-[#A5B4FC]'
                             : 'text-[#292524] hover:bg-[#FAF9F5] dark:text-[#E7E5E4] dark:hover:bg-[#252A26]'
-                        }`}
+                          }`}
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 text-xs font-bold">
@@ -194,11 +217,6 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Desktop 3-Tier Sakuga Anime Stamp Picker (>= 1024px) */}
-          <div className="hidden lg:inline-flex">
-            <SakugaTierPicker tier={tier} onSelectTier={onSelectTier} />
-          </div>
-
           {/* Center Cluster: 4 Study Mode Tabs (Desktop >= 1024px) */}
           <nav
             aria-label="Chế độ học tập"
@@ -212,11 +230,10 @@ export const Header: React.FC<HeaderProps> = ({
                   type="button"
                   onClick={() => onSelectMode(id)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`sakuga-btn inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-semibold whitespace-nowrap lg:px-2.5 xl:px-3 2xl:px-3.5 2xl:text-[13px] ${
-                    isActive
+                  className={`sakuga-btn inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-semibold whitespace-nowrap lg:px-2.5 xl:px-3 2xl:px-3.5 2xl:text-[13px] ${isActive
                       ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-[3px_3px_0_0_#C7D2FE] hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]'
                       : 'border-transparent text-[#656058] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
-                  }`}
+                    }`}
                 >
                   <Icon className="hidden h-3.5 w-3.5 shrink-0 2xl:block" />
                   <span className="2xl:hidden">{shortLabel}</span>
@@ -226,166 +243,185 @@ export const Header: React.FC<HeaderProps> = ({
             })}
           </nav>
 
-          {/* Right Cluster: Mastery Badge + Rule Info, Shortcuts Popover, Sync Modal Button, Theme Toggle */}
+          {/* Desktop 3-Tier Sakuga Anime Stamp Picker (>= 1024px) */}
+          <div className="hidden lg:inline-flex">
+            <SakugaTierPicker tier={tier} onSelectTier={onSelectTier} />
+          </div>
+
+          {/* Right Cluster: Mastery Badge + Rule Info, Sync Modal Button, Theme Toggle */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {/* Overall Mastery Badge (Dopamine Emerald) + Info Popover */}
+            {/* Overall Mastery Badge (Color & Anime Jump keyed to Study Tier) + Info Popover */}
             <div ref={ruleInfoContainerRef} className="relative flex items-center gap-1">
-              <div
-                className="inline-flex items-center gap-1 rounded-full border-2 border-[#059669] bg-[#D1FAE5] px-2.5 py-1 text-[11px] font-semibold text-[#047857] shadow-[3px_3px_0_0_#6EE7B7] tabular-nums whitespace-nowrap dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] dark:shadow-[3px_3px_0_0_#065F46] sm:gap-1.5 sm:px-3 sm:text-xs"
+              <motion.div
+                key={badgeBounceSeq > 0 ? `mastery-bounce-${badgeBounceSeq}` : 'mastery-static'}
+                initial={
+                  badgeBounceSeq > 0
+                    ? { y: 0, scaleX: 1.18, scaleY: 0.84 }
+                    : false
+                }
+                animate={
+                  badgeBounceSeq > 0
+                    ? {
+                      y: [0, -11, 2, 0],
+                      scaleX: [1.18, 0.9, 1.06, 1],
+                      scaleY: [0.84, 1.14, 0.94, 1],
+                    }
+                    : { y: 0, scaleX: 1, scaleY: 1 }
+                }
+                transition={{ duration: 0.44, times: [0, 0.36, 0.72, 1], ease: [0.22, 1, 0.36, 1] }}
+                className={`inline-flex items-center gap-1 rounded-full border-2 px-2.5 py-1 text-[11px] font-semibold tabular-nums whitespace-nowrap transition-colors duration-200 sm:gap-1.5 sm:px-3 sm:text-xs ${TIER_BADGE_STYLES[tier].pill}`}
                 title={`Đã thuộc ${masteredCount} trên ${activeQuestions.length} câu môn ${activeSubjectMeta.code}`}
               >
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#059669] dark:text-[#34D399]" />
+                <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${TIER_BADGE_STYLES[tier].icon}`} />
                 <span>
                   {masteredCount}/{activeQuestions.length}
                   <span className="hidden sm:inline lg:hidden xl:inline"> Đã thuộc</span>
                 </span>
+          </motion.div>
+
+          <button
+            type="button"
+            onClick={() => setIsRuleInfoOpen((prev) => !prev)}
+            aria-expanded={isRuleInfoOpen}
+            aria-haspopup="true"
+            aria-label="Quy tắc tính tiến độ Đã thuộc"
+            title="Xem quy tắc đạt Đã thuộc"
+            className={`inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border text-xs transition sm:h-7 sm:w-7 ${isRuleInfoOpen
+                ? 'border-[#4338CA] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
+              }`}
+          >
+            <Info className="h-3.5 w-3.5" />
+          </button>
+
+          {isRuleInfoOpen && (
+            <div
+              role="dialog"
+              aria-label="Quy tắc tính tiến độ"
+              className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-[#C6BEB0] bg-[#FFFFFF] p-4 shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] dark:border-[#323833] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)] sm:w-80"
+            >
+              <div className="mb-2.5 flex items-center justify-between border-b border-[#D5CFC2] pb-2 dark:border-[#262925]">
+                <span className="text-xs font-bold text-[#18181B] dark:text-[#F5F5F4]">
+                  Quy tắc tính tiến độ học tập
+                </span>
+                <span className="rounded-md border border-[#A5B4FC] bg-[#EEF2FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
+                  Đồng bộ 2 chiều
+                </span>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setIsRuleInfoOpen((prev) => !prev)}
-                aria-expanded={isRuleInfoOpen}
-                aria-haspopup="true"
-                aria-label="Quy tắc tính tiến độ Đã thuộc"
-                title="Xem quy tắc đạt Đã thuộc"
-                className={`inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border text-xs transition sm:h-7 sm:w-7 ${
-                  isRuleInfoOpen
-                    ? 'border-[#4338CA] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
-                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
-                }`}
-              >
-                <Info className="h-3.5 w-3.5" />
-              </button>
+              <p className="mb-2.5 text-[11px] text-[#656058] dark:text-[#9CA39B]">
+                <span className="font-semibold text-[#18181B] dark:text-[#F5F5F4]">
+                  {activeSubjectMeta.code}
+                </span>{' '}
+                • {activeSubjectMeta.name} ({activeSubjectMeta.chapters.length} chương,{' '}
+                {activeQuestions.length} câu)
+              </p>
 
-              {isRuleInfoOpen && (
-                <div
-                  role="dialog"
-                  aria-label="Quy tắc tính tiến độ"
-                  className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-[#C6BEB0] bg-[#FFFFFF] p-4 shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] dark:border-[#323833] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)] sm:w-80"
-                >
-                  <div className="mb-2.5 flex items-center justify-between border-b border-[#D5CFC2] pb-2 dark:border-[#262925]">
-                    <span className="text-xs font-bold text-[#18181B] dark:text-[#F5F5F4]">
-                      Quy tắc tính tiến độ học tập
-                    </span>
-                    <span className="rounded-md border border-[#A5B4FC] bg-[#EEF2FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
-                      Đồng bộ 2 chiều
-                    </span>
+              <div className="space-y-3 text-xs leading-relaxed text-[#292524] dark:text-[#E7E5E4]">
+                <div className="rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
+                  <div className="mb-1 font-bold text-[#4338CA] dark:text-[#818CF8]">
+                    1. Học theo chương &amp; Học cuốn chiếu
                   </div>
-
-                  <p className="mb-2.5 text-[11px] text-[#656058] dark:text-[#9CA39B]">
-                    <span className="font-semibold text-[#18181B] dark:text-[#F5F5F4]">
-                      {activeSubjectMeta.code}
-                    </span>{' '}
-                    • {activeSubjectMeta.name} ({activeSubjectMeta.chapters.length} chương,{' '}
-                    {activeQuestions.length} câu)
-                  </p>
-
-                  <div className="space-y-3 text-xs leading-relaxed text-[#292524] dark:text-[#E7E5E4]">
-                    <div className="rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
-                      <div className="mb-1 font-bold text-[#4338CA] dark:text-[#818CF8]">
-                        1. Học theo chương &amp; Học cuốn chiếu
-                      </div>
-                      <ul className="space-y-1 text-[11px]">
-                        <li>
-                          • Trả lời đúng lần 1 →{' '}
-                          <span className="font-semibold text-[#B45309] dark:text-[#FCD34D]">
-                            ✓ Đúng 1/2 lần (● ○)
-                          </span>
-                        </li>
-                        <li>
-                          • Trả lời đúng <strong>2 lần liên tiếp</strong> (không bấm phân vân) →{' '}
-                          <span className="font-semibold text-[#047857] dark:text-[#34D399]">
-                            ✓ Đã thuộc (● ●)
-                          </span>
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div className="rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
-                      <div className="mb-1 font-bold text-[#0369A1] dark:text-[#38BDF8]">
-                        2. Flashcard (Lật thẻ nhanh)
-                      </div>
-                      <ul className="space-y-1 text-[11px]">
-                        <li>
-                          • Lật xem đáp án mặt sau →{' '}
-                          <span className="font-semibold text-[#B45309] dark:text-[#FCD34D]">
-                            Đã học
-                          </span>
-                        </li>
-                        <li>
-                          • Bấm nút <strong>Cờ xanh lá</strong> →{' '}
-                          <span className="font-semibold text-[#047857] dark:text-[#34D399]">
-                            ✓ Đã thuộc
-                          </span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+                  <ul className="space-y-1 text-[11px]">
+                    <li>
+                      • Trả lời đúng lần 1 →{' '}
+                      <span className="font-semibold text-[#B45309] dark:text-[#FCD34D]">
+                        ✓ Đúng 1/2 lần (● ○)
+                      </span>
+                    </li>
+                    <li>
+                      • Trả lời đúng <strong>2 lần liên tiếp</strong> (không bấm phân vân) →{' '}
+                      <span className="font-semibold text-[#047857] dark:text-[#34D399]">
+                        ✓ Đã thuộc (● ●)
+                      </span>
+                    </li>
+                  </ul>
                 </div>
-              )}
+
+                <div className="rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
+                  <div className="mb-1 font-bold text-[#0369A1] dark:text-[#38BDF8]">
+                    2. Flashcard (Lật thẻ nhanh)
+                  </div>
+                  <ul className="space-y-1 text-[11px]">
+                    <li>
+                      • Lật xem đáp án mặt sau →{' '}
+                      <span className="font-semibold text-[#B45309] dark:text-[#FCD34D]">
+                        Đã học
+                      </span>
+                    </li>
+                    <li>
+                      • Bấm nút <strong>Cờ xanh lá</strong> →{' '}
+                      <span className="font-semibold text-[#047857] dark:text-[#34D399]">
+                        ✓ Đã thuộc
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </div>
-
-            {/* Progress Sync Button */}
-            <button
-              type="button"
-              onClick={onOpenSyncModal}
-              aria-label="Đồng bộ tiến độ"
-              title="Đồng bộ tiến độ"
-              className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] p-1.5 text-xs font-semibold text-[#3730A3] whitespace-nowrap hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50 sm:px-2.5 sm:py-1.5 lg:p-1.5 2xl:px-3 2xl:py-1.5"
-            >
-              <Cloud className="h-4 w-4 shrink-0 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 2xl:h-3.5 2xl:w-3.5" />
-              <span className="hidden sm:inline lg:hidden 2xl:inline">Đồng bộ tiến độ</span>
-            </button>
-
-            {/* Light / Dark Mode Toggle */}
-            <button
-              type="button"
-              onClick={onToggleTheme}
-              aria-pressed={theme === 'dark'}
-              aria-label={theme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
-              title={theme === 'dark' ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối'}
-              className="sakuga-btn inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1.5 text-xs font-medium text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-4 w-4 text-[#FCD34D]" />
-              ) : (
-                <Moon className="h-4 w-4 text-[#4338CA]" />
-              )}
-            </button>
-          </div>
+          )}
         </div>
 
-        {/* Row 2 (Mobile & Tablet only, < 1024px): 4 Mode Tabs grid */}
-        <nav
-          aria-label="Chế độ học tập"
-          className="grid grid-cols-4 gap-1 border-t border-[#D5CFC2] py-2 dark:border-[#262925] lg:hidden"
+        {/* Progress Sync Button */}
+        <button
+          type="button"
+          onClick={onOpenSyncModal}
+          aria-label="Đồng bộ tiến độ"
+          title="Đồng bộ tiến độ"
+          className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] p-1.5 text-xs font-semibold text-[#3730A3] whitespace-nowrap hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50 sm:px-2.5 sm:py-1.5 lg:p-1.5 2xl:px-3 2xl:py-1.5"
         >
-          {MODE_TABS.map(({ id, shortLabel, Icon }) => {
-            const isActive = mode === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => onSelectMode(id)}
-                aria-current={isActive ? 'page' : undefined}
-                className={`sakuga-btn inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-1.5 py-1.5 text-xs font-semibold whitespace-nowrap sm:px-2.5 sm:text-[13px] ${
-                  isActive
-                    ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-[2px_2px_0_0_#C7D2FE] hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]'
-                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
-                }`}
-              >
-                <Icon className="hidden h-3.5 w-3.5 shrink-0 sm:block" />
-                <span className="truncate">{shortLabel}</span>
-              </button>
-            );
-          })}
-        </nav>
+          <Cloud className="h-4 w-4 shrink-0 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 2xl:h-3.5 2xl:w-3.5" />
+          <span className="hidden sm:inline lg:hidden 2xl:inline">Đồng bộ tiến độ</span>
+        </button>
 
-        {/* Row 3 (Mobile & Tablet only, < 1024px): 3 Study Tier Anime Stamps */}
-        <div className="border-t border-[#D5CFC2]/80 py-2 dark:border-[#262925] lg:hidden">
-          <SakugaTierPicker tier={tier} onSelectTier={onSelectTier} compact />
-        </div>
+        {/* Light / Dark Mode Toggle */}
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          aria-pressed={theme === 'dark'}
+          aria-label={theme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
+          title={theme === 'dark' ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối'}
+          className="sakuga-btn inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1.5 text-xs font-medium text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
+        >
+          {theme === 'dark' ? (
+            <Sun className="h-4 w-4 text-[#FCD34D]" />
+          ) : (
+            <Moon className="h-4 w-4 text-[#4338CA]" />
+          )}
+        </button>
       </div>
-    </header>
+    </div>
+
+  {/* Row 2 (Mobile & Tablet only, < 1024px): 3 Study Tier Anime Stamps */ }
+  <div className="border-t border-[#D5CFC2] py-2 dark:border-[#262925] lg:hidden">
+    <SakugaTierPicker tier={tier} onSelectTier={onSelectTier} compact />
+  </div>
+
+  {/* Row 3 (Mobile & Tablet only, < 1024px): 4 Mode Tabs grid */ }
+  <nav
+    aria-label="Chế độ học tập"
+    className="grid grid-cols-4 gap-1 border-t border-[#D5CFC2]/80 py-2 dark:border-[#262925] lg:hidden"
+  >
+    {MODE_TABS.map(({ id, shortLabel, Icon }) => {
+      const isActive = mode === id;
+      return (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onSelectMode(id)}
+          aria-current={isActive ? 'page' : undefined}
+          className={`sakuga-btn inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-1.5 py-1.5 text-xs font-semibold whitespace-nowrap sm:px-2.5 sm:text-[13px] ${isActive
+              ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-[2px_2px_0_0_#C7D2FE] hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]'
+              : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
+            }`}
+        >
+          <Icon className="hidden h-3.5 w-3.5 shrink-0 sm:block" />
+          <span className="truncate">{shortLabel}</span>
+        </button>
+      );
+    })}
+  </nav>
+      </div >
+    </header >
   );
 };
