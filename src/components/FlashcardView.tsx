@@ -536,6 +536,15 @@ const correctOptionItems = useMemo(() => {
   return currentQuestion.options.filter((opt) => upperSet.has(opt.key.toUpperCase()));
 }, [currentQuestion]);
 
+const suspectedOptionItems = useMemo(() => {
+  if (!currentQuestion || !currentQuestion.suspectedAnswers?.length) return [];
+  const correctSet = new Set(currentQuestion.correctAnswers.map((k) => k.toUpperCase()));
+  const suspectSet = new Set(currentQuestion.suspectedAnswers.map((k) => k.toUpperCase()));
+  return currentQuestion.options.filter(
+    (opt) => suspectSet.has(opt.key.toUpperCase()) && !correctSet.has(opt.key.toUpperCase())
+  );
+}, [currentQuestion]);
+
 return (
   <>
     <div className="flex w-full flex-col items-start gap-6 lg:flex-row lg:gap-8 xl:gap-10">
@@ -1072,6 +1081,29 @@ return (
                           </div>
                         ))}
                       </div>
+
+                      {suspectedOptionItems.length > 0 && (
+                        <div className="mx-auto mt-3 w-full max-w-2xl space-y-2 rounded-2xl border-2 border-[#EC4899] bg-[#FCE7F3] p-3.5 text-[#9D174D] ring-2 ring-[#F472B6]/20 dark:border-[#F472B6] dark:bg-[#831843]/45 dark:text-[#FCE7F3] dark:ring-[#F472B6]/20 sm:p-4">
+                          {suspectedOptionItems.map((opt) => (
+                            <div key={opt.key} className="flex flex-wrap items-start justify-between gap-2.5 sm:flex-nowrap">
+                              <div className="flex items-start gap-3">
+                                <span className="sakuga-option-badge mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[#DB2777] bg-[#EC4899] text-xs font-bold text-white dark:border-[#F472B6] dark:bg-[#EC4899] dark:text-white">
+                                  {opt.key}
+                                </span>
+                                <span className="flex-1 text-[15px] font-semibold leading-relaxed sm:text-[16px]">
+                                  {opt.text}
+                                </span>
+                              </div>
+                              <SakugaMangaTag
+                                label="???"
+                                tone="pink"
+                                animateBurst={isFlipped}
+                                className="shrink-0"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Bottom Toggle Explanation */}

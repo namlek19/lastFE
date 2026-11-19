@@ -2944,9 +2944,12 @@
     "correctAnswers": [
       "D"
     ],
+    "suspectedAnswers": [
+      "B"
+    ],
     "isMultiSelect": false,
-    "explanation": "Theo đáp án quy định của câu hỏi, sự cư trú của các dân tộc gắn với sự phân chia theo **vị trí địa lý** và đặc điểm ra đời, **phát triển của dân tộc** đó trên từng địa bàn. Lưu ý theo giáo trình MLN131, đặc trưng nổi bật trong 6 đặc điểm dân tộc ở Việt Nam là các **dân tộc cư trú xen kẽ** nhau, không có dân tộc nào có lãnh thổ riêng biệt.",
-    "note": ""
+    "explanation": "Tuy đáp án của suộc là **D** (phân chia lãnh thổ theo vị trí địa lý và đặc điểm ra đời, phát triển của dân tộc đó), nhưng theo tôi đáp án **B** (**Các dân tộc cư trú xen kẽ nhau, không có một dân tộc nào tập trung duy nhất trên một địa bàn**) mới đúng vì theo giáo trình MLN131 (đặc điểm thứ 2 trong 6 đặc điểm dân tộc ở Việt Nam), Việt Nam là nơi chuyển cư của nhiều dân tộc ở Đông Nam Á nên bản đồ cư trú phân tán, **các dân tộc cư trú xen kẽ nhau** và **không có dân tộc nào có lãnh thổ tộc người riêng** (khớp với câu mln-094 trong cùng bộ đề).",
+    "note": "Câu nghi vấn đáp án: Suộc chấm D, giáo trình chuẩn là B — nên nhớ cả hai để tránh mất điểm tùy hệ thống chấm."
   },
   {
     "id": "mln-099",
@@ -11683,20 +11686,6 @@
       },
       {
         "key": "B",
-        "text": "Hệ thống chính sách, pháp luật về xây dựng gia đình sẽ không thể hoàn thiện"
-      },
-      {
-        "key": "C",
-        "text": "Việc xây dựng gia đình không còn dựa trên nền tảng hệ tư tưởng chính trị"
-      },
-      {
-        "key": "D",
-        "text": "Việc xây dựng gia đình sẽ không hướng tới đời sống văn hóa, tinh thần"
-      }
-    ],
-    "correctAnswers": [
-      "A"
-    ],
     "isMultiSelect": false,
     "explanation": "**Cơ sở văn hóa** đóng vai trò định hướng giá trị, chuẩn mực đạo đức và lối sống gia đình; nếu thiếu cơ sở văn hóa hoặc không đi liền với **cơ sở kinh tế, chính trị** thì việc **xây dựng gia đình** sẽ bị **lệch lạc, không đạt hiệu quả**.",
     "note": ""
@@ -12149,9 +12138,12 @@
     "correctAnswers": [
       "A"
     ],
+    "suspectedAnswers": [
+      "B"
+    ],
     "isMultiSelect": false,
-    "explanation": "Theo cách phân loại trong câu hỏi về các **chức năng cơ bản của gia đình**, gia đình thực hiện **3 chức năng** chủ yếu gồm tái sản xuất ra con người, kinh tế và nuôi dưỡng - giáo dục (gắn liền với thỏa mãn nhu cầu tâm sinh lý, tình cảm).",
-    "note": ""
+    "explanation": "Tuy đáp án của suộc là **A (3)**, nhưng theo tôi đáp án **B (4)** mới đúng vì theo giáo trình MLN131 (Chương 7, mục Chức năng cơ bản của gia đình), gia đình có chính xác **4 chức năng cơ bản** gồm: **tái sản xuất ra con người**; **nuôi dưỡng, giáo dục**; **kinh tế và tổ chức tiêu dùng**; và **thỏa mãn nhu cầu tâm sinh lý, duy trì tình cảm gia đình** (khớp nguyên văn với câu mln-093 trong cùng bộ đề).",
+    "note": "Câu nghi vấn đáp án: Suộc chấm A (3), giáo trình chuẩn là B (4) — nên nhớ cả hai khi làm bài thi."
   },
   {
     "id": "mln-406",

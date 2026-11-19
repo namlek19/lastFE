@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Filter,
   Flag,
+  HelpCircle,
   Menu,
   RotateCcw,
   X,
@@ -913,6 +914,11 @@ return (
               {currentQuestion.options.map((opt) => {
                 const isSelected = currentAttempt.selectedKeys.includes(opt.key);
                 const isCorrectOption = currentQuestion.correctAnswers.includes(opt.key);
+                const isSuspectedOption =
+                  !isCorrectOption &&
+                  (currentQuestion.suspectedAnswers ?? [])
+                    .map((k) => k.toUpperCase())
+                    .includes(opt.key.toUpperCase());
                 const isGraded = currentAttempt.graded;
 
                 let containerClasses =
@@ -933,6 +939,11 @@ return (
                       'border-2 border-[#059669] bg-[#F8F6F0] text-[#064E3B] ring-2 ring-[#10B981]/20 dark:border-2 dark:border-[#10B981] dark:bg-[#252A26] dark:text-[#ECFDF5] dark:ring-2 dark:ring-[#10B981]/25';
                     keyBadgeClasses =
                       'sakuga-green-key-arrival border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]';
+                  } else if (isSuspectedOption) {
+                    containerClasses =
+                      'border-2 border-[#EC4899] bg-[#FCE7F3] text-[#9D174D] ring-2 ring-[#F472B6]/25 dark:border-2 dark:border-[#F472B6] dark:bg-[#831843]/45 dark:text-[#FCE7F3] dark:ring-2 dark:ring-[#F472B6]/25';
+                    keyBadgeClasses =
+                      'border-[#DB2777] bg-[#EC4899] text-white dark:border-[#F472B6] dark:bg-[#EC4899] dark:text-white';
                   } else if (isSelected && !isCorrectOption) {
                     containerClasses =
                       'border border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/55 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]';
@@ -957,7 +968,11 @@ return (
                     (k) => !currentAttempt.selectedKeys.includes(k)
                   );
                 const showSuccessTag = isGraded && isCurrentCorrect && isCorrectOption;
-                const showMissTag = isGraded && !isCurrentCorrect && missTargetKeys.includes(opt.key);
+                const showMissTag =
+                  isGraded &&
+                  !isCurrentCorrect &&
+                  !isSuspectedOption &&
+                  missTargetKeys.includes(opt.key);
 
                 return (
                   <button
@@ -989,8 +1004,9 @@ return (
 
                     {(showSuccessTag ||
                       showMissTag ||
+                      (isGraded && isSuspectedOption) ||
                       (isGraded && isCorrectOption) ||
-                      (isGraded && isSelected && !isCorrectOption)) && (
+                      (isGraded && isSelected && !isCorrectOption && !isSuspectedOption)) && (
                         <span className="relative z-10 mt-0.5 flex shrink-0 items-center gap-1.5 sm:gap-2">
                           {showSuccessTag && (
                             <SakugaMangaTag
@@ -998,11 +1014,17 @@ return (
                               tone={effectiveStreak >= 2 ? 'emerald' : 'amber'}
                             />
                           )}
+                          {isGraded && isSuspectedOption && (
+                            <SakugaMangaTag label="???" tone="pink" />
+                          )}
                           {showMissTag && <SakugaMangaTag label="MISS!" tone="rose" />}
                           {isGraded && isCorrectOption && (
                             <CheckCircle2 className="h-4 w-4 shrink-0 text-[#059669] dark:text-[#10B981] sm:h-5 sm:w-5" />
                           )}
-                          {isGraded && isSelected && !isCorrectOption && (
+                          {isGraded && isSuspectedOption && (
+                            <HelpCircle className="h-4 w-4 shrink-0 text-[#DB2777] dark:text-[#F472B6] sm:h-5 sm:w-5" />
+                          )}
+                          {isGraded && isSelected && !isCorrectOption && !isSuspectedOption && (
                             <XCircle className="h-4 w-4 shrink-0 text-[#E11D48] dark:text-[#FB7185] sm:h-5 sm:w-5" />
                           )}
                         </span>

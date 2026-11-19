@@ -16,6 +16,7 @@ export interface QuestionItem {
   question: string;
   options: QuestionOption[];
   correctAnswers: string[];
+  suspectedAnswers?: string[];
   isMultiSelect: boolean;
   explanation: string;
   note: string;

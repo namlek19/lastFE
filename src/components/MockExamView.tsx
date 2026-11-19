@@ -1711,6 +1711,11 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                         const isCorrectOpt = q.correctAnswers
                           .map(c => c.toUpperCase())
                           .includes(opt.key.toUpperCase());
+                        const isSuspectedOpt =
+                          !isCorrectOpt &&
+                          (q.suspectedAnswers ?? [])
+                            .map(c => c.toUpperCase())
+                            .includes(opt.key.toUpperCase());
                         const isUserSelected = selected
                           .map(s => s.toUpperCase())
                           .includes(opt.key.toUpperCase());
@@ -1725,6 +1730,11 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                             'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#ECFDF5]';
                           badgeStyle =
                             'border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]';
+                        } else if (isSuspectedOpt) {
+                          rowStyle =
+                            'border-2 border-[#EC4899] bg-[#FCE7F3] text-[#9D174D] dark:border-2 dark:border-[#F472B6] dark:bg-[#831843]/45 dark:text-[#FCE7F3]';
+                          badgeStyle =
+                            'border-[#DB2777] bg-[#EC4899] text-white dark:border-[#F472B6] dark:bg-[#EC4899] dark:text-white';
                         } else if (isUserSelected) {
                           rowStyle =
                             'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]';
@@ -1748,17 +1758,22 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                               </span>
                             </div>
 
-                            {(isUserSelected || isCorrectOpt) && (
+                            {(isUserSelected || isCorrectOpt || isSuspectedOpt) && (
                               <div className="ml-9 flex shrink-0 items-center gap-1.5 text-[11px] font-semibold sm:ml-0">
                                 {isUserSelected && (
                                   <span
                                     className={`rounded-md border px-2 py-0.5 ${isCorrectOpt
                                       ? 'border-[#10B981] bg-white text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/80 dark:text-[#34D399]'
-                                      : 'border-[#FDA4AF] bg-white text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/25 dark:text-[#FDA4AF]'
+                                      : isSuspectedOpt
+                                        ? 'border-[#EC4899] bg-white text-[#BE185D] dark:border-[#F472B6] dark:bg-[#831843]/80 dark:text-[#FBCFE8]'
+                                        : 'border-[#FDA4AF] bg-white text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/25 dark:text-[#FDA4AF]'
                                       }`}
                                   >
                                     Bạn chọn
                                   </span>
+                                )}
+                                {isSuspectedOpt && (
+                                  <SakugaMangaTag label="???" tone="pink" animateBurst={false} />
                                 )}
                                 {isCorrectOpt && (
                                   <span className="rounded-md border border-[#10B981] bg-white px-2 py-0.5 text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/80 dark:text-[#34D399]">

@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Flag,
+  HelpCircle,
   Layers,
   Menu,
   Play,
@@ -793,6 +794,11 @@ if (activeStage !== null) {
                   const isCorrectOption = currentQuestion.correctAnswers
                     .map(c => c.toUpperCase())
                     .includes(opt.key.toUpperCase());
+                  const isSuspectedOption =
+                    !isCorrectOption &&
+                    (currentQuestion.suspectedAnswers ?? [])
+                      .map(c => c.toUpperCase())
+                      .includes(opt.key.toUpperCase());
                   const isGraded = gradedState !== null;
 
                   let containerCls =
@@ -811,6 +817,11 @@ if (activeStage !== null) {
                         'border-2 border-[#059669] bg-[#F8F6F0] text-[#064E3B] ring-2 ring-[#10B981]/20 dark:border-2 dark:border-[#10B981] dark:bg-[#252A26] dark:text-[#ECFDF5] dark:ring-2 dark:ring-[#10B981]/25';
                       badgeCls =
                         'sakuga-green-key-arrival border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]';
+                    } else if (isSuspectedOption) {
+                      containerCls =
+                        'border-2 border-[#EC4899] bg-[#FCE7F3] text-[#9D174D] ring-2 ring-[#F472B6]/25 dark:border-2 dark:border-[#F472B6] dark:bg-[#831843]/45 dark:text-[#FCE7F3] dark:ring-2 dark:ring-[#F472B6]/25';
+                      badgeCls =
+                        'border-[#DB2777] bg-[#EC4899] text-white dark:border-[#F472B6] dark:bg-[#EC4899] dark:text-white';
                     } else if (isSelected && !isCorrectOption) {
                       containerCls =
                         'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/55 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]';
@@ -837,6 +848,7 @@ if (activeStage !== null) {
                   const showMissTag =
                     isGraded &&
                     !gradedState.isCorrect &&
+                    !isSuspectedOption &&
                     missTargetKeys.some(k => k.toUpperCase() === opt.key.toUpperCase());
 
                   return (
@@ -874,6 +886,9 @@ if (activeStage !== null) {
                             tone={!turnFlagged && gradedState.nextStreak >= 2 ? 'emerald' : 'amber'}
                           />
                         )}
+                        {isGraded && isSuspectedOption && (
+                          <SakugaMangaTag label="???" tone="pink" />
+                        )}
                         {showMissTag && <SakugaMangaTag label="MISS!" tone="rose" />}
                         {!isGraded && (
                           <kbd className="hidden rounded border border-[#D5CFC2] bg-white px-1.5 py-0.5 font-mono text-[10px] text-[#656058] dark:border-[#353B36] dark:bg-[#161816] dark:text-[#9CA39B] lg:inline-block">
@@ -883,7 +898,10 @@ if (activeStage !== null) {
                         {isGraded && isCorrectOption && (
                           <Check className="h-4 w-4 text-[#059669] dark:text-[#34D399]" />
                         )}
-                        {isGraded && isSelected && !isCorrectOption && (
+                        {isGraded && isSuspectedOption && (
+                          <HelpCircle className="h-4 w-4 text-[#DB2777] dark:text-[#F472B6]" />
+                        )}
+                        {isGraded && isSelected && !isCorrectOption && !isSuspectedOption && (
                           <X className="h-4 w-4 text-[#BE123C] dark:text-[#FDA4AF]" />
                         )}
                       </span>

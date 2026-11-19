@@ -246,7 +246,7 @@ export const SakugaBurst: React.FC<SakugaBurstProps> = ({ event, className = '' 
 
 export interface SakugaMangaTagProps {
   label: string;
-  tone?: 'emerald' | 'indigo' | 'amber' | 'rose' | 'fuchsia';
+  tone?: 'emerald' | 'indigo' | 'amber' | 'rose' | 'fuchsia' | 'pink';
   className?: string;
   animateBurst?: boolean;
 }
@@ -294,6 +294,13 @@ const TONE_MAP: Record<
     accentFill: '#D946EF',
     smokeTint: '#F5D0FE',
     sparkleFill: '#E879F9',
+  },
+  pink: {
+    plateClass:
+      'border-[#831843] bg-[#FCE7F3] text-[#BE185D] shadow-[2px_2px_0_0_#F472B6] dark:border-[#F9A8D4] dark:bg-[#831843] dark:text-[#FCE7F3] dark:shadow-[2px_2px_0_0_#EC4899]',
+    accentFill: '#EC4899',
+    smokeTint: '#FBCFE8',
+    sparkleFill: '#F472B6',
   },
 };
 

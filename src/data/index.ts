@@ -22,6 +22,80 @@ export interface SubjectMeta {
 const mln131Questions = mln131Raw as QuestionItem[];
 const vnr202Questions = vnr202Raw as QuestionItem[];
 
+const MLN131_LAZY_MAX_IDS = new Set<string>([
+  // Chương 1 (22 câu trụ cột)
+  'mln-010', 'mln-039', 'mln-043', 'mln-044', 'mln-049', 'mln-054', 'mln-080', 'mln-103',
+  'mln-118', 'mln-121', 'mln-129', 'mln-166', 'mln-170', 'mln-174', 'mln-179', 'mln-191',
+  'mln-219', 'mln-235', 'mln-267', 'mln-296', 'mln-342', 'mln-386',
+  // Chương 2 (20 câu trụ cột)
+  'mln-005', 'mln-013', 'mln-023', 'mln-033', 'mln-092', 'mln-096', 'mln-112', 'mln-135',
+  'mln-148', 'mln-177', 'mln-214', 'mln-215', 'mln-220', 'mln-248', 'mln-251', 'mln-286',
+  'mln-355', 'mln-387', 'mln-419', 'mln-431',
+  // Chương 3 (27 câu trụ cột)
+  'mln-015', 'mln-036', 'mln-037', 'mln-068', 'mln-077', 'mln-078', 'mln-083', 'mln-084',
+  'mln-091', 'mln-122', 'mln-125', 'mln-130', 'mln-167', 'mln-193', 'mln-194', 'mln-195',
+  'mln-205', 'mln-217', 'mln-232', 'mln-243', 'mln-254', 'mln-258', 'mln-269', 'mln-289',
+  'mln-304', 'mln-353', 'mln-413',
+  // Chương 4 (22 câu trụ cột)
+  'mln-018', 'mln-050', 'mln-060', 'mln-073', 'mln-086', 'mln-089', 'mln-124', 'mln-128',
+  'mln-204', 'mln-206', 'mln-229', 'mln-234', 'mln-247', 'mln-249', 'mln-255', 'mln-263',
+  'mln-281', 'mln-316', 'mln-320', 'mln-329', 'mln-380', 'mln-385',
+  // Chương 5 (18 câu trụ cột)
+  'mln-008', 'mln-075', 'mln-139', 'mln-155', 'mln-184', 'mln-189', 'mln-210', 'mln-213',
+  'mln-244', 'mln-270', 'mln-293', 'mln-295', 'mln-312', 'mln-315', 'mln-321', 'mln-338',
+  'mln-365', 'mln-425',
+  // Chương 6 (24 câu trụ cột)
+  'mln-001', 'mln-006', 'mln-007', 'mln-009', 'mln-011', 'mln-066', 'mln-087', 'mln-098',
+  'mln-106', 'mln-108', 'mln-111', 'mln-141', 'mln-154', 'mln-156', 'mln-158', 'mln-161',
+  'mln-253', 'mln-303', 'mln-322', 'mln-330', 'mln-378', 'mln-391', 'mln-407', 'mln-426',
+  // Chương 7 (22 câu trụ cột)
+  'mln-003', 'mln-016', 'mln-056', 'mln-093', 'mln-097', 'mln-100', 'mln-116', 'mln-142',
+  'mln-159', 'mln-183', 'mln-260', 'mln-272', 'mln-277', 'mln-294', 'mln-317', 'mln-341',
+  'mln-363', 'mln-372', 'mln-395', 'mln-404', 'mln-405', 'mln-411',
+]);
+
+const MLN131_LAZY_EXTRA_IDS = [
+  // Chương 1 (+16 câu = 38 câu)
+  'mln-030', 'mln-110', 'mln-117', 'mln-120', 'mln-168', 'mln-181', 'mln-187', 'mln-268',
+  'mln-299', 'mln-331', 'mln-344', 'mln-351', 'mln-382', 'mln-398', 'mln-406', 'mln-408',
+  // Chương 2 (+22 câu = 42 câu)
+  'mln-029', 'mln-031', 'mln-081', 'mln-085', 'mln-115', 'mln-123', 'mln-132', 'mln-173',
+  'mln-176', 'mln-178', 'mln-180', 'mln-202', 'mln-307', 'mln-314', 'mln-326', 'mln-334',
+  'mln-335', 'mln-340', 'mln-343', 'mln-364', 'mln-412', 'mln-422',
+  // Chương 3 (+28 câu = 55 câu)
+  'mln-002', 'mln-021', 'mln-028', 'mln-032', 'mln-041', 'mln-079', 'mln-082', 'mln-113',
+  'mln-131', 'mln-134', 'mln-137', 'mln-165', 'mln-182', 'mln-186', 'mln-190', 'mln-211',
+  'mln-212', 'mln-225', 'mln-230', 'mln-284', 'mln-285', 'mln-302', 'mln-310', 'mln-313',
+  'mln-324', 'mln-332', 'mln-374', 'mln-424',
+  // Chương 4 (+22 câu = 44 câu)
+  'mln-035', 'mln-064', 'mln-065', 'mln-105', 'mln-107', 'mln-126', 'mln-140', 'mln-157',
+  'mln-160', 'mln-192', 'mln-198', 'mln-231', 'mln-257', 'mln-275', 'mln-291', 'mln-301',
+  'mln-306', 'mln-318', 'mln-319', 'mln-350', 'mln-373', 'mln-421',
+  // Chương 5 (+24 câu = 42 câu)
+  'mln-012', 'mln-019', 'mln-022', 'mln-025', 'mln-059', 'mln-070', 'mln-072', 'mln-090',
+  'mln-102', 'mln-127', 'mln-138', 'mln-188', 'mln-196', 'mln-199', 'mln-209', 'mln-218',
+  'mln-223', 'mln-256', 'mln-265', 'mln-271', 'mln-288', 'mln-323', 'mln-336', 'mln-375',
+  // Chương 6 (+37 câu = 61 câu)
+  'mln-034', 'mln-046', 'mln-051', 'mln-055', 'mln-061', 'mln-076', 'mln-094', 'mln-119',
+  'mln-143', 'mln-149', 'mln-162', 'mln-163', 'mln-169', 'mln-185', 'mln-208', 'mln-228',
+  'mln-236', 'mln-246', 'mln-262', 'mln-273', 'mln-290', 'mln-292', 'mln-297', 'mln-308',
+  'mln-327', 'mln-349', 'mln-354', 'mln-356', 'mln-367', 'mln-388', 'mln-393', 'mln-400',
+  'mln-402', 'mln-410', 'mln-415', 'mln-423', 'mln-428',
+  // Chương 7 (+29 câu = 51 câu)
+  'mln-024', 'mln-026', 'mln-052', 'mln-062', 'mln-063', 'mln-071', 'mln-133', 'mln-147',
+  'mln-153', 'mln-197', 'mln-221', 'mln-237', 'mln-241', 'mln-245', 'mln-266', 'mln-274',
+  'mln-278', 'mln-279', 'mln-298', 'mln-309', 'mln-333', 'mln-339', 'mln-357', 'mln-369',
+  'mln-389', 'mln-390', 'mln-396', 'mln-403', 'mln-420',
+];
+
+const MLN131_LAZY_IDS = new Set<string>([...MLN131_LAZY_MAX_IDS, ...MLN131_LAZY_EXTRA_IDS]);
+
+const mln131ByTier: Record<StudyTier, QuestionItem[]> = {
+  lazymax: mln131Questions.filter((q) => MLN131_LAZY_MAX_IDS.has(q.id)),
+  lazy: mln131Questions.filter((q) => MLN131_LAZY_IDS.has(q.id)),
+  hardcore: mln131Questions,
+};
+
 const VNR202_LAZY_MAX_IDS = new Set<string>([
   // Chương 1 (48 câu trụ cột)
   'vnr-033', 'vnr-036', 'vnr-037', 'vnr-038', 'vnr-057', 'vnr-059', 'vnr-060', 'vnr-061',
@@ -96,7 +170,11 @@ function buildChapters(questions: QuestionItem[]): ChapterMeta[] {
   return Array.from(map.values()).sort((a, b) => a.chapter - b.chapter);
 }
 
-const mln131Chapters = buildChapters(mln131Questions);
+const mln131ChaptersByTier: Record<StudyTier, ChapterMeta[]> = {
+  lazymax: buildChapters(mln131ByTier.lazymax),
+  lazy: buildChapters(mln131ByTier.lazy),
+  hardcore: buildChapters(mln131ByTier.hardcore),
+};
 const vnr202ChaptersByTier: Record<StudyTier, ChapterMeta[]> = {
   lazymax: buildChapters(vnr202ByTier.lazymax),
   lazy: buildChapters(vnr202ByTier.lazy),
@@ -120,7 +198,7 @@ export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
       6: 10,
       7: 10,
     },
-    chapters: mln131Chapters,
+    chapters: mln131ChaptersByTier.hardcore,
   },
   vnr202: {
     id: 'vnr202',
@@ -142,14 +220,14 @@ export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
     subject: SubjectId,
     tier: StudyTier = 'hardcore'
   ): QuestionItem[] {
-    return subject === 'mln131' ? mln131Questions : vnr202ByTier[tier];
+    return subject === 'mln131' ? mln131ByTier[tier] : vnr202ByTier[tier];
   }
 
     export function getChaptersBySubject(
       subject: SubjectId,
       tier: StudyTier = 'hardcore'
     ): ChapterMeta[] {
-      return subject === 'mln131' ? mln131Chapters : vnr202ChaptersByTier[tier];
+      return subject === 'mln131' ? mln131ChaptersByTier[tier] : vnr202ChaptersByTier[tier];
     }
 
     export function isAnswerCorrect(selected: string[], correct: string[]): boolean {
