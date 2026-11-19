@@ -9,7 +9,6 @@ import {
   CreditCard,
   GraduationCap,
   Info,
-  Keyboard,
   Layers,
   Moon,
   Sun,
@@ -58,10 +57,8 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleTheme,
   onOpenSyncModal,
 }) => {
-  const [isShortcutOpen, setIsShortcutOpen] = useState(false);
   const [isRuleInfoOpen, setIsRuleInfoOpen] = useState(false);
   const [isSubjectMenuOpen, setIsSubjectMenuOpen] = useState(false);
-  const shortcutContainerRef = useRef<HTMLDivElement>(null);
   const ruleInfoContainerRef = useRef<HTMLDivElement>(null);
   const subjectContainerRef = useRef<HTMLDivElement>(null);
 
@@ -78,15 +75,9 @@ export const Header: React.FC<HeaderProps> = ({
   }, [activeQuestions, progress.questions]);
 
   useEffect(() => {
-    if (!isShortcutOpen && !isRuleInfoOpen && !isSubjectMenuOpen) return;
+    if (!isRuleInfoOpen && !isSubjectMenuOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        shortcutContainerRef.current &&
-        !shortcutContainerRef.current.contains(event.target as Node)
-      ) {
-        setIsShortcutOpen(false);
-      }
       if (
         ruleInfoContainerRef.current &&
         !ruleInfoContainerRef.current.contains(event.target as Node)
@@ -103,7 +94,6 @@ export const Header: React.FC<HeaderProps> = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setIsShortcutOpen(false);
         setIsRuleInfoOpen(false);
         setIsSubjectMenuOpen(false);
       }
@@ -115,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isShortcutOpen, isRuleInfoOpen, isSubjectMenuOpen]);
+  }, [isRuleInfoOpen, isSubjectMenuOpen]);
 
   const activeSubjectMeta = SUBJECTS[subject];
 
@@ -331,91 +321,6 @@ export const Header: React.FC<HeaderProps> = ({
                       </ul>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Keyboard Shortcuts Popover — Desktop / Tablet */}
-            <div ref={shortcutContainerRef} className="relative hidden md:block">
-              <button
-                type="button"
-                onClick={() => setIsShortcutOpen((prev) => !prev)}
-                aria-expanded={isShortcutOpen}
-                aria-haspopup="true"
-                aria-label="Phím tắt bàn phím"
-                title="Phím tắt bàn phím"
-                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-2 py-1.5 text-xs font-medium whitespace-nowrap transition xl:px-2.5 ${
-                  isShortcutOpen
-                    ? 'border-[#4338CA] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
-                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
-                }`}
-              >
-                <Keyboard className="h-3.5 w-3.5 shrink-0" />
-                <span className="hidden md:inline lg:hidden xl:inline">Phím tắt</span>
-              </button>
-
-              {isShortcutOpen && (
-                <div
-                  role="dialog"
-                  aria-label="Hướng dẫn phím tắt"
-                  className="absolute right-0 top-full z-50 mt-2 w-76 rounded-2xl border border-[#C6BEB0] bg-[#FFFFFF] p-4 shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] dark:border-[#323833] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)]"
-                >
-                  <div className="mb-2.5 flex items-center justify-between border-b border-[#D5CFC2] pb-2 dark:border-[#262925]">
-                    <span className="text-xs font-bold text-[#18181B] dark:text-[#F5F5F4]">
-                      Phím tắt trên máy tính
-                    </span>
-                    <span className="text-[11px] text-[#656058] dark:text-[#9CA39B]">PC</span>
-                  </div>
-                  <ul className="space-y-2 text-xs text-[#292524] dark:text-[#E7E5E4]">
-                    <li className="flex items-center justify-between gap-2">
-                      <span>Chọn đáp án</span>
-                      <span className="flex items-center gap-1">
-                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
-                          1–4
-                        </kbd>
-                        <span className="text-[#656058] dark:text-[#9CA39B]">/</span>
-                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
-                          A–D
-                        </kbd>
-                      </span>
-                    </li>
-                    <li className="flex items-center justify-between gap-2">
-                      <span>Kiểm tra / Lật thẻ / Tiếp</span>
-                      <span className="flex items-center gap-1">
-                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
-                          Enter
-                        </kbd>
-                        <span className="text-[#656058] dark:text-[#9CA39B]">/</span>
-                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
-                          Space
-                        </kbd>
-                      </span>
-                    </li>
-                    <li className="flex items-center justify-between gap-2">
-                      <span>Chuyển câu / Thẻ trước-tiếp</span>
-                      <span className="flex items-center gap-1">
-                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
-                          ←
-                        </kbd>
-                        <span className="text-[#656058] dark:text-[#9CA39B]">/</span>
-                        <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
-                          →
-                        </kbd>
-                      </span>
-                    </li>
-                    <li className="flex items-center justify-between gap-2">
-                      <span>Cờ xanh lá Đã thuộc (Flashcard)</span>
-                      <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
-                        G
-                      </kbd>
-                    </li>
-                    <li className="flex items-center justify-between gap-2">
-                      <span>Đánh dấu Phân vân</span>
-                      <kbd className="rounded border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#18181B] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#F5F5F4]">
-                        F
-                      </kbd>
-                    </li>
-                  </ul>
                 </div>
               )}
             </div>
