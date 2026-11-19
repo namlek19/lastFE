@@ -149,7 +149,6 @@ export const App: React.FC = () => {
               {mode === 'exam' && (
                 <MockExamView
                   subject={subject}
-                  tier={tier}
                   progress={store}
                   onSaveExamResult={handleSaveExamResult}
                   onRecordAttempt={handleRecordAttempt}

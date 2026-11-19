@@ -27,7 +27,6 @@ import {
   ExamHistoryItem,
   ExamType,
   QuestionItem,
-  StudyTier,
   SubjectId,
   UserProgressStore,
 } from '../types/quiz';
@@ -37,7 +36,6 @@ import { SakugaMangaTag, SakugaProgressBar } from './SakugaVfx';
 
 interface MockExamViewProps {
   subject: SubjectId;
-  tier: StudyTier;
   progress: UserProgressStore;
   onSaveExamResult: (result: ExamHistoryItem) => void;
   onRecordAttempt: (qId: string, isCorrect: boolean) => void;
@@ -62,8 +60,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
   return copy;
 }
 
-  function generateMockExam(subject: SubjectId, tier: StudyTier): QuestionItem[] {
-    const allQuestions = getQuestionsBySubject(subject, tier);
+  function generateMockExam(subject: SubjectId): QuestionItem[] {
+    const allQuestions = getQuestionsBySubject(subject, 'hardcore');
     const quotas = SUBJECTS[subject].examQuotas;
     const seenIds = new Set<string>();
     const selected: QuestionItem[] = [];
@@ -117,7 +115,6 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
 
   export const MockExamView: React.FC<MockExamViewProps> = ({
     subject,
-    tier,
     progress,
     onSaveExamResult,
     onRecordAttempt,
@@ -125,8 +122,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     onFlagQuestions,
   }) => {
     const subjectMeta = SUBJECTS[subject];
-    const allSubjectQuestions = useMemo(() => getQuestionsBySubject(subject, tier), [subject, tier]);
-    const subjectChapters = useMemo(() => getChaptersBySubject(subject, tier), [subject, tier]);
+    const allSubjectQuestions = useMemo(() => getQuestionsBySubject(subject, 'hardcore'), [subject]);
+    const subjectChapters = useMemo(() => getChaptersBySubject(subject, 'hardcore'), [subject]);
 
     const [phase, setPhase] = useState<ExamPhase>('lobby');
     const [examType, setExamType] = useState<ExamType>('standard');
@@ -148,7 +145,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     const submittedRef = useRef<boolean>(false);
     const reviewSectionRef = useRef<HTMLElement | null>(null);
 
-    // Mastered question pool for the selected subject & tier
+    // Mastered question pool for the selected subject (always full Hardcore set)
     const masteredPool = useMemo(
       () => allSubjectQuestions.filter(q => isMastered(progress.questions[q.id])),
       [allSubjectQuestions, progress.questions]
@@ -207,7 +204,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
             : Math.max(5, Math.round(currentMastered.length * 0.75));
         durationSec = mins * 60;
       } else {
-        generated = generateMockExam(subject, tier);
+        generated = generateMockExam(subject);
         durationSec = EXAM_DURATION_SECONDS;
       }
 
@@ -225,7 +222,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
       setIsMobileResultsSheetOpen(false);
       setBulkFlaggedConfirm(null);
       setPhase('active');
-  }, [allSubjectQuestions, examType, progress.questions, subject, tier]);
+  }, [allSubjectQuestions, examType, progress.questions, subject]);
 
   const handleSubmitExam = useCallback(() => {
     if (submittedRef.current || examQuestions.length === 0) return;
@@ -519,8 +516,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
               <div>
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold whitespace-nowrap ${isMasteredMode
-                      ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
-                      : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                    ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                    : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
                     }`}
                 >
                   {isMasteredMode ? (
@@ -561,23 +558,23 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                   type="button"
                   onClick={() => setExamType('standard')}
                   className={`flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 text-left transition sm:p-4 ${examType === 'standard'
-                      ? 'border-[#4338CA] bg-[#EEF2FF] ring-1 ring-[#4338CA] dark:border-[#818CF8] dark:bg-[#312E81]/35 dark:ring-[#818CF8]'
-                      : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                    ? 'border-[#4338CA] bg-[#EEF2FF] ring-1 ring-[#4338CA] dark:border-[#818CF8] dark:bg-[#312E81]/35 dark:ring-[#818CF8]'
+                    : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                     }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className={`text-sm font-bold ${examType === 'standard'
-                          ? 'text-[#3730A3] dark:text-[#A5B4FC]'
-                          : 'text-[#18181B] dark:text-[#F5F5F4]'
+                        ? 'text-[#3730A3] dark:text-[#A5B4FC]'
+                        : 'text-[#18181B] dark:text-[#F5F5F4]'
                         }`}
                     >
                       Đề chuẩn đề cương (random)
                     </span>
                     <span
                       className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${examType === 'standard'
-                          ? 'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8] dark:bg-[#4338CA] dark:text-white'
-                          : 'border-[#C6BEB0] dark:border-[#323833]'
+                        ? 'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8] dark:bg-[#4338CA] dark:text-white'
+                        : 'border-[#C6BEB0] dark:border-[#323833]'
                         }`}
                     >
                       {examType === 'standard' && (
@@ -597,23 +594,23 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                   type="button"
                   onClick={() => setExamType('mastered')}
                   className={`flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 text-left transition sm:p-4 ${examType === 'mastered'
-                      ? 'border-[#10B981] bg-[#D1FAE5] ring-1 ring-[#10B981] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:ring-[#10B981]'
-                      : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#10B981] hover:bg-[#D1FAE5]/60 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#10B981] dark:hover:bg-[#064E3B]/30'
+                    ? 'border-[#10B981] bg-[#D1FAE5] ring-1 ring-[#10B981] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:ring-[#10B981]'
+                    : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#10B981] hover:bg-[#D1FAE5]/60 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#10B981] dark:hover:bg-[#064E3B]/30'
                     }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className={`text-sm font-bold ${examType === 'mastered'
-                          ? 'text-[#064E3B] dark:text-[#34D399]'
-                          : 'text-[#18181B] dark:text-[#F5F5F4]'
+                        ? 'text-[#064E3B] dark:text-[#34D399]'
+                        : 'text-[#18181B] dark:text-[#F5F5F4]'
                         }`}
                     >
                       Ôn các câu đã học
                     </span>
                     <span
                       className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${examType === 'mastered'
-                          ? 'border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]'
-                          : 'border-[#C6BEB0] dark:border-[#323833]'
+                        ? 'border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]'
+                        : 'border-[#C6BEB0] dark:border-[#323833]'
                         }`}
                     >
                       {examType === 'mastered' && (
@@ -714,8 +711,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
               >
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors ${timerEnabled
-                      ? 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
-                      : 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B]'
+                    ? 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                    : 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B]'
                     }`}
                 >
                   {timerEnabled ? <Timer className="h-5 w-5" /> : <TimerOff className="h-5 w-5" />}
@@ -726,8 +723,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                   </span>
                   <span
                     className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${timerEnabled
-                        ? 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
-                        : 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B]'
+                      ? 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                      : 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B]'
                       }`}
                   >
                     {timerEnabled ? 'Đang bật' : 'Đang tắt'}
@@ -787,8 +784,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                         <div className="flex min-w-0 items-center gap-2.5">
                           <span
                             className={`inline-flex shrink-0 items-center justify-center rounded-lg border px-2.5 py-1 text-sm font-bold tabular-nums ${passed
-                                ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
-                                : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
+                              ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                              : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
                               }`}
                           >
                             {item.scoreOn10.toFixed(1)}đ
@@ -800,8 +797,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                               </span>
                               <span
                                 className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${isItemMasteredMode
-                                    ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
-                                    : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                                  ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                                  : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
                                   }`}
                               >
                                 {isItemMasteredMode ? 'Ôn đã thuộc' : 'Đề đề cương'}
@@ -878,10 +875,10 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                     type="button"
                     onClick={() => setCurrentIndex(idx)}
                     className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold tabular-nums transition ${isAnswered
-                        ? 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
-                        : flagged
-                          ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-                          : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                      ? 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                      : flagged
+                        ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
+                        : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                       } ${flagged && isAnswered ? 'border-[#A21CAF] dark:border-[#D946EF]' : ''} ${isCurrent
                         ? 'z-10 ring-2 ring-[#4338CA] ring-offset-1 ring-offset-[#EAE6DD] dark:ring-[#818CF8] dark:ring-offset-[#161816]'
                         : ''
@@ -944,10 +941,10 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                 onClick={() => setTimerEnabled(prev => !prev)}
                 title={timerEnabled ? 'Đang bật đếm ngược (chạm để tắt)' : 'Đang tắt đếm ngược (chạm để bật)'}
                 className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-bold tabular-nums transition ${!timerEnabled
-                    ? 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B]'
-                    : isLowTime
-                      ? 'animate-pulse border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
-                      : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                  ? 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B]'
+                  : isLowTime
+                    ? 'animate-pulse border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
+                    : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
                   }`}
               >
                 <Clock className="h-3.5 w-3.5 shrink-0" />
@@ -971,10 +968,10 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                 <div className="flex items-center gap-2">
                   <div
                     className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-bold tabular-nums transition-colors ${!timerEnabled
-                        ? 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
-                        : isLowTime
-                          ? 'animate-pulse border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
-                          : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                      ? 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
+                      : isLowTime
+                        ? 'animate-pulse border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
+                        : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
                       }`}
                   >
                     <Clock className="h-4 w-4 shrink-0" />
@@ -1058,14 +1055,14 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                   type="button"
                   onClick={() => onToggleFlag(currentQuestion.id)}
                   className={`sakuga-btn hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold md:inline-flex ${isFlagged
-                      ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
-                      : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#353B36] dark:hover:border-[#D946EF]/50 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
+                    ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+                    : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#353B36] dark:hover:border-[#D946EF]/50 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
                     }`}
                 >
                   <Flag
                     className={`h-3.5 w-3.5 ${isFlagged
-                        ? 'fill-[#A21CAF] text-[#A21CAF] dark:fill-[#F5D0FE] dark:text-[#F5D0FE]'
-                        : ''
+                      ? 'fill-[#A21CAF] text-[#A21CAF] dark:fill-[#F5D0FE] dark:text-[#F5D0FE]'
+                      : ''
                       }`}
                   />
                   <span>Phân vân</span>
@@ -1092,14 +1089,14 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                       type="button"
                       onClick={() => handleSelectOption(currentQuestion, opt.key)}
                       className={`group flex w-full cursor-pointer items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${isSelected
-                          ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] ring-1 ring-[#4338CA] dark:border-[#818CF8] dark:bg-[#312E81]/35 dark:text-[#F5F5F4] dark:ring-[#818CF8]'
-                          : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] md:hover:translate-x-1 dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                        ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] ring-1 ring-[#4338CA] dark:border-[#818CF8] dark:bg-[#312E81]/35 dark:text-[#F5F5F4] dark:ring-[#818CF8]'
+                        : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] md:hover:translate-x-1 dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                         }`}
                     >
                       <span
                         className={`sakuga-option-badge mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold sm:h-7 sm:w-7 ${isSelected
-                            ? 'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8] dark:bg-[#4338CA] dark:text-white'
-                            : 'border-[#C6BEB0] bg-white text-[#4338CA] group-hover:border-[#4338CA] group-hover:bg-[#4338CA] group-hover:text-white dark:border-[#353B36] dark:bg-[#161816] dark:text-[#A5B4FC] dark:group-hover:border-[#818CF8] dark:group-hover:bg-[#4338CA] dark:group-hover:text-white'
+                          ? 'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8] dark:bg-[#4338CA] dark:text-white'
+                          : 'border-[#C6BEB0] bg-white text-[#4338CA] group-hover:border-[#4338CA] group-hover:bg-[#4338CA] group-hover:text-white dark:border-[#353B36] dark:bg-[#161816] dark:text-[#A5B4FC] dark:group-hover:border-[#818CF8] dark:group-hover:bg-[#4338CA] dark:group-hover:text-white'
                           }`}
                       >
                         {opt.key}
@@ -1179,8 +1176,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
               onClick={() => onToggleFlag(currentQuestion.id)}
               aria-pressed={isFlagged}
               className={`sakuga-btn inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold ${isFlagged
-                  ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
-                  : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#353B36]'
+                ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+                : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#353B36]'
                 }`}
             >
               <Flag className={`h-3.5 w-3.5 ${isFlagged ? 'fill-current' : ''}`} />
@@ -1288,10 +1285,10 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                             setIsMobileSheetOpen(false);
                           }}
                           className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold tabular-nums transition ${isAnswered
-                              ? 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
-                              : flagged
-                                ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-                                : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
+                            ? 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                            : flagged
+                              ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
+                              : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
                             } ${flagged && isAnswered ? 'border-[#A21CAF] dark:border-[#D946EF]' : ''} ${isCurrent
                               ? 'z-10 ring-2 ring-[#4338CA] ring-offset-1 ring-offset-[#EAE6DD] dark:ring-[#818CF8] dark:ring-offset-[#161816]'
                               : ''
@@ -1381,8 +1378,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
             <div className="flex items-center gap-3.5 sm:gap-4">
               <div
                 className={`flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl border sm:h-20 sm:w-20 ${scoreOn10 >= 5
-                    ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
-                    : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
+                  ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                  : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
                   }`}
               >
                 <span className="text-xl font-extrabold leading-none tabular-nums sm:text-2xl">
@@ -1401,8 +1398,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                   </span>
                   <span
                     className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${isResultMasteredMode
-                        ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
-                        : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                      ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                      : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
                       }`}
                   >
                     {isResultMasteredMode ? 'Ôn đã thuộc' : 'Đề đề cương'}
@@ -1430,8 +1427,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                   disabled={bulkFlaggedConfirm !== null}
                   onClick={handleFlagWrongQuestions}
                   className={`sakuga-btn inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold sm:w-auto sm:text-sm ${bulkFlaggedConfirm !== null
-                      ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-none dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-                      : 'border-[#A21CAF] bg-[#A21CAF] text-white shadow-[2px_2px_0_0_#F0ABFC] hover:bg-[#86198F] dark:border-[#D946EF]/60 dark:bg-[#A21CAF] dark:shadow-[2px_2px_0_0_#701A75] dark:hover:bg-[#86198F]'
+                    ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-none dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
+                    : 'border-[#A21CAF] bg-[#A21CAF] text-white shadow-[2px_2px_0_0_#F0ABFC] hover:bg-[#86198F] dark:border-[#D946EF]/60 dark:bg-[#A21CAF] dark:shadow-[2px_2px_0_0_#701A75] dark:hover:bg-[#86198F]'
                     }`}
                 >
                   <Flag className="h-4 w-4 shrink-0 fill-current" />
@@ -1490,36 +1487,36 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#D5CFC2] bg-white dark:divide-[#262925] dark:bg-[#1E221F]">
-                      {
-                        subjectChapters.map(ch => {
-                          const stat = breakdown[ch.chapter] ?? { correct: 0, total: 0 };
-                          const pct = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0;
+                    {
+                      subjectChapters.map(ch => {
+                        const stat = breakdown[ch.chapter] ?? { correct: 0, total: 0 };
+                        const pct = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0;
 
-                          return (
-                            <tr key={ch.chapter}>
-                              <td className="px-3 py-2.5 sm:px-4 sm:py-3">
-                                <div className="font-semibold text-[#18181B] dark:text-[#F5F5F4]">
-                                  Chương {ch.chapter}
-                                </div>
-                                <div className="line-clamp-1 text-[11px] text-[#656058] dark:text-[#9CA39B] sm:text-xs">
-                                  {ch.title}
-                                </div>
-                              </td>
-                              <td className="whitespace-nowrap px-3 py-2.5 text-right font-semibold text-[#292524] tabular-nums dark:text-[#E7E5E4] sm:px-4 sm:py-3">
-                                {stat.correct}/{stat.total}
-                              </td>
-                              <td className="px-3 py-2.5 sm:px-4 sm:py-3">
-                                <div className="flex items-center gap-2">
-                                  <SakugaProgressBar percent={pct} className="h-2 flex-1" />
-                                  <span className="w-8 text-right text-[11px] font-semibold text-[#656058] tabular-nums dark:text-[#9CA39B] sm:w-9 sm:text-xs">
-                                    {pct}%
-                                  </span>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      }
+                        return (
+                          <tr key={ch.chapter}>
+                            <td className="px-3 py-2.5 sm:px-4 sm:py-3">
+                              <div className="font-semibold text-[#18181B] dark:text-[#F5F5F4]">
+                                Chương {ch.chapter}
+                              </div>
+                              <div className="line-clamp-1 text-[11px] text-[#656058] dark:text-[#9CA39B] sm:text-xs">
+                                {ch.title}
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-2.5 text-right font-semibold text-[#292524] tabular-nums dark:text-[#E7E5E4] sm:px-4 sm:py-3">
+                              {stat.correct}/{stat.total}
+                            </td>
+                            <td className="px-3 py-2.5 sm:px-4 sm:py-3">
+                              <div className="flex items-center gap-2">
+                                <SakugaProgressBar percent={pct} className="h-2 flex-1" />
+                                <span className="w-8 text-right text-[11px] font-semibold text-[#656058] tabular-nums dark:text-[#9CA39B] sm:w-9 sm:text-xs">
+                                  {pct}%
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    }
                   </tbody>
                 </table>
               </div>
@@ -1544,8 +1541,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                       handleJumpToReviewQuestion(item.question.id, item.isCorrect, item.isFlagged)
                     }
                     className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-bold tabular-nums transition ${item.isCorrect
-                        ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] hover:bg-[#A7F3D0] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399] dark:hover:bg-[#064E3B]/80'
-                        : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] hover:bg-[#FECDD3] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF] dark:hover:bg-[#E11D48]/30'
+                      ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] hover:bg-[#A7F3D0] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399] dark:hover:bg-[#064E3B]/80'
+                      : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] hover:bg-[#FECDD3] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF] dark:hover:bg-[#E11D48]/30'
                       } ${focusedReviewId === item.question.id
                         ? 'ring-2 ring-[#4338CA] ring-offset-1 ring-offset-[#EAE6DD] dark:ring-[#818CF8] dark:ring-offset-[#161816]'
                         : ''
@@ -1622,15 +1619,15 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                     type="button"
                     onClick={() => setReviewFilter(tab.id)}
                     className={`sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold ${active
-                        ? 'bg-[#4338CA] text-white shadow-xs hover:bg-[#3730A3] dark:bg-[#4338CA] dark:hover:bg-[#3730A3]'
-                        : 'text-[#292524] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#E7E5E4] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]'
+                      ? 'bg-[#4338CA] text-white shadow-xs hover:bg-[#3730A3] dark:bg-[#4338CA] dark:hover:bg-[#3730A3]'
+                      : 'text-[#292524] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#E7E5E4] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]'
                       }`}
                   >
                     <span>{tab.label}</span>
                     <span
                       className={`rounded-full px-1.5 py-0.5 text-[11px] tabular-nums ${active
-                          ? 'bg-white/20 text-white'
-                          : 'border border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
+                        ? 'bg-white/20 text-white'
+                        : 'border border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
                         }`}
                     >
                       {tab.count}
@@ -1689,14 +1686,14 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                         type="button"
                         onClick={() => onToggleFlag(q.id)}
                         className={`sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-semibold sm:px-3 ${isFlagged
-                            ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
-                            : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#353B36] dark:hover:border-[#D946EF]/50 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
+                          ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+                          : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#353B36] dark:hover:border-[#D946EF]/50 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
                           }`}
                       >
                         <Flag
                           className={`h-3.5 w-3.5 ${isFlagged
-                              ? 'fill-[#A21CAF] text-[#A21CAF] dark:fill-[#F5D0FE] dark:text-[#F5D0FE]'
-                              : ''
+                            ? 'fill-[#A21CAF] text-[#A21CAF] dark:fill-[#F5D0FE] dark:text-[#F5D0FE]'
+                            : ''
                             }`}
                         />
                         <span>Phân vân</span>
@@ -1756,8 +1753,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                                 {isUserSelected && (
                                   <span
                                     className={`rounded-md border px-2 py-0.5 ${isCorrectOpt
-                                        ? 'border-[#10B981] bg-white text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/80 dark:text-[#34D399]'
-                                        : 'border-[#FDA4AF] bg-white text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/25 dark:text-[#FDA4AF]'
+                                      ? 'border-[#10B981] bg-white text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/80 dark:text-[#34D399]'
+                                      : 'border-[#FDA4AF] bg-white text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/25 dark:text-[#FDA4AF]'
                                       }`}
                                   >
                                     Bạn chọn
@@ -1856,8 +1853,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                             setIsMobileResultsSheetOpen(false);
                           }}
                           className={`cursor-pointer rounded-xl border px-2 py-2 text-xs font-semibold tabular-nums transition ${active
-                              ? 'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8]/50 dark:bg-[#4338CA]'
-                              : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
+                            ? 'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8]/50 dark:bg-[#4338CA]'
+                            : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
                             }`}
                         >
                           {tab.label} ({tab.count})
@@ -1882,8 +1879,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                           handleJumpToReviewQuestion(item.question.id, item.isCorrect, item.isFlagged);
                         }}
                         className={`relative flex h-9 cursor-pointer items-center justify-center rounded-lg border text-xs font-bold tabular-nums transition ${item.isCorrect
-                            ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
-                            : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
+                          ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
+                          : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
                           } ${focusedReviewId === item.question.id
                             ? 'ring-2 ring-[#4338CA] ring-offset-1 ring-offset-[#EAE6DD] dark:ring-[#818CF8] dark:ring-offset-[#161816]'
                             : ''
