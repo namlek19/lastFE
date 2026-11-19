@@ -20,7 +20,7 @@ import { getChaptersBySubject, getQuestionsBySubject, isAnswerCorrect, SUBJECTS 
 import { QuestionItem, SubjectId, UserProgressStore } from '../types/quiz';
 import { getMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
-import { SakugaBurst, SakugaEvent, SakugaMangaTag } from './SakugaVfx';
+import { SakugaBurst, SakugaEvent, SakugaMangaTag, SakugaProgressBar } from './SakugaVfx';
 
 export interface RollingStudyViewProps {
   subject: SubjectId;
@@ -467,12 +467,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     {stageStats.mastered}/{stageStats.total} ({stageStats.percent}%)
                   </span>
                 </div>
-                <div className="sakuga-progress-track mt-2 h-2 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
-                  <div
-                    className="sakuga-progress-fill h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
-                    style={{ width: `${stageStats.percent}%` }}
-                  />
-                </div>
+                <SakugaProgressBar percent={stageStats.percent} className="mt-2 h-2 w-full" />
                 <div className="mt-2.5 flex items-center justify-between gap-2 text-[11px] font-medium tabular-nums">
                   <span className="text-[#047857] dark:text-[#34D399]">
                     Thuộc: {stageStats.mastered}
@@ -1189,12 +1184,10 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 </div>
               </div>
 
-              <div className="sakuga-progress-track mt-2.5 h-2 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E] sm:mt-3 sm:h-2.5">
-                <div
-                  className="sakuga-progress-fill h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
-                  style={{ width: `${chapterStats.percent}%` }}
-                />
-              </div>
+              <SakugaProgressBar
+                percent={chapterStats.percent}
+                className="mt-2.5 h-2 w-full sm:mt-3 sm:h-2.5"
+              />
             </div>
           )}
         </div>
@@ -1249,12 +1242,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                         {stats.mastered}/{stats.total}
                       </span>
                     </div>
-                    <div className="sakuga-progress-track h-2 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
-                      <div
-                        className="sakuga-progress-fill h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
-                        style={{ width: `${stats.percent}%` }}
-                      />
-                    </div>
+                    <SakugaProgressBar percent={stats.percent} className="h-2 w-full" />
                   </div>
 
                   {/* 3 Status counts */}

@@ -26,7 +26,7 @@ import { getQuestionsBySubject, isAnswerCorrect, SUBJECTS } from '../data';
 import { ExamHistoryItem, ExamType, QuestionItem, SubjectId, UserProgressStore } from '../types/quiz';
 import { isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
-import { SakugaMangaTag } from './SakugaVfx';
+import { SakugaMangaTag, SakugaProgressBar } from './SakugaVfx';
 
 interface MockExamViewProps {
   subject: SubjectId;
@@ -1013,14 +1013,14 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   <span className="text-xs font-semibold text-[#292524] tabular-nums dark:text-[#E7E5E4]">
                     Đã làm: <span className="text-[#4338CA] dark:text-[#818CF8]">{answeredCount}</span>/{examQuestions.length} câu
                   </span>
-                  <div className="sakuga-progress-track h-2 w-24 overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
-                    <div
-                      className="sakuga-progress-fill h-full rounded-full bg-[#4338CA] transition-all duration-200 dark:bg-[#6366F1]"
-                      style={{
-                        width: `${Math.round((answeredCount / examQuestions.length) * 100)}%`,
-                      }}
-                    />
-                  </div>
+                  <SakugaProgressBar
+                    percent={
+                      examQuestions.length > 0
+                        ? Math.round((answeredCount / examQuestions.length) * 100)
+                        : 0
+                    }
+                    className="h-2 w-24"
+                  />
                 </div>
               </div>
 
@@ -1508,12 +1508,6 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     {subjectMeta.chapters.map(ch => {
                       const stat = breakdown[ch.chapter] ?? { correct: 0, total: 0 };
                       const pct = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0;
-                      const barColor =
-                        pct >= 80
-                          ? 'bg-[#059669] dark:bg-[#10B981]'
-                          : pct >= 50
-                            ? 'bg-[#4338CA] dark:bg-[#6366F1]'
-                            : 'bg-[#BE123C] dark:bg-[#FB7185]';
 
                       return (
                         <tr key={ch.chapter}>
@@ -1530,12 +1524,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                           </td>
                           <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                             <div className="flex items-center gap-2">
-                              <div className="sakuga-progress-track h-2 flex-1 overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
-                                <div
-                                  className={`sakuga-progress-fill h-full rounded-full ${barColor}`}
-                                  style={{ width: `${pct}%` }}
-                                />
-                              </div>
+                              <SakugaProgressBar percent={pct} className="h-2 flex-1" />
                               <span className="w-8 text-right text-[11px] font-semibold text-[#656058] tabular-nums dark:text-[#9CA39B] sm:w-9 sm:text-xs">
                                 {pct}%
                               </span>

@@ -23,7 +23,7 @@ import {
 import { QuestionItem, QuestionProgress, SubjectId, UserProgressStore } from '../types/quiz';
 import { getDetailedMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
-import { SakugaBurst, SakugaEvent, SakugaMangaTag } from './SakugaVfx';
+import { SakugaBurst, SakugaEvent, SakugaMangaTag, SakugaProgressBar } from './SakugaVfx';
 
 interface ChapterStudyViewProps {
   subject: SubjectId;
@@ -522,12 +522,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                           </span>
                         </div>
 
-                        <div className="sakuga-progress-track mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
-                          <div
-                            className="sakuga-progress-fill h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
-                            style={{ width: `${stat.pct}%` }}
-                          />
-                        </div>
+                        <SakugaProgressBar percent={stat.pct} className="mt-2 h-1.5 w-full" />
                       </button>
                     );
                   })}
