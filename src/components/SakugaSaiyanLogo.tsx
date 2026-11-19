@@ -379,14 +379,6 @@ export const SakugaSaiyanLogo: React.FC<SakugaSaiyanLogoProps> = ({ event, onLog
             </g>
           </svg>
         </motion.div>
-
-        {/* Subtle resting cel glint (fades smoothly) */}
-        <span
-          aria-hidden="true"
-          className={`pointer-events-none absolute right-1 top-1 z-20 h-1.5 w-1.5 rounded-full bg-[#FEF08A] transition-[opacity,transform] duration-200 group-hover:scale-125 ${
-            isPowered ? 'opacity-0' : 'opacity-100'
-          }`}
-        />
       </button>
 
       {/* Sakuga Manga Callout Text: persistent container during spam, smooth enter & gentle exit */}
