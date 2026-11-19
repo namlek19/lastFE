@@ -31,18 +31,20 @@ export const SakugaSaiyanLogo: React.FC<SakugaSaiyanLogoProps> = ({ event, onLog
 
   const isPowered = activeEvent !== null;
   const seqKey = activeEvent?.seq ?? 0;
+  const webStroke = isPowered ? '#FDE047' : '#18181B';
+  const webOpacity = isPowered ? 0.92 : 0.72;
 
   return (
     <div className="relative inline-flex shrink-0 items-center overflow-visible">
       <button
         type="button"
         onClick={onLogoClick}
-        aria-label="Ôn FE — Bật chế độ Super Saiyan"
-        title="Bấm để bật Super Saiyan!"
+        aria-label="Ôn FE — Người Nhện bật Super Saiyan"
+        title="Bấm để Người Nhện hóa Super Saiyan!"
         className={`sakuga-btn group relative flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-visible rounded-xl border-2 focus-visible:outline-none sm:h-9 sm:w-9 ${
           isPowered
             ? 'border-[#78350F] bg-[#FEF08A] shadow-[0_0_0_2px_#FACC15,3px_3px_0_0_#EA580C] dark:border-[#FEF9C3] dark:bg-[#CA8A04] dark:shadow-[0_0_0_2px_#FEF08A,3px_3px_0_0_#EA580C]'
-            : 'border-[#1E1B4B] bg-[#4338CA] shadow-[2px_2px_0_0_#A5B4FC] hover:bg-[#3730A3] dark:border-[#A5B4FC] dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]'
+            : 'border-[#1E1B4B] bg-[#1D4ED8] shadow-[2px_2px_0_0_#93C5FD] hover:bg-[#1E40AF] dark:border-[#93C5FD] dark:bg-[#1E3A8A] dark:shadow-[2px_2px_0_0_#172554] dark:hover:bg-[#1D4ED8]'
         }`}
       >
         {/* One-shot shockwave ring + flat cel-shaded Super Saiyan ki aura & lightning */}
@@ -62,13 +64,13 @@ export const SakugaSaiyanLogo: React.FC<SakugaSaiyanLogoProps> = ({ event, onLog
               viewBox="0 0 72 72"
               aria-hidden="true"
               initial={{ scale: 0.72, opacity: 0 }}
-              animate={{ scale: [0.88, 1.1, 1.02, 1.06, 0.95], opacity: [0.95, 1, 0.92, 0.85, 0] }}
+              animate={{ scale: [0.88, 1.12, 1.02, 1.08, 0.95], opacity: [0.95, 1, 0.92, 0.85, 0] }}
               transition={{ duration: 0.95, times: [0, 0.2, 0.5, 0.75, 1], ease: 'easeOut' }}
               className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-14 w-14 -translate-x-1/2 -translate-y-1/2 overflow-visible sm:h-16 sm:w-16"
             >
               {/* Outer flame aura spikes (flat cel orange & gold) */}
               <path
-                d="M36 3 L43 16 L57 8 L53 23 L68 25 L57 36 L67 49 L52 52 L53 66 L39 59 L36 69 L31 59 L18 66 L20 52 L5 49 L15 36 L4 25 L19 23 L15 8 L29 16 Z"
+                d="M36 2 L43 15 L57 7 L53 22 L68 24 L57 36 L67 49 L52 52 L53 66 L39 59 L36 69 L31 59 L18 66 L20 52 L5 49 L15 36 L4 24 L19 22 L15 7 L29 15 Z"
                 fill="#EA580C"
                 stroke="#7C2D12"
                 strokeWidth="1.4"
@@ -76,7 +78,7 @@ export const SakugaSaiyanLogo: React.FC<SakugaSaiyanLogoProps> = ({ event, onLog
                 opacity="0.82"
               />
               <path
-                d="M36 9 L41 20 L52 14 L49 26 L61 28 L52 37 L59 47 L48 49 L49 60 L38 55 L36 63 L33 55 L23 60 L24 49 L13 47 L20 37 L11 28 L23 26 L20 14 L31 20 Z"
+                d="M36 8 L41 19 L52 13 L49 25 L61 27 L52 37 L59 47 L48 49 L49 60 L38 55 L36 63 L33 55 L23 60 L24 49 L13 47 L20 37 L11 27 L23 25 L20 13 L31 19 Z"
                 fill="#FACC15"
                 opacity="0.92"
               />
@@ -126,7 +128,7 @@ export const SakugaSaiyanLogo: React.FC<SakugaSaiyanLogoProps> = ({ event, onLog
           </>
         )}
 
-        {/* Chibi Saiyan Character Bust (Base Form <-> Super Saiyan) */}
+        {/* Chibi Spider-Man <-> Super Saiyan Spider-Man Bust */}
         <motion.div
           key={isPowered ? `saiyan-body-${seqKey}` : 'saiyan-base'}
           initial={isPowered ? { scaleX: 1.18, scaleY: 0.82, y: 0 } : false}
@@ -140,165 +142,138 @@ export const SakugaSaiyanLogo: React.FC<SakugaSaiyanLogoProps> = ({ event, onLog
               : { scaleX: 1, scaleY: 1, y: 0 }
           }
           transition={{ duration: 0.46, times: [0, 0.35, 0.72, 1], ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-10 flex h-full w-full items-center justify-center overflow-hidden rounded-[10px]"
+          className="relative z-10 flex h-full w-full items-center justify-center overflow-visible"
         >
           <svg
             viewBox="0 0 48 48"
             aria-hidden="true"
-            className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:-rotate-3"
+            className="h-7 w-7 overflow-visible transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:-rotate-3 sm:h-8 sm:w-8"
           >
-            {/* Shonen Gi / Collar */}
+            {/* Spider-Man Blue Shoulders & Red Chest Panel */}
             <path
-              d="M9 47 C10 38 15 35 24 35 C33 35 38 38 39 47 Z"
-              fill="#EA580C"
+              d="M9 45 C10 36.8 15.2 34 24 34 C32.8 34 38 36.8 39 45 Q24 46.5 9 45 Z"
+              fill={isPowered ? '#2563EB' : '#1D4ED8'}
+              stroke="#18181B"
+              strokeWidth="1.9"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M16.5 34.4 L24 44.8 L31.5 34.4 Z"
+              fill={isPowered ? '#EF4444' : '#DC2626'}
+              stroke="#18181B"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+            {/* Tiny Chest Spider Emblem (glows gold in Super Saiyan) */}
+            <ellipse
+              cx="24"
+              cy="39.4"
+              rx="1.5"
+              ry="2"
+              fill={isPowered ? '#FACC15' : '#18181B'}
+            />
+            <path
+              d="M21 38 L24 39.2 L27 38 M20.8 40.5 L24 39.6 L27.2 40.5"
+              fill="none"
+              stroke={isPowered ? '#FACC15' : '#18181B'}
+              strokeWidth="1.15"
+              strokeLinecap="round"
+            />
+
+            {/* Chibi Spider-Man Red Mask Head */}
+            <path
+              d="M12.5 22.8 C12.5 14.5 17.5 10.2 24 10.2 C30.5 10.2 35.5 14.5 35.5 22.8 C35.5 30.6 30.2 35.8 24 35.8 C17.8 35.8 12.5 30.6 12.5 22.8 Z"
+              fill={isPowered ? '#EF4444' : '#DC2626'}
               stroke="#18181B"
               strokeWidth="2"
-              strokeLinejoin="round"
+            />
+            {/* Mask Forehead Highlight & Chin Shadow (flat cel shading) */}
+            <path
+              d="M16.8 14.4 C19 12 21.5 11.4 24 11.4 C26.5 11.4 29 12 31.2 14.4 C28.8 13.4 26.5 13 24 13 C21.5 13 19.2 13.4 16.8 14.4 Z"
+              fill={isPowered ? '#FCA5A5' : '#F87171'}
             />
             <path
-              d="M18 35 L24 44 L30 35"
-              fill="#1E3A8A"
-              stroke="#18181B"
-              strokeWidth="1.8"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M21 36 L24 41 L27 36"
-              fill="#F5C794"
-              stroke="#18181B"
-              strokeWidth="1.4"
-              strokeLinejoin="round"
+              d="M16.5 31.6 C18.8 34.1 21.3 35 24 35 C26.7 35 29.2 34.1 31.5 31.6 C29 33 26.5 33.4 24 33.4 C21.5 33.4 19 33 16.5 31.6 Z"
+              fill="#B91C1C"
             />
 
-            {/* Ears */}
-            <circle cx="12.5" cy="27" r="2.7" fill="#FDE6C4" stroke="#18181B" strokeWidth="1.8" />
-            <circle cx="35.5" cy="27" r="2.7" fill="#FDE6C4" stroke="#18181B" strokeWidth="1.8" />
+            {/* Iconic Spider-Man Mask Webbing (turns electric yellow when Super Saiyan) */}
+            <g
+              fill="none"
+              stroke={webStroke}
+              strokeWidth="1.05"
+              strokeLinecap="round"
+              opacity={webOpacity}
+            >
+              <line x1="24" y1="10.8" x2="24" y2="35" />
+              <line x1="24" y1="24.5" x2="17" y2="12.5" />
+              <line x1="24" y1="24.5" x2="31" y2="12.5" />
+              <line x1="24" y1="24.5" x2="15.5" y2="31.5" />
+              <line x1="24" y1="24.5" x2="32.5" y2="31.5" />
+              <path d="M14.2 17.5 Q24 14.8 33.8 17.5" />
+              <path d="M14.8 29.6 Q24 27.6 33.2 29.6" />
+            </g>
 
-            {/* Chibi Face */}
-            <path
-              d="M13 24 C13 17.5 17.5 14 24 14 C30.5 14 35 17.5 35 24 C35 31 30.2 36.2 24 36.2 C17.8 36.2 13 31 13 24 Z"
-              fill="#FDE6C4"
-              stroke="#18181B"
-              strokeWidth="2"
-            />
-            {/* Chin cel shadow */}
-            <path
-              d="M18.5 33.8 C20.4 35.1 22.1 35.5 24 35.5 C25.9 35.5 27.6 35.1 29.5 33.8 C27.6 34.4 25.9 34.6 24 34.6 C22.1 34.6 20.4 34.4 18.5 33.8 Z"
-              fill="#F5C794"
-            />
-
-            {isPowered ? (
-              <>
-                {/* Super Saiyan Golden Crown Spikes */}
-                <motion.g
-                  initial={{ scaleY: 0.78, y: 3 }}
-                  animate={{ scaleY: [1.14, 1.02, 1.08, 1], y: [-2, 0, -1, 0] }}
-                  transition={{ duration: 0.42, times: [0, 0.4, 0.72, 1] }}
-                  style={{ originX: '24px', originY: '20px' }}
-                >
-                  <path
-                    d="M12 24 L6 16 L13 15 L9 6 L19 11 L24 2 L29 11 L39 6 L35 15 L42 16 L36 24 L32 19 L28 24 L24 18 L20 24 L16 19 Z"
-                    fill="#FACC15"
-                    stroke="#78350F"
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                  />
-                  {/* Cel highlight facets */}
-                  <polygon points="24,4 21,13 25,15 28,11" fill="#FEF9C3" />
-                  <polygon points="11,8 14,15 18,13" fill="#FEF9C3" />
-                  <polygon points="37,8 31,13 34,15" fill="#FEF9C3" />
-                </motion.g>
-
-                {/* Golden slanted warrior brows */}
+            {/* Golden Super Saiyan Spiky Hair erupting cleanly above the Spider-Man mask */}
+            {isPowered && (
+              <motion.g
+                initial={{ scaleY: 0.75, y: 4 }}
+                animate={{ scaleY: [1.18, 1.02, 1.08, 1], y: [-3, 0, -1, 0] }}
+                transition={{ duration: 0.42, times: [0, 0.4, 0.72, 1] }}
+                style={{ originX: '24px', originY: '14px' }}
+              >
                 <path
-                  d="M16 23 L21.5 25"
-                  stroke="#B45309"
-                  strokeWidth="2.1"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M32 23 L26.5 25"
-                  stroke="#B45309"
-                  strokeWidth="2.1"
-                  strokeLinecap="round"
-                />
-
-                {/* Emerald Super Saiyan Eyes */}
-                <rect
-                  x="16.5"
-                  y="25.2"
-                  width="4.4"
-                  height="4.4"
-                  rx="1.5"
-                  fill="#059669"
-                  stroke="#18181B"
-                  strokeWidth="1.3"
-                />
-                <rect
-                  x="27.1"
-                  y="25.2"
-                  width="4.4"
-                  height="4.4"
-                  rx="1.5"
-                  fill="#059669"
-                  stroke="#18181B"
-                  strokeWidth="1.3"
-                />
-                <circle cx="19.5" cy="26.5" r="1.1" fill="#A7F3D0" />
-                <circle cx="30.1" cy="26.5" r="1.1" fill="#A7F3D0" />
-
-                {/* Power-up Shout Mouth */}
-                <path
-                  d="M20.5 31.3 Q24 30.2 27.5 31.3 Q26.6 34.4 24 34.4 Q21.4 34.4 20.5 31.3 Z"
-                  fill="#E11D48"
-                  stroke="#18181B"
-                  strokeWidth="1.4"
+                  d="M12 16 L5 8 L13 7 L9 -2 L19 3 L24 -7 L29 3 L39 -2 L35 7 L43 8 L36 16 L31 12 L27 15 L24 10 L21 15 L17 12 Z"
+                  fill="#FACC15"
+                  stroke="#78350F"
+                  strokeWidth="2"
                   strokeLinejoin="round"
                 />
-                <path d="M21.8 31.5 L26.2 31.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" />
+                {/* Crisp flat cel highlights on golden spikes */}
+                <polygon points="24,-5 21,5 25,7 28,4" fill="#FEF9C3" />
+                <polygon points="10.5,0 14,7.5 18,5.5" fill="#FEF9C3" />
+                <polygon points="37.5,0 31,5.5 34,7.5" fill="#FEF9C3" />
+              </motion.g>
+            )}
+
+            {/* Iconic Teardrop Spider-Man Lenses (White in Base -> Emerald Battle Glow in Super Saiyan) */}
+            {isPowered ? (
+              <>
+                <path
+                  d="M14.8 20.6 Q18.8 19 22.4 23.6 Q19.2 26.8 15.8 25.1 Q14.2 23.1 14.8 20.6 Z"
+                  fill="#34D399"
+                  stroke="#064E3B"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M33.2 20.6 Q29.2 19 25.6 23.6 Q28.8 26.8 32.2 25.1 Q33.8 23.1 33.2 20.6 Z"
+                  fill="#34D399"
+                  stroke="#064E3B"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+                <circle cx="17.2" cy="22.4" r="1.05" fill="#ECFDF5" />
+                <circle cx="30.8" cy="22.4" r="1.05" fill="#ECFDF5" />
               </>
             ) : (
               <>
-                {/* Base Form Spiky Black Hair */}
                 <path
-                  d="M12.5 24.5 L8 19 L13.5 17.5 L11 10.5 L19 13.5 L24 6 L29 13.5 L37 10.5 L34.5 17.5 L40 19 L35.5 24.5 L31.5 19.8 L28 22.8 L24 18.2 L20 22.8 L16.5 19.8 Z"
-                  fill="#18181B"
-                  stroke="#09090B"
-                  strokeWidth="1.6"
+                  d="M15 20.5 Q18.8 18.2 22.3 23.2 Q19.2 26.8 15.8 25.2 Q14.2 23.2 15 20.5 Z"
+                  fill="#FFFFFF"
+                  stroke="#18181B"
+                  strokeWidth="2.1"
                   strokeLinejoin="round"
                 />
-                {/* Crisp slate cel sheen */}
-                <polygon points="24,8 21.5,14 24.5,15.5 26.8,13" fill="#475569" />
-                <polygon points="13,12 15.5,16.5 18,14.8" fill="#475569" />
-
-                {/* Base Form Focused Brows */}
                 <path
-                  d="M16.2 24 L21.5 25"
+                  d="M33 20.5 Q29.2 18.2 25.7 23.2 Q28.8 26.8 32.2 25.2 Q33.8 23.2 33 20.5 Z"
+                  fill="#FFFFFF"
                   stroke="#18181B"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
+                  strokeWidth="2.1"
+                  strokeLinejoin="round"
                 />
-                <path
-                  d="M31.8 24 L26.5 25"
-                  stroke="#18181B"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                />
-
-                {/* Determined Dark Eyes with Specular Dot */}
-                <circle cx="18.8" cy="27.5" r="2.2" fill="#18181B" />
-                <circle cx="29.2" cy="27.5" r="2.2" fill="#18181B" />
-                <circle cx="19.5" cy="26.7" r="0.85" fill="#FFFFFF" />
-                <circle cx="29.9" cy="26.7" r="0.85" fill="#FFFFFF" />
-
-                {/* Confident Shonen Smirk */}
-                <path
-                  d="M21 32 Q24 33.8 27.2 31.6"
-                  fill="none"
-                  stroke="#18181B"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                />
+                <circle cx="17" cy="22" r="0.9" fill="#DBEAFE" />
+                <circle cx="31" cy="22" r="0.9" fill="#DBEAFE" />
               </>
             )}
           </svg>

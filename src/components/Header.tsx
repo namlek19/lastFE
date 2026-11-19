@@ -20,7 +20,7 @@ import {
 } from './SakugaSaiyanLogo';
 import { SakugaParticles, SakugaTierPicker } from './SakugaVfx';
 
-const LOGO_SAIYAN_LINES = ['SUPER SAIYAN!', 'POWER UP! ⚡', 'FULL POWER!', 'OVER 9000!'] as const;
+const LOGO_SAIYAN_LINES = ['SPIDEY SAIYAN!', 'THWIP! ⚡', 'POWER UP!', 'OVER 9000!'] as const;
 
 export interface HeaderProps {
   subject: SubjectId;
