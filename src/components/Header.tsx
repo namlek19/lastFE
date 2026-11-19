@@ -6,7 +6,6 @@ import {
   ClipboardCheck,
   Cloud,
   CreditCard,
-  GraduationCap,
   Layers,
   Moon,
   Sun,
@@ -14,7 +13,14 @@ import {
 import { SUBJECTS, getQuestionsBySubject } from '../data/index';
 import { StudyMode, StudyTier, SubjectId, UserProgressStore } from '../types/quiz';
 import { isMastered, ThemeMode } from '../utils/storage';
+import {
+  SaiyanTagTone,
+  SaiyanTriggerEvent,
+  SakugaSaiyanLogo,
+} from './SakugaSaiyanLogo';
 import { SakugaParticles, SakugaTierPicker } from './SakugaVfx';
+
+const LOGO_SAIYAN_LINES = ['SUPER SAIYAN!', 'POWER UP! ⚡', 'FULL POWER!', 'OVER 9000!'] as const;
 
 export interface HeaderProps {
   subject: SubjectId;
@@ -154,9 +160,17 @@ export const Header: React.FC<HeaderProps> = ({
   const [examBurstSeq, setExamBurstSeq] = useState(0);
   const [isExamBursting, setIsExamBursting] = useState(false);
   const [hasToggledTheme, setHasToggledTheme] = useState(false);
+  const [saiyanEvent, setSaiyanEvent] = useState<SaiyanTriggerEvent | null>(null);
 
   const prevTierRef = useRef<StudyTier>(tier);
   const prevSubjectRef = useRef<SubjectId>(subject);
+  const saiyanSeqRef = useRef(0);
+  const logoLineIdxRef = useRef(0);
+
+  const triggerSaiyan = (label: string, tone: SaiyanTagTone) => {
+    saiyanSeqRef.current += 1;
+    setSaiyanEvent({ seq: saiyanSeqRef.current, label, tone });
+  };
 
   useEffect(() => {
     if (prevTierRef.current !== tier || prevSubjectRef.current !== subject) {
@@ -198,24 +212,63 @@ export const Header: React.FC<HeaderProps> = ({
 
   const activeSubjectMeta = SUBJECTS[subject];
 
+  const handleLogoClick = () => {
+    const label = LOGO_SAIYAN_LINES[logoLineIdxRef.current % LOGO_SAIYAN_LINES.length];
+    logoLineIdxRef.current += 1;
+    triggerSaiyan(label, 'amber');
+  };
+
   const handleSubjectClick = (subjId: SubjectId) => {
     onSelectSubject(subjId);
     setSubjectBurst((prev) => ({ id: subjId, seq: (prev?.seq ?? 0) + 1 }));
+    triggerSaiyan(
+      subjId === 'vnr202' ? 'VNR202!' : 'MLN131!',
+      subjId === 'vnr202' ? 'amber' : 'indigo'
+    );
   };
 
   const handleModeClick = (modeId: StudyMode) => {
     onSelectMode(modeId);
     setModeBurst((prev) => ({ id: modeId, seq: (prev?.seq ?? 0) + 1 }));
+    if (modeId === 'chapter') {
+      triggerSaiyan('CHAPTER!', 'indigo');
+    } else if (modeId === 'rolling') {
+      triggerSaiyan('ROLLING!', 'emerald');
+    } else if (modeId === 'flashcard') {
+      triggerSaiyan('FLASHCARD!', 'fuchsia');
+    }
+  };
+
+  const handleTierClick = (nextTier: StudyTier) => {
+    onSelectTier(nextTier);
+    if (nextTier === 'lazymax') {
+      triggerSaiyan('LAZY MAX!', 'emerald');
+    } else if (nextTier === 'lazy') {
+      triggerSaiyan('LAZY!', 'amber');
+    } else {
+      triggerSaiyan('HARDCORE!', 'rose');
+    }
   };
 
   const handleExamClick = () => {
     onSelectMode('exam');
     setExamBurstSeq((seq) => seq + 1);
     setIsExamBursting(true);
+    triggerSaiyan('BOSS FIGHT!', 'amber');
+  };
+
+  const handleSyncClick = () => {
+    triggerSaiyan('SYNC!', 'indigo');
+    onOpenSyncModal();
   };
 
   const handleThemeClick = () => {
     setHasToggledTheme(true);
+    if (theme === 'dark') {
+      triggerSaiyan('LIGHT MODE!', 'amber');
+    } else {
+      triggerSaiyan('DARK MODE!', 'indigo');
+    }
     onToggleTheme();
   };
 
@@ -224,16 +277,10 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="mx-auto w-full max-w-[1720px] px-3 sm:px-6 lg:px-8 xl:px-12">
         {/* Main Row: Single-Row Desktop Anime HUD (>= 1024px) & Top Row on Mobile/Tablet */}
         <div className="flex w-full items-center justify-between gap-1.5 py-2 sm:gap-2.5 sm:py-2.5 lg:py-3">
-          {/* Left Cluster: Cel-Shaded Brand Emblem + Direct VNR / MLN Anime Switcher */}
+          {/* Left Cluster: Super Saiyan Anime Logo + Direct VNR / MLN Anime Switcher */}
           <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2.5">
-            <div className="group flex items-center gap-2">
-              <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border-2 border-[#1E1B4B] bg-[#4338CA] text-white shadow-[2px_2px_0_0_#A5B4FC] transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:-rotate-6 dark:border-[#A5B4FC] dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] sm:h-9 sm:w-9">
-                <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[#FEF08A] transition-transform duration-150 group-hover:scale-125"
-                />
-              </div>
+            <div className="flex items-center gap-2">
+              <SakugaSaiyanLogo event={saiyanEvent} onLogoClick={handleLogoClick} />
               <div className="hidden leading-tight min-[440px]:block">
                 <span className="block text-xs font-black tracking-tight text-[#18181B] dark:text-[#F5F5F4] sm:text-sm xl:text-[15px]">
                   Ôn FE
@@ -370,7 +417,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Desktop 3-Tier Sakuga Anime Stamp Picker (>= 1024px) — Preserved */}
           <div className="hidden lg:inline-flex">
-            <SakugaTierPicker tier={tier} onSelectTier={onSelectTier} />
+            <SakugaTierPicker tier={tier} onSelectTier={handleTierClick} />
           </div>
 
           {/* Right Cluster: Mastery HUD Counter, Standalone "Thi thử" Stamp, Sync, Theme */}
@@ -441,7 +488,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Progress Sync Button */}
             <button
               type="button"
-              onClick={onOpenSyncModal}
+              onClick={handleSyncClick}
               aria-label="Đồng bộ tiến độ"
               title="Đồng bộ tiến độ"
               className="sakuga-btn group inline-flex cursor-pointer items-center gap-1.5 rounded-lg border-2 border-[#A5B4FC] bg-[#EEF2FF] p-1 text-xs font-extrabold text-[#3730A3] shadow-[2px_2px_0_0_#C7D2FE] whitespace-nowrap hover:-translate-y-0.5 hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/60 dark:bg-[#312E81]/35 dark:text-[#A5B4FC] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:border-[#A5B4FC] dark:hover:bg-[#312E81]/55 sm:px-2.5 sm:py-1 lg:p-1.5 2xl:px-2.5 2xl:py-1"
@@ -478,7 +525,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Row 2 (Mobile & Tablet only, < 1024px): 3 Study Tier Anime Stamps — Preserved */}
         <div className="border-t border-[#D5CFC2] py-2 dark:border-[#262925] lg:hidden">
-          <SakugaTierPicker tier={tier} onSelectTier={onSelectTier} compact />
+          <SakugaTierPicker tier={tier} onSelectTier={handleTierClick} compact />
         </div>
 
         {/* Row 3 (Mobile & Tablet only, < 1024px): 3 Mode Tabs Cel-Shaded Grid with Spring Highlight */}
