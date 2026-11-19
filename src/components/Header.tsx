@@ -417,7 +417,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Desktop 3-Tier Sakuga Anime Stamp Picker (>= 1024px) — Preserved */}
           <div className="hidden lg:inline-flex">
-            <SakugaTierPicker tier={tier} onSelectTier={handleTierClick} />
+            <SakugaTierPicker tier={tier} subject={subject} onSelectTier={handleTierClick} />
           </div>
 
           {/* Right Cluster: Mastery HUD Counter, Standalone "Thi thử" Stamp, Sync, Theme */}
@@ -525,7 +525,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Row 2 (Mobile & Tablet only, < 1024px): 3 Study Tier Anime Stamps — Preserved */}
         <div className="border-t border-[#D5CFC2] py-2 dark:border-[#262925] lg:hidden">
-          <SakugaTierPicker tier={tier} onSelectTier={handleTierClick} compact />
+          <SakugaTierPicker tier={tier} subject={subject} onSelectTier={handleTierClick} compact />
         </div>
 
         {/* Row 3 (Mobile & Tablet only, < 1024px): 3 Mode Tabs Cel-Shaded Grid with Spring Highlight */}
