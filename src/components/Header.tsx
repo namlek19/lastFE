@@ -84,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
     }
   }, [tier]);
 
-  const activeQuestions = useMemo(() => getQuestionsBySubject(subject), [subject]);
+  const activeQuestions = useMemo(() => getQuestionsBySubject(subject, tier), [subject, tier]);
 
   const masteredCount = useMemo(() => {
     let count = 0;
@@ -183,15 +183,15 @@ export const Header: React.FC<HeaderProps> = ({
                           setIsSubjectMenuOpen(false);
                         }}
                         className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl px-3 py-2 text-left transition ${isActive
-                            ? 'bg-[#EEF2FF] text-[#3730A3] dark:bg-[#312E81]/45 dark:text-[#A5B4FC]'
-                            : 'text-[#292524] hover:bg-[#FAF9F5] dark:text-[#E7E5E4] dark:hover:bg-[#252A26]'
+                          ? 'bg-[#EEF2FF] text-[#3730A3] dark:bg-[#312E81]/45 dark:text-[#A5B4FC]'
+                          : 'text-[#292524] hover:bg-[#FAF9F5] dark:text-[#E7E5E4] dark:hover:bg-[#252A26]'
                           }`}
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 text-xs font-bold">
                             <span>{meta.code}</span>
                             <span className="font-medium text-[#656058] tabular-nums dark:text-[#9CA39B]">
-                              • {meta.totalQuestions} câu
+                              • {getQuestionsBySubject(subjId, tier).length} câu
                             </span>
                           </div>
                           <div className="truncate text-[11px] opacity-80">{meta.name}</div>
@@ -221,8 +221,8 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => onSelectMode(id)}
                   aria-current={isActive ? 'page' : undefined}
                   className={`sakuga-btn inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-semibold whitespace-nowrap lg:px-2.5 xl:px-3 2xl:px-3.5 2xl:text-[13px] ${isActive
-                      ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-[3px_3px_0_0_#C7D2FE] hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]'
-                      : 'border-transparent text-[#656058] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
+                    ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-[3px_3px_0_0_#C7D2FE] hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]'
+                    : 'border-transparent text-[#656058] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
                     }`}
                 >
                   <Icon className="hidden h-3.5 w-3.5 shrink-0 2xl:block" />
@@ -251,10 +251,10 @@ export const Header: React.FC<HeaderProps> = ({
               animate={
                 badgeBounceSeq > 0
                   ? {
-                      y: [0, -11, 2, 0],
-                      scaleX: [1.18, 0.9, 1.06, 1],
-                      scaleY: [0.84, 1.14, 0.94, 1],
-                    }
+                    y: [0, -11, 2, 0],
+                    scaleX: [1.18, 0.9, 1.06, 1],
+                    scaleY: [0.84, 1.14, 0.94, 1],
+                  }
                   : { y: 0, scaleX: 1, scaleY: 1 }
               }
               transition={{ duration: 0.44, times: [0, 0.36, 0.72, 1], ease: [0.22, 1, 0.36, 1] }}
@@ -269,64 +269,64 @@ export const Header: React.FC<HeaderProps> = ({
             </motion.div>
 
             {/* Progress Sync Button */}
-        <button
-          type="button"
-          onClick={onOpenSyncModal}
-          aria-label="Đồng bộ tiến độ"
-          title="Đồng bộ tiến độ"
-          className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] p-1.5 text-xs font-semibold text-[#3730A3] whitespace-nowrap hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50 sm:px-2.5 sm:py-1.5 lg:p-1.5 2xl:px-3 2xl:py-1.5"
-        >
-          <Cloud className="h-4 w-4 shrink-0 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 2xl:h-3.5 2xl:w-3.5" />
-          <span className="hidden sm:inline lg:hidden 2xl:inline">Đồng bộ tiến độ</span>
-        </button>
+            <button
+              type="button"
+              onClick={onOpenSyncModal}
+              aria-label="Đồng bộ tiến độ"
+              title="Đồng bộ tiến độ"
+              className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] p-1.5 text-xs font-semibold text-[#3730A3] whitespace-nowrap hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50 sm:px-2.5 sm:py-1.5 lg:p-1.5 2xl:px-3 2xl:py-1.5"
+            >
+              <Cloud className="h-4 w-4 shrink-0 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 2xl:h-3.5 2xl:w-3.5" />
+              <span className="hidden sm:inline lg:hidden 2xl:inline">Đồng bộ tiến độ</span>
+            </button>
 
-        {/* Light / Dark Mode Toggle */}
-        <button
-          type="button"
-          onClick={onToggleTheme}
-          aria-pressed={theme === 'dark'}
-          aria-label={theme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
-          title={theme === 'dark' ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối'}
-          className="sakuga-btn inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1.5 text-xs font-medium text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
-        >
-          {theme === 'dark' ? (
-            <Sun className="h-4 w-4 text-[#FCD34D]" />
-          ) : (
-            <Moon className="h-4 w-4 text-[#4338CA]" />
-          )}
-        </button>
-      </div>
-    </div>
+            {/* Light / Dark Mode Toggle */}
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              aria-pressed={theme === 'dark'}
+              aria-label={theme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
+              title={theme === 'dark' ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối'}
+              className="sakuga-btn inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1.5 text-xs font-medium text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4 text-[#FCD34D]" />
+              ) : (
+                <Moon className="h-4 w-4 text-[#4338CA]" />
+              )}
+            </button>
+          </div>
+        </div>
 
-  {/* Row 2 (Mobile & Tablet only, < 1024px): 3 Study Tier Anime Stamps */ }
-  <div className="border-t border-[#D5CFC2] py-2 dark:border-[#262925] lg:hidden">
-    <SakugaTierPicker tier={tier} onSelectTier={onSelectTier} compact />
-  </div>
+        {/* Row 2 (Mobile & Tablet only, < 1024px): 3 Study Tier Anime Stamps */}
+        <div className="border-t border-[#D5CFC2] py-2 dark:border-[#262925] lg:hidden">
+          <SakugaTierPicker tier={tier} onSelectTier={onSelectTier} compact />
+        </div>
 
-  {/* Row 3 (Mobile & Tablet only, < 1024px): 4 Mode Tabs grid */ }
-  <nav
-    aria-label="Chế độ học tập"
-    className="grid grid-cols-4 gap-1 border-t border-[#D5CFC2]/80 py-2 dark:border-[#262925] lg:hidden"
-  >
-    {MODE_TABS.map(({ id, shortLabel, Icon }) => {
-      const isActive = mode === id;
-      return (
-        <button
-          key={id}
-          type="button"
-          onClick={() => onSelectMode(id)}
-          aria-current={isActive ? 'page' : undefined}
-          className={`sakuga-btn inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-1.5 py-1.5 text-xs font-semibold whitespace-nowrap sm:px-2.5 sm:text-[13px] ${isActive
-              ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-[2px_2px_0_0_#C7D2FE] hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]'
-              : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
-            }`}
+        {/* Row 3 (Mobile & Tablet only, < 1024px): 4 Mode Tabs grid */}
+        <nav
+          aria-label="Chế độ học tập"
+          className="grid grid-cols-4 gap-1 border-t border-[#D5CFC2]/80 py-2 dark:border-[#262925] lg:hidden"
         >
-          <Icon className="hidden h-3.5 w-3.5 shrink-0 sm:block" />
-          <span className="truncate">{shortLabel}</span>
-        </button>
-      );
-    })}
-  </nav>
+          {MODE_TABS.map(({ id, shortLabel, Icon }) => {
+            const isActive = mode === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => onSelectMode(id)}
+                aria-current={isActive ? 'page' : undefined}
+                className={`sakuga-btn inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-1.5 py-1.5 text-xs font-semibold whitespace-nowrap sm:px-2.5 sm:text-[13px] ${isActive
+                  ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-[2px_2px_0_0_#C7D2FE] hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]'
+                  : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
+                  }`}
+              >
+                <Icon className="hidden h-3.5 w-3.5 shrink-0 sm:block" />
+                <span className="truncate">{shortLabel}</span>
+              </button>
+            );
+          })}
+        </nav>
       </div >
     </header >
   );

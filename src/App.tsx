@@ -120,6 +120,7 @@ export const App: React.FC = () => {
               {mode === 'chapter' && (
                 <ChapterStudyView
                   subject={subject}
+                  tier={tier}
                   progress={store}
                   onRecordAttempt={handleRecordAttempt}
                   onToggleFlag={handleToggleFlag}
@@ -128,6 +129,7 @@ export const App: React.FC = () => {
               {mode === 'rolling' && (
                 <RollingStudyView
                   subject={subject}
+                  tier={tier}
                   progress={store}
                   onRecordAttempt={handleRecordAttempt}
                   onToggleFlag={handleToggleFlag}
@@ -137,6 +139,7 @@ export const App: React.FC = () => {
               {mode === 'flashcard' && (
                 <FlashcardView
                   subject={subject}
+                  tier={tier}
                   progress={store}
                   onMarkStudied={handleMarkStudied}
                   onToggleMastered={handleToggleMastered}
@@ -146,6 +149,7 @@ export const App: React.FC = () => {
               {mode === 'exam' && (
                 <MockExamView
                   subject={subject}
+                  tier={tier}
                   progress={store}
                   onSaveExamResult={handleSaveExamResult}
                   onRecordAttempt={handleRecordAttempt}
