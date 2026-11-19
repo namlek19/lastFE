@@ -17,7 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { getChaptersBySubject, getQuestionsBySubject, SUBJECTS } from '../data';
-import { QuestionItem, SubjectId, UserProgressStore } from '../types/quiz';
+import { QuestionItem, QuestionProgress, SubjectId, UserProgressStore } from '../types/quiz';
 import { getDetailedMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
 import {
@@ -49,6 +49,29 @@ function shuffleArray<T>(items: readonly T[]): T[] {
   return copy;
 }
 
+function findFirstUnmasteredIndex(
+  questions: readonly QuestionItem[],
+  progressMap: Record<string, QuestionProgress>
+): number {
+  const idx = questions.findIndex((q) => !isMastered(progressMap[q.id]));
+  return idx >= 0 ? idx : 0;
+}
+
+function findEarliestUnmasteredTarget(
+  chapters: readonly { chapter: number }[],
+  allQuestions: readonly QuestionItem[],
+  progressMap: Record<string, QuestionProgress>
+): { chapter: number; index: number } {
+  for (const ch of chapters) {
+    const chQuestions = allQuestions.filter((q) => q.chapter === ch.chapter);
+    const idx = chQuestions.findIndex((q) => !isMastered(progressMap[q.id]));
+    if (idx >= 0) {
+      return { chapter: ch.chapter, index: idx };
+    }
+  }
+  return { chapter: chapters[0]?.chapter ?? 1, index: 0 };
+}
+
 export const FlashcardView: React.FC<FlashcardViewProps> = ({
   subject,
   progress,
@@ -60,13 +83,17 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const chapters = useMemo(() => getChaptersBySubject(subject), [subject]);
   const allSubjectQuestions = useMemo(() => getQuestionsBySubject(subject), [subject]);
 
-  const [selectedChapter, setSelectedChapter] = useState<number>(() => chapters[0]?.chapter ?? 1);
+  const [selectedChapter, setSelectedChapter] = useState<number>(
+    () => findEarliestUnmasteredTarget(chapters, allSubjectQuestions, progress.questions).chapter
+  );
   const [filter, setFilter] = useState<FlashcardFilter>('all');
   const [lockedFilterIds, setLockedFilterIds] = useState<string[] | null>(null);
   const [isShuffled, setIsShuffled] = useState<boolean>(false);
   const [shuffledIds, setShuffledIds] = useState<string[] | null>(null);
 
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [currentIndex, setCurrentIndex] = useState<number>(
+    () => findEarliestUnmasteredTarget(chapters, allSubjectQuestions, progress.questions).index
+  );
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
   const [showExplanation, setShowExplanation] = useState<boolean>(false);
   const [sidebarTab, setSidebarTab] = useState<'chapters' | 'grid'>('chapters');
@@ -75,25 +102,31 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const [justMasteredId, setJustMasteredId] = useState<string | null>(null);
   const [masteredBurstSeq, setMasteredBurstSeq] = useState<number>(0);
 
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const didSwipeRef = useRef<boolean>(false);
 
-  // Reset state when switching subject
+  // Jump to earliest non-mastered card when switching subject
   useEffect(() => {
-    const firstChapter = chapters[0]?.chapter ?? 1;
-    setSelectedChapter(firstChapter);
+    const target = findEarliestUnmasteredTarget(
+      chapters,
+      allSubjectQuestions,
+      progressRef.current.questions
+    );
+    setSelectedChapter(target.chapter);
     setFilter('all');
     setLockedFilterIds(null);
     setIsShuffled(false);
     setShuffledIds(null);
-    setCurrentIndex(0);
+    setCurrentIndex(target.index);
     setIsFlipped(false);
     setShowExplanation(false);
     setSidebarTab('chapters');
     setIsMobileSheetOpen(false);
     setSakugaEvent(null);
     setJustMasteredId(null);
-  }, [subject, chapters]);
+  }, [subject, chapters, allSubjectQuestions]);
 
   const chapterQuestions = useMemo(
     () => allSubjectQuestions.filter((q) => q.chapter === selectedChapter),
@@ -186,12 +219,13 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   };
 
   const handleSelectChapter = (chapterNum: number) => {
+    const nextChapterQuestions = allSubjectQuestions.filter((q) => q.chapter === chapterNum);
     setSelectedChapter(chapterNum);
     setFilter('all');
     setLockedFilterIds(null);
     setIsShuffled(false);
     setShuffledIds(null);
-    setCurrentIndex(0);
+    setCurrentIndex(findFirstUnmasteredIndex(nextChapterQuestions, progress.questions));
     setIsFlipped(false);
     setShowExplanation(false);
     setSakugaEvent(null);
