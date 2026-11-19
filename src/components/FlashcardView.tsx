@@ -774,7 +774,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               <div className="relative">
                 <SakugaBurst
                   event={sakugaEvent}
-                  className="pointer-events-none absolute -top-3 right-6 z-30 sm:right-10"
+                  className="pointer-events-none absolute -top-3 left-1/2 z-30 -translate-x-1/2 sm:left-auto sm:right-10 sm:translate-x-0"
                 />
 
                 {/* 3D Flip Card Container */}
@@ -800,7 +800,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                         WebkitBackfaceVisibility: 'hidden',
                         transform: 'rotateY(0deg)',
                       }}
-                      className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] sm:min-h-[390px] sm:p-6 md:p-8 ${
+                      className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[4px_4px_0_0_#C7D2FE,0_14px_28px_-12px_rgba(24,24,27,0.10)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[4px_4px_0_0_#312E81,0_18px_36px_-12px_rgba(0,0,0,0.75)] sm:min-h-[390px] sm:p-6 sm:shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:sm:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] md:p-8 ${
                         isFlipped ? 'pointer-events-none' : ''
                       }`}
                     >
@@ -845,7 +845,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                         WebkitBackfaceVisibility: 'hidden',
                         transform: 'rotateY(180deg)',
                       }}
-                      className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#059669] bg-white p-4 shadow-[6px_6px_0_0_#6EE7B7,0_16px_32px_-12px_rgba(5,150,105,0.14)] dark:border-2 dark:border-[#10B981] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#065F46,0_20px_40px_-12px_rgba(0,0,0,0.8)] sm:min-h-[390px] sm:p-6 md:p-8 ${
+                      className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#059669] bg-white p-4 shadow-[4px_4px_0_0_#6EE7B7,0_14px_28px_-12px_rgba(5,150,105,0.14)] dark:border-2 dark:border-[#10B981] dark:bg-[#1E221F] dark:shadow-[4px_4px_0_0_#065F46,0_18px_36px_-12px_rgba(0,0,0,0.8)] sm:min-h-[390px] sm:p-6 sm:shadow-[6px_6px_0_0_#6EE7B7,0_16px_32px_-12px_rgba(5,150,105,0.14)] dark:sm:shadow-[6px_6px_0_0_#065F46,0_20px_40px_-12px_rgba(0,0,0,0.8)] md:p-8 ${
                         !isFlipped ? 'pointer-events-none' : ''
                       }`}
                     >
@@ -855,7 +855,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                           <span className="tabular-nums rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] sm:px-3 sm:py-1">
                             Đáp án • Thẻ {safeIndex + 1}/{deck.length}
                           </span>
-                          <SakugaMangaTag label="ANSWER ✓" tone="emerald" />
+                          <SakugaMangaTag label="ANSWER ✓" tone="emerald" className="hidden sm:inline-flex" />
                           {renderStatusBadge()}
                         </div>
 

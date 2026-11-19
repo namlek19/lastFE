@@ -574,7 +574,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
             {/* Stage Completion Card */}
             {!currentQuestion ? (
-              <div className="relative rounded-3xl border-2 border-[#059669] bg-white p-6 text-center shadow-[6px_6px_0_0_#6EE7B7,0_16px_32px_-12px_rgba(5,150,105,0.14)] dark:border-2 dark:border-[#10B981] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#065F46,0_20px_40px_-12px_rgba(0,0,0,0.8)] sm:p-8">
+              <div className="relative rounded-3xl border-2 border-[#059669] bg-white p-6 text-center shadow-[4px_4px_0_0_#6EE7B7,0_14px_28px_-12px_rgba(5,150,105,0.14)] dark:border-2 dark:border-[#10B981] dark:bg-[#1E221F] dark:shadow-[4px_4px_0_0_#065F46,0_18px_36px_-12px_rgba(0,0,0,0.8)] sm:p-8 sm:shadow-[6px_6px_0_0_#6EE7B7,0_16px_32px_-12px_rgba(5,150,105,0.14)] dark:sm:shadow-[6px_6px_0_0_#065F46,0_20px_40px_-12px_rgba(0,0,0,0.8)]">
                 <SakugaBurst
                   event={stageCompleteEvent}
                   className="pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2"
@@ -662,13 +662,13 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
               /* Question Card */
               <div
                 key={`${currentQuestion.id}-${turnCounter}`}
-                className={`relative rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] sm:p-6 md:p-8 ${
+                className={`relative rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[4px_4px_0_0_#C7D2FE,0_14px_28px_-12px_rgba(24,24,27,0.10)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[4px_4px_0_0_#312E81,0_18px_36px_-12px_rgba(0,0,0,0.75)] sm:p-6 sm:shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:sm:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] md:p-8 ${
                   isShaking ? 'sakuga-shake' : ''
                 }`}
               >
                 <SakugaBurst
                   event={sakugaEvent}
-                  className="pointer-events-none absolute -top-3 right-6 z-20 sm:right-10"
+                  className="pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2 sm:left-auto sm:right-10 sm:translate-x-0"
                 />
                 {/* Card top badges + Desktop Phân vân toggle */}
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-2.5 dark:border-[#2C322D] dark:bg-[#141714] sm:mb-5">

@@ -3,6 +3,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   body {
     font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
     background-color: #F4F2EC;
