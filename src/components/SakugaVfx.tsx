@@ -392,105 +392,8 @@ export function getSakugaProgressColor(percent: number): string {
   return interpolateStops(GREEN_PROGRESS_STOPS, clamped);
 }
 
-interface SakugaFlameSpriteProps {
-  scale: number;
-  showEmbers: boolean;
-  showStar: boolean;
-  isMax: boolean;
-  compact?: boolean;
-}
-
-const SakugaFlameSprite: React.FC<SakugaFlameSpriteProps> = ({
-  scale,
-  showEmbers,
-  showStar,
-  isMax,
-  compact = false,
-}) => (
-  <svg
-    viewBox="0 0 36 42"
-    aria-hidden="true"
-    style={{
-      transform: `scale(${scale.toFixed(3)})`,
-      transformOrigin: 'center 82%',
-    }}
-    className={`overflow-visible ${compact ? 'h-5 w-4' : 'h-7 w-6'}`}
-  >
-    {/* Twin radiant wing tongues at 100% */}
-    {isMax && (
-      <g className="sakuga-flame-outer">
-        <path
-          d="M11 33 C5 29, 3 22, 8 17 C8 22, 11 24, 13 28 Z"
-          fill="#10B981"
-          stroke="#064E3B"
-          strokeWidth="1.25"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M25 33 C31 29, 33 22, 28 17 C28 22, 25 24, 23 28 Z"
-          fill="#10B981"
-          stroke="#064E3B"
-          strokeWidth="1.25"
-          strokeLinejoin="round"
-        />
-      </g>
-    )}
-
-    {/* Main outer cel-shaded anime flame tongue */}
-    <g className="sakuga-flame-outer">
-      <path
-        d="M18 4 C21 12, 27 14, 27 23 C27 30, 23 36, 18 36 C13 36, 9 30, 9 23 C9 17, 13 13, 14 9 C15 12, 16 13, 18 4 Z"
-        fill={isMax ? '#34D399' : '#F97316'}
-        stroke="#18181B"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      {/* Mid golden flame layer */}
-      <path
-        d="M18 11 C20 17, 24 19, 24 25 C24 30, 21 34, 18 34 C15 34, 12 30, 12 25 C12 20, 15 17, 18 11 Z"
-        fill="#FACC15"
-      />
-    </g>
-
-    {/* Counter-phase glowing pale yellow inner core */}
-    <g className="sakuga-flame-inner">
-      <path
-        d="M18 18 C20 22, 21 24, 21 28 C21 31, 19.6 33.2, 18 33.2 C16.4 33.2, 15 31, 15 28 C15 24, 16.5 22, 18 18 Z"
-        fill="#FEF9C3"
-      />
-    </g>
-
-    {/* Rising anime embers for >= 65% */}
-    {showEmbers && (
-      <g className="sakuga-flame-ember">
-        <circle cx="9" cy="11" r="1.7" fill="#FACC15" stroke="#18181B" strokeWidth="0.9" />
-        <circle cx="27" cy="9" r="1.4" fill={isMax ? '#6EE7B7' : '#FB923C'} stroke="#18181B" strokeWidth="0.9" />
-      </g>
-    )}
-
-    {/* 4-point anime star sparkles for >= 80% & radiant 100% */}
-    {showStar && (
-      <g className="sakuga-flame-star">
-        <path
-          d="M28 5 L29.1 7.6 L31.7 8.7 L29.1 9.8 L28 12.4 L26.9 9.8 L24.3 8.7 L26.9 7.6 Z"
-          fill="#FEF08A"
-          stroke="#18181B"
-          strokeWidth="0.85"
-          strokeLinejoin="round"
-        />
-        {isMax && (
-          <path
-            d="M7 6 L8 8.2 L10.2 9.2 L8 10.2 L7 12.4 L6 10.2 L3.8 9.2 L6 8.2 Z"
-            fill="#A7F3D0"
-            stroke="#064E3B"
-            strokeWidth="0.85"
-            strokeLinejoin="round"
-          />
-        )}
-      </g>
-    )}
-  </svg>
-);
+export { SakugaBorderFire } from './SakugaBorderFire';
+export type { SakugaBorderFireProps } from './SakugaBorderFire';
 
 export interface SakugaProgressBarProps {
   percent: number;
@@ -503,55 +406,74 @@ export const SakugaProgressBar: React.FC<SakugaProgressBarProps> = ({
 }) => {
   const clampedPct = Math.max(0, Math.min(100, percent));
   const fillColor = getSakugaProgressColor(clampedPct);
-  const hasFlame = clampedPct >= 50;
   const isMax = clampedPct >= 100;
-  const flameScale = hasFlame ? 0.52 + ((clampedPct - 50) / 50) * 0.78 : 0.52;
 
   return (
     <div className={`relative overflow-visible ${className}`}>
       <div
         className={`sakuga-progress-track relative h-full w-full overflow-hidden rounded-full bg-[#D5CFC2] transition-shadow duration-300 dark:bg-[#0F100E] ${
           isMax
-            ? 'ring-2 ring-[#10B981] shadow-[0_0_12px_rgba(16,185,129,0.55)] dark:ring-[#34D399] dark:shadow-[0_0_14px_rgba(52,211,153,0.65)]'
+            ? 'ring-2 ring-[#34D399] shadow-[0_0_14px_rgba(16,185,129,0.65),0_0_5px_rgba(250,204,21,0.55)] dark:ring-[#6EE7B7] dark:shadow-[0_0_16px_rgba(52,211,153,0.75),0_0_6px_rgba(250,204,21,0.55)]'
             : ''
         }`}
       >
         <div
-          className="sakuga-progress-fill h-full rounded-full transition-all duration-300"
+          className="sakuga-progress-fill relative h-full overflow-hidden rounded-full transition-all duration-300"
           style={{ width: `${clampedPct}%`, backgroundColor: fillColor }}
-        />
+        >
+          {isMax && (
+            <span
+              aria-hidden="true"
+              className="sakuga-bar-radiant-sweep pointer-events-none absolute inset-y-0 left-0 flex w-7 items-stretch gap-1"
+            >
+              <span className="h-full w-3 bg-[#FEF9C3]/75" />
+              <span className="h-full w-1.5 bg-white/85" />
+            </span>
+          )}
+        </div>
       </div>
 
-      {hasFlame && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 z-20 overflow-visible transition-all duration-300"
-          style={{ width: `${clampedPct}%` }}
-        >
-          {/* Radiant 100% secondary flames erupting along the full bar */}
-          {isMax && (
-            <>
-              <span className="absolute bottom-0 left-[24%] -translate-x-1/2 translate-y-0.5">
-                <SakugaFlameSprite scale={0.72} showEmbers={false} showStar={false} isMax={false} compact />
-              </span>
-              <span className="absolute bottom-0 left-[52%] -translate-x-1/2 translate-y-0.5">
-                <SakugaFlameSprite scale={0.86} showEmbers={true} showStar={true} isMax={false} compact />
-              </span>
-              <span className="absolute bottom-0 left-[76%] -translate-x-1/2 translate-y-0.5">
-                <SakugaFlameSprite scale={0.74} showEmbers={false} showStar={false} isMax={false} compact />
-              </span>
-            </>
-          )}
-
-          {/* Leading tip anime flame scaling with percentage (50% -> 100%) */}
-          <span className="absolute -right-2.5 bottom-0 translate-y-0.5">
-            <SakugaFlameSprite
-              scale={flameScale}
-              showEmbers={clampedPct >= 65}
-              showStar={clampedPct >= 80}
-              isMax={isMax}
+      {/* Radiant 100% 4-point anime star sparkles along the bar */}
+      {isMax && (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-20 overflow-visible">
+          <svg
+            viewBox="0 0 16 16"
+            className="sakuga-flame-star absolute -top-2 left-[18%] h-3 w-3 -translate-x-1/2"
+          >
+            <path
+              d="M8 1 L9.7 6.3 L15 8 L9.7 9.7 L8 15 L6.3 9.7 L1 8 L6.3 6.3 Z"
+              fill="#FEF08A"
+              stroke="#18181B"
+              strokeWidth="1"
+              strokeLinejoin="round"
             />
-          </span>
+          </svg>
+          <svg
+            viewBox="0 0 16 16"
+            style={{ animationDelay: '220ms' }}
+            className="sakuga-flame-star absolute -bottom-2 left-[54%] h-3.5 w-3.5 -translate-x-1/2"
+          >
+            <path
+              d="M8 1 L9.7 6.3 L15 8 L9.7 9.7 L8 15 L6.3 9.7 L1 8 L6.3 6.3 Z"
+              fill="#A7F3D0"
+              stroke="#064E3B"
+              strokeWidth="1"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <svg
+            viewBox="0 0 16 16"
+            style={{ animationDelay: '440ms' }}
+            className="sakuga-flame-star absolute -top-2 right-0 h-3.5 w-3.5 translate-x-1/3"
+          >
+            <path
+              d="M8 1 L9.7 6.3 L15 8 L9.7 9.7 L8 15 L6.3 9.7 L1 8 L6.3 6.3 Z"
+              fill="#FEF08A"
+              stroke="#18181B"
+              strokeWidth="1"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
       )}
     </div>

@@ -20,7 +20,13 @@ import { getChaptersBySubject, getQuestionsBySubject, isAnswerCorrect, SUBJECTS 
 import { QuestionItem, SubjectId, UserProgressStore } from '../types/quiz';
 import { getMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
-import { SakugaBurst, SakugaEvent, SakugaMangaTag, SakugaProgressBar } from './SakugaVfx';
+import {
+  SakugaBorderFire,
+  SakugaBurst,
+  SakugaEvent,
+  SakugaMangaTag,
+  SakugaProgressBar,
+} from './SakugaVfx';
 
 export interface RollingStudyViewProps {
   subject: SubjectId;
@@ -460,7 +466,16 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
               </div>
 
               {/* Stage mastery progress bar */}
-              <div className="mt-4 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-3.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
+              <div
+                className={`relative mt-4 rounded-xl border bg-[#FAF9F5] p-3.5 dark:bg-[#1C1F1C] ${
+                  stageStats.percent >= 100
+                    ? 'border-[#10B981] ring-2 ring-[#34D399]/35 dark:border-[#10B981]/80 dark:ring-[#34D399]/30'
+                    : stageStats.percent >= 50
+                      ? 'border-[#F59E0B]/70 dark:border-[#F59E0B]/55'
+                      : 'border-[#D5CFC2] dark:border-[#2C302B]'
+                }`}
+              >
+                <SakugaBorderFire percent={stageStats.percent} radius={12} compact />
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <span className="font-medium text-[#656058] dark:text-[#9CA39B]">Tiến độ chặng</span>
                   <span className="font-semibold text-[#047857] tabular-nums dark:text-[#34D399]">
@@ -1163,7 +1178,17 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
           {/* Overall Chapter Progress Bar */}
           {currentChapterMeta && (
-            <div className="mt-3.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-3.5 dark:border-[#2C302B] dark:bg-[#1C1F1C] sm:mt-5 sm:p-4">
+            <div
+              className={`relative mt-3.5 rounded-xl border bg-[#FAF9F5] p-3.5 dark:bg-[#1C1F1C] sm:mt-5 sm:p-4 ${
+                chapterStats.percent >= 100
+                  ? 'border-[#10B981] ring-2 ring-[#34D399]/35 dark:border-[#10B981]/80 dark:ring-[#34D399]/30'
+                  : chapterStats.percent >= 50
+                    ? 'border-[#F59E0B]/70 dark:border-[#F59E0B]/55'
+                    : 'border-[#D5CFC2] dark:border-[#2C302B]'
+              }`}
+            >
+              <SakugaBorderFire percent={chapterStats.percent} radius={12} />
+
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="hidden text-sm font-semibold text-[#3730A3] dark:text-[#A5B4FC] md:block">
                   Chương {currentChapterMeta.chapter}: {currentChapterMeta.title}
@@ -1203,12 +1228,15 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 key={stage.index}
                 type="button"
                 onClick={() => startStageSession(stage.index)}
-                className={`group flex cursor-pointer flex-col justify-between rounded-2xl border bg-[#EAE6DD] p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:bg-[#161816] dark:shadow-none sm:p-6 ${
+                className={`group relative flex cursor-pointer flex-col justify-between rounded-2xl border bg-[#EAE6DD] p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:bg-[#161816] dark:shadow-none sm:p-6 ${
                   isCompleted
-                    ? 'border-[#10B981] hover:border-[#059669] hover:bg-[#ECFDF5] dark:border-[#10B981]/70 dark:hover:border-[#34D399] dark:hover:bg-[#059669]/20'
-                    : 'border-[#D5CFC2] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#262925] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                    ? 'border-[#10B981] ring-2 ring-[#34D399]/35 shadow-[0_0_16px_rgba(16,185,129,0.22)] hover:border-[#059669] hover:bg-[#ECFDF5] dark:border-[#10B981]/80 dark:ring-[#34D399]/30 dark:shadow-[0_0_18px_rgba(52,211,153,0.22)] dark:hover:border-[#34D399] dark:hover:bg-[#059669]/20'
+                    : stats.percent >= 50
+                      ? 'border-[#F59E0B]/70 hover:border-[#059669] hover:bg-[#ECFDF5]/60 dark:border-[#F59E0B]/55 dark:hover:border-[#34D399] dark:hover:bg-[#059669]/15'
+                      : 'border-[#D5CFC2] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#262925] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                 }`}
               >
+                <SakugaBorderFire percent={stats.percent} radius={16} />
                 <div className="w-full">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">

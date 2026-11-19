@@ -23,7 +23,13 @@ import {
 import { QuestionItem, QuestionProgress, SubjectId, UserProgressStore } from '../types/quiz';
 import { getDetailedMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
-import { SakugaBurst, SakugaEvent, SakugaMangaTag, SakugaProgressBar } from './SakugaVfx';
+import {
+  SakugaBorderFire,
+  SakugaBurst,
+  SakugaEvent,
+  SakugaMangaTag,
+  SakugaProgressBar,
+} from './SakugaVfx';
 
 interface ChapterStudyViewProps {
   subject: SubjectId;
@@ -475,7 +481,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   </button>
                 </div>
 
-                <div className="max-h-[calc(100vh-250px)] space-y-3 overflow-y-auto pr-1">
+                <div className="max-h-[calc(100vh-250px)] space-y-4 overflow-y-auto px-2.5 py-2.5">
                   {chapters.map((ch) => {
                     const stat = chapterStats.get(ch.chapter) ?? {
                       mastered: 0,
@@ -490,12 +496,17 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                         type="button"
                         data-native-enter="true"
                         onClick={() => handleSelectChapter(ch.chapter)}
-                        className={`w-full cursor-pointer rounded-xl border p-4 text-left transition-all ${
+                        className={`relative w-full cursor-pointer rounded-xl border p-4 text-left transition-all ${
                           active
                             ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
-                            : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                            : stat.pct >= 100
+                              ? 'border-[#10B981] bg-[#FAF9F5] ring-2 ring-[#34D399]/35 hover:border-[#059669] hover:bg-[#ECFDF5] dark:border-[#10B981]/80 dark:bg-[#1C1F1C] dark:ring-[#34D399]/30 dark:hover:border-[#34D399] dark:hover:bg-[#059669]/20'
+                              : stat.pct >= 50
+                                ? 'border-[#F59E0B]/70 bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                                : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                         }`}
                       >
+                        <SakugaBorderFire percent={stat.pct} radius={12} compact />
                         <div className="flex items-center justify-between gap-2">
                           <span
                             className={`text-xs font-bold uppercase tracking-wide ${
