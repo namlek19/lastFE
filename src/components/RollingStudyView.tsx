@@ -20,6 +20,7 @@ import { getChaptersBySubject, getQuestionsBySubject, isAnswerCorrect, SUBJECTS 
 import { QuestionItem, SubjectId, UserProgressStore } from '../types/quiz';
 import { getMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
+import { SakugaBurst, SakugaEvent, SakugaMangaTag } from './SakugaVfx';
 
 export interface RollingStudyViewProps {
   subject: SubjectId;
@@ -127,8 +128,39 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
   const [turnCounter, setTurnCounter] = useState<number>(0);
   const [isChapterSheetOpen, setIsChapterSheetOpen] = useState<boolean>(false);
   const [isStageSheetOpen, setIsStageSheetOpen] = useState<boolean>(false);
+  const [sakugaEvent, setSakugaEvent] = useState<SakugaEvent | null>(null);
+  const [stageCompleteEvent, setStageCompleteEvent] = useState<SakugaEvent | null>(null);
+  const [isShaking, setIsShaking] = useState<boolean>(false);
 
   const explanationRef = useRef<HTMLDivElement>(null);
+  const shakeTimerRef = useRef<number | null>(null);
+
+  const clearShake = useCallback(() => {
+    if (shakeTimerRef.current !== null) {
+      window.clearTimeout(shakeTimerRef.current);
+      shakeTimerRef.current = null;
+    }
+    setIsShaking(false);
+  }, []);
+
+  const triggerShake = useCallback(() => {
+    if (shakeTimerRef.current !== null) {
+      window.clearTimeout(shakeTimerRef.current);
+    }
+    setIsShaking(true);
+    shakeTimerRef.current = window.setTimeout(() => {
+      setIsShaking(false);
+      shakeTimerRef.current = null;
+    }, 240);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (shakeTimerRef.current !== null) {
+        window.clearTimeout(shakeTimerRef.current);
+      }
+    };
+  }, []);
 
   const scrollToExplanationOnMobile = useCallback(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -146,9 +178,12 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
     setSelectedOptions([]);
     setGradedState(null);
     setTurnFlagged(false);
+    setSakugaEvent(null);
+    setStageCompleteEvent(null);
+    clearShake();
     setIsChapterSheetOpen(false);
     setIsStageSheetOpen(false);
-  }, [subject, chapters]);
+  }, [subject, chapters, clearShake]);
 
   const chapterQuestions = useMemo(
     () => allSubjectQuestions.filter(q => q.chapter === selectedChapter),
@@ -169,6 +204,14 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
   const activeStage = activeStageIndex !== null ? stages[activeStageIndex] ?? null : null;
   const currentQuestion = queue[0] ?? null;
+
+  useEffect(() => {
+    if (!currentQuestion && activeStage) {
+      setStageCompleteEvent({ id: Date.now(), variant: 'complete', label: 'COMPLETE! ✓' });
+    } else {
+      setStageCompleteEvent(null);
+    }
+  }, [activeStage, currentQuestion]);
 
   // Sync turnFlagged whenever the head of the queue or turnCounter changes
   useEffect(() => {
@@ -194,12 +237,14 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
       setQueue(initialQueue);
       setSelectedOptions([]);
       setGradedState(null);
+      setSakugaEvent(null);
+      clearShake();
       setTurnCounter(c => c + 1);
       setTurnFlagged(
         initialQueue[0] ? Boolean(progress.questions[initialQueue[0].id]?.flagged) : false
       );
     },
-    [stages, progress]
+    [stages, progress, clearShake]
   );
 
   const handleExitSession = useCallback(() => {
@@ -208,7 +253,10 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
     setSelectedOptions([]);
     setGradedState(null);
     setTurnFlagged(false);
-  }, []);
+    setSakugaEvent(null);
+    setStageCompleteEvent(null);
+    clearShake();
+  }, [clearShake]);
 
   const handleResetAndRestartStage = useCallback(() => {
     if (!activeStage) return;
@@ -219,8 +267,10 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
     setSelectedOptions([]);
     setGradedState(null);
     setTurnFlagged(false);
+    setSakugaEvent(null);
+    clearShake();
     setTurnCounter(c => c + 1);
-  }, [activeStage, onResetStage]);
+  }, [activeStage, onResetStage, clearShake]);
 
   const gradeSubmission = useCallback(
     (chosenKeys: string[]) => {
@@ -233,10 +283,26 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
       const nextStreak = isCorrect && !currentFlagged ? prevStreak + 1 : 0;
 
       setGradedState({ isCorrect, nextStreak });
+      if (isCorrect && nextStreak >= 2) {
+        setSakugaEvent({ id: Date.now(), variant: 'clear', label: 'CLEAR! ✓' });
+      } else if (isCorrect) {
+        setSakugaEvent({ id: Date.now(), variant: 'nice', label: 'NICE!' });
+      } else {
+        setSakugaEvent({ id: Date.now(), variant: 'miss', label: 'MISS!' });
+        triggerShake();
+      }
       onRecordAttempt(currentQuestion.id, isCorrect, currentFlagged);
       scrollToExplanationOnMobile();
     },
-    [currentQuestion, gradedState, progress.questions, turnFlagged, onRecordAttempt, scrollToExplanationOnMobile]
+    [
+      currentQuestion,
+      gradedState,
+      progress.questions,
+      turnFlagged,
+      onRecordAttempt,
+      scrollToExplanationOnMobile,
+      triggerShake,
+    ]
   );
 
   const handleOptionClick = useCallback(
@@ -261,6 +327,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
     if (gradedState !== null) {
       setGradedState(prev => (prev ? { ...prev, nextStreak: 0 } : prev));
     }
+    setSakugaEvent({ id: Date.now(), variant: 'ok', label: 'OK!' });
     onToggleFlag(currentQuestion.id);
   }, [currentQuestion, gradedState, onToggleFlag]);
 
@@ -286,8 +353,10 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
     setQueue(nextQueue);
     setSelectedOptions([]);
     setGradedState(null);
+    setSakugaEvent(null);
+    clearShake();
     setTurnCounter(c => c + 1);
-  }, [currentQuestion, gradedState, queue, turnFlagged]);
+  }, [currentQuestion, gradedState, queue, turnFlagged, clearShake]);
 
   // PC Keyboard Shortcuts: 1-5 / A-E, F, Enter / Space
   useEffect(() => {
@@ -369,7 +438,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 <button
                   type="button"
                   onClick={handleExitSession}
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-1.5 text-xs font-semibold text-[#292524] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]"
+                  className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-1.5 text-xs font-semibold text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
                   <span>Danh sách chặng</span>
@@ -414,9 +483,9 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     {stageStats.mastered}/{stageStats.total} ({stageStats.percent}%)
                   </span>
                 </div>
-                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
+                <div className="sakuga-progress-track mt-2 h-2 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
                   <div
-                    className="h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
+                    className="sakuga-progress-fill h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
                     style={{ width: `${stageStats.percent}%` }}
                   />
                 </div>
@@ -505,10 +574,15 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
             {/* Stage Completion Card */}
             {!currentQuestion ? (
-              <div className="rounded-3xl border-2 border-[#059669] bg-white p-6 text-center shadow-[0_6px_0_0_#059669,0_20px_40px_-12px_rgba(5,150,105,0.2)] dark:border-2 dark:border-[#10B981] dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#10B981,0_22px_44px_-12px_rgba(0,0,0,0.85)] sm:p-8">
+              <div className="relative rounded-3xl border-2 border-[#059669] bg-white p-6 text-center shadow-[6px_6px_0_0_#6EE7B7,0_16px_32px_-12px_rgba(5,150,105,0.14)] dark:border-2 dark:border-[#10B981] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#065F46,0_20px_40px_-12px_rgba(0,0,0,0.8)] sm:p-8">
+                <SakugaBurst
+                  event={stageCompleteEvent}
+                  className="pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2"
+                />
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#10B981] bg-[#D1FAE5] text-[#059669] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] sm:h-16 sm:w-16">
                   <Trophy className="h-7 w-7 sm:h-8 sm:w-8" />
                 </div>
+                <SakugaMangaTag label="COMPLETE! ✓" tone="emerald" className="mb-2" />
                 <h2 className="text-xl font-bold text-[#18181B] dark:text-[#F5F5F4] sm:text-2xl">
                   Hoàn thành chặng!
                 </h2>
@@ -549,7 +623,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     <button
                       type="button"
                       onClick={() => startStageSession(activeStage.index + 1)}
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]"
+                      className="sakuga-btn inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
                     >
                       <span>Sang Chặng {activeStage.index + 2}</span>
                       <ArrowRight className="h-4 w-4" />
@@ -559,7 +633,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   <button
                     type="button"
                     onClick={() => startStageSession(activeStage.index, true)}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] px-4 py-2.5 text-sm font-semibold text-[#3730A3] transition hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:hover:bg-[#312E81]/45"
+                    className="sakuga-btn inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] px-4 py-2.5 text-sm font-semibold text-[#3730A3] shadow-[2px_2px_0_0_#C7D2FE] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#312E81]/45"
                   >
                     <RotateCcw className="h-4 w-4" />
                     <span>Ôn tập lại chặng này</span>
@@ -569,7 +643,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     <button
                       type="button"
                       onClick={handleResetAndRestartStage}
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-medium text-[#292524] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25"
+                      className="sakuga-btn inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-medium text-[#292524] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:shadow-[2px_2px_0_0_#2C302B] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25"
                     >
                       <span>Học lại chặng</span>
                     </button>
@@ -578,7 +652,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   <button
                     type="button"
                     onClick={handleExitSession}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-medium text-[#656058] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]"
+                    className="sakuga-btn inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-medium text-[#656058] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]"
                   >
                     <span>Quay lại danh sách</span>
                   </button>
@@ -588,8 +662,14 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
               /* Question Card */
               <div
                 key={`${currentQuestion.id}-${turnCounter}`}
-                className="rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[0_6px_0_0_#27272A,0_20px_40px_-12px_rgba(24,24,27,0.14)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#3F3F46,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:p-6 md:p-8"
+                className={`relative rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] sm:p-6 md:p-8 ${
+                  isShaking ? 'sakuga-shake' : ''
+                }`}
               >
+                <SakugaBurst
+                  event={sakugaEvent}
+                  className="pointer-events-none absolute -top-3 right-6 z-20 sm:right-10"
+                />
                 {/* Card top badges + Desktop Phân vân toggle */}
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-2.5 dark:border-[#2C322D] dark:bg-[#141714] sm:mb-5">
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -656,10 +736,10 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     type="button"
                     onClick={handleToggleFlag}
                     aria-pressed={turnFlagged}
-                    className={`hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition lg:inline-flex ${
+                    className={`sakuga-btn hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold lg:inline-flex ${
                       turnFlagged
-                        ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-xs dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-                        : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#E879F9]/55 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
+                        ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+                        : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] hover:shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#2C302B] dark:hover:border-[#E879F9]/55 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE] dark:hover:shadow-[2px_2px_0_0_#701A75]'
                     }`}
                   >
                     <Flag
@@ -738,7 +818,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                         }`}
                       >
                         <span
-                          className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition sm:h-7 sm:w-7 ${badgeCls}`}
+                          className={`sakuga-option-badge mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold sm:h-7 sm:w-7 ${badgeCls}`}
                         >
                           {opt.key}
                         </span>
@@ -772,7 +852,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                       type="button"
                       disabled={selectedOptions.length === 0}
                       onClick={() => gradeSubmission(selectedOptions)}
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:border disabled:border-[#D5CFC2] disabled:bg-[#EAE6DD] disabled:text-[#656058] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3] dark:disabled:border-[#2C302B] dark:disabled:bg-[#252A26] dark:disabled:text-[#9CA39B]"
+                      className="sakuga-btn inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:border disabled:border-[#D5CFC2] disabled:bg-[#EAE6DD] disabled:text-[#656058] disabled:shadow-none dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3] dark:disabled:border-[#2C302B] dark:disabled:bg-[#252A26] dark:disabled:text-[#9CA39B] dark:disabled:shadow-none"
                     >
                       <span>Kiểm tra đáp án</span>
                       <kbd className="hidden rounded bg-white/20 px-1.5 py-0.5 font-mono text-[10px] text-white lg:inline-block">
@@ -789,34 +869,53 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     className="mt-5 scroll-mt-4 scroll-mb-24 space-y-4 border-t border-[#D5CFC2] pt-4 dark:border-[#262925] sm:mt-6 sm:space-y-5 sm:pt-5"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div
-                        className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold sm:px-3.5 sm:text-sm ${
-                          gradedState.isCorrect
-                            ? 'border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]'
-                            : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/55 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
-                        }`}
-                      >
-                        {gradedState.isCorrect ? (
-                          <>
-                            <CheckCircle2 className="h-4 w-4 text-[#059669] dark:text-[#34D399]" />
-                            <span>
-                              Chính xác!{' '}
-                              {!turnFlagged && gradedState.nextStreak >= 2
-                                ? '• ✓ Đã thuộc (2/2) ●●'
-                                : !turnFlagged && gradedState.nextStreak === 1
-                                  ? '• ✓ Đúng 1/2 lần ●○'
-                                  : ''}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <X className="h-4 w-4 text-[#BE123C] dark:text-[#FDA4AF]" />
-                            <span>
-                              Chưa đúng · Đáp án đúng:{' '}
-                              {currentQuestion.correctAnswers.join(', ')}
-                            </span>
-                          </>
-                        )}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div
+                          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold sm:px-3.5 sm:text-sm ${
+                            gradedState.isCorrect
+                              ? 'border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]'
+                              : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/55 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
+                          }`}
+                        >
+                          {gradedState.isCorrect ? (
+                            <>
+                              <CheckCircle2 className="h-4 w-4 text-[#059669] dark:text-[#34D399]" />
+                              <span>
+                                Chính xác!{' '}
+                                {!turnFlagged && gradedState.nextStreak >= 2
+                                  ? '• ✓ Đã thuộc (2/2) ●●'
+                                  : !turnFlagged && gradedState.nextStreak === 1
+                                    ? '• ✓ Đúng 1/2 lần ●○'
+                                    : ''}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <X className="h-4 w-4 text-[#BE123C] dark:text-[#FDA4AF]" />
+                              <span>
+                                Chưa đúng · Đáp án đúng:{' '}
+                                {currentQuestion.correctAnswers.join(', ')}
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        <SakugaMangaTag
+                          label={
+                            gradedState.isCorrect
+                              ? gradedState.nextStreak >= 2
+                                ? 'CLEAR! ✓'
+                                : 'NICE!'
+                              : 'MISS!'
+                          }
+                          tone={
+                            gradedState.isCorrect
+                              ? gradedState.nextStreak >= 2
+                                ? 'emerald'
+                                : 'amber'
+                              : 'rose'
+                          }
+                        />
                       </div>
 
                       {turnFlagged && (
@@ -833,7 +932,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                       <button
                         type="button"
                         onClick={handleNext}
-                        className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]"
+                        className="sakuga-btn inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
                       >
                         <span>Câu tiếp theo</span>
                         <ArrowRight className="h-4 w-4" />
@@ -890,7 +989,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
               <button
                 type="button"
                 onClick={handleExitSession}
-                className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2.5 text-xs font-semibold text-[#292524] transition dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]"
+                className="sakuga-btn inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2.5 text-xs font-semibold text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]"
               >
                 <ChevronLeft className="h-4 w-4" />
                 <span>Chặng</span>
@@ -900,10 +999,10 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 type="button"
                 onClick={handleToggleFlag}
                 aria-pressed={turnFlagged}
-                className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
+                className={`sakuga-btn inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold ${
                   turnFlagged
-                    ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
+                    ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#2C302B]'
                 }`}
               >
                 <Flag className={`h-3.5 w-3.5 ${turnFlagged ? 'fill-current' : ''}`} />
@@ -915,7 +1014,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   type="button"
                   disabled={selectedOptions.length === 0}
                   onClick={() => gradeSubmission(selectedOptions)}
-                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]"
+                  className="sakuga-btn inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3] dark:disabled:shadow-none"
                 >
                   <Check className="h-4 w-4" />
                   <span>Kiểm tra ({selectedOptions.length})</span>
@@ -925,7 +1024,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   type="button"
                   disabled={gradedState === null}
                   onClick={handleNext}
-                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]"
+                  className="sakuga-btn inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3] dark:disabled:shadow-none"
                 >
                   <span>Câu tiếp</span>
                   <ChevronRight className="h-4 w-4" />
@@ -1137,9 +1236,9 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 </div>
               </div>
 
-              <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E] sm:mt-3 sm:h-2.5">
+              <div className="sakuga-progress-track mt-2.5 h-2 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E] sm:mt-3 sm:h-2.5">
                 <div
-                  className="h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
+                  className="sakuga-progress-fill h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
                   style={{ width: `${chapterStats.percent}%` }}
                 />
               </div>
@@ -1197,9 +1296,9 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                         {stats.mastered}/{stats.total}
                       </span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
+                    <div className="sakuga-progress-track h-2 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
                       <div
-                        className="h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
+                        className="sakuga-progress-fill h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
                         style={{ width: `${stats.percent}%` }}
                       />
                     </div>

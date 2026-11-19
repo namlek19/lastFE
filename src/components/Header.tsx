@@ -140,9 +140,9 @@ export const Header: React.FC<HeaderProps> = ({
                     onClick={() => onSelectSubject(subjId)}
                     aria-pressed={isActive}
                     title={`${meta.code} • ${meta.name} (${meta.totalQuestions} câu)`}
-                    className={`inline-flex cursor-pointer items-center rounded-lg border px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition sm:px-3 sm:py-1.5 ${
+                    className={`sakuga-btn inline-flex cursor-pointer items-center rounded-lg border px-2.5 py-1 text-xs font-semibold whitespace-nowrap sm:px-3 sm:py-1.5 ${
                       isActive
-                        ? 'border-transparent bg-[#4338CA] text-white shadow-sm hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]'
+                        ? 'border-transparent bg-[#4338CA] text-white shadow-[2px_2px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]'
                         : 'border-transparent text-[#292524] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#E7E5E4] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
                     }`}
                   >
@@ -166,9 +166,9 @@ export const Header: React.FC<HeaderProps> = ({
                   type="button"
                   onClick={() => onSelectMode(id)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-semibold whitespace-nowrap transition lg:px-3 xl:px-3.5 2xl:text-[13px] ${
+                  className={`sakuga-btn inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-semibold whitespace-nowrap lg:px-3 xl:px-3.5 2xl:text-[13px] ${
                     isActive
-                      ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-sm hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]'
+                      ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-[3px_3px_0_0_#C7D2FE] hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]'
                       : 'border-transparent text-[#656058] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
                   }`}
                 >
@@ -185,7 +185,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Overall Mastery Badge (Dopamine Emerald) + Info Popover */}
             <div ref={ruleInfoContainerRef} className="relative flex items-center gap-1">
               <div
-                className="inline-flex items-center gap-1 rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-1 text-[11px] font-semibold text-[#047857] tabular-nums whitespace-nowrap dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] sm:gap-1.5 sm:px-3 sm:text-xs"
+                className="inline-flex items-center gap-1 rounded-full border-2 border-[#059669] bg-[#D1FAE5] px-2.5 py-1 text-[11px] font-semibold text-[#047857] shadow-[3px_3px_0_0_#6EE7B7] tabular-nums whitespace-nowrap dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] dark:shadow-[3px_3px_0_0_#065F46] sm:gap-1.5 sm:px-3 sm:text-xs"
                 title={`Đã thuộc ${masteredCount} trên ${activeQuestions.length} câu môn ${activeSubjectMeta.code}`}
               >
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#059669] dark:text-[#34D399]" />
@@ -370,7 +370,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenSyncModal}
               aria-label="Đồng bộ tiến độ"
               title="Đồng bộ tiến độ"
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] p-1.5 text-xs font-semibold text-[#3730A3] whitespace-nowrap transition hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50 sm:px-2.5 sm:py-1.5 lg:p-1.5 2xl:px-3 2xl:py-1.5"
+              className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] p-1.5 text-xs font-semibold text-[#3730A3] whitespace-nowrap hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50 sm:px-2.5 sm:py-1.5 lg:p-1.5 2xl:px-3 2xl:py-1.5"
             >
               <Cloud className="h-4 w-4 shrink-0 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 2xl:h-3.5 2xl:w-3.5" />
               <span className="hidden sm:inline lg:hidden 2xl:inline">Đồng bộ tiến độ</span>
@@ -383,7 +383,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-pressed={theme === 'dark'}
               aria-label={theme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
               title={theme === 'dark' ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối'}
-              className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1.5 text-xs font-medium text-[#292524] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
+              className="sakuga-btn inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1.5 text-xs font-medium text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
             >
               {theme === 'dark' ? (
                 <Sun className="h-4 w-4 text-[#FCD34D]" />
@@ -407,9 +407,9 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={() => onSelectMode(id)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-1.5 py-1.5 text-xs font-semibold whitespace-nowrap transition sm:px-2.5 sm:text-[13px] ${
+                className={`sakuga-btn inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-1.5 py-1.5 text-xs font-semibold whitespace-nowrap sm:px-2.5 sm:text-[13px] ${
                   isActive
-                    ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-sm hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]'
+                    ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-[2px_2px_0_0_#C7D2FE] hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]'
                     : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/50 dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
                 }`}
               >

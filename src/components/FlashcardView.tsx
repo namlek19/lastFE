@@ -20,6 +20,7 @@ import { getChaptersBySubject, getQuestionsBySubject, SUBJECTS } from '../data';
 import { QuestionItem, SubjectId, UserProgressStore } from '../types/quiz';
 import { getDetailedMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
+import { SakugaBurst, SakugaEvent, SakugaMangaTag } from './SakugaVfx';
 
 export interface FlashcardViewProps {
   subject: SubjectId;
@@ -64,6 +65,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const [showExplanation, setShowExplanation] = useState<boolean>(false);
   const [sidebarTab, setSidebarTab] = useState<'chapters' | 'grid'>('chapters');
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState<boolean>(false);
+  const [sakugaEvent, setSakugaEvent] = useState<SakugaEvent | null>(null);
 
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const didSwipeRef = useRef<boolean>(false);
@@ -81,6 +83,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     setShowExplanation(false);
     setSidebarTab('chapters');
     setIsMobileSheetOpen(false);
+    setSakugaEvent(null);
   }, [subject, chapters]);
 
   const chapterQuestions = useMemo(
@@ -175,6 +178,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     setCurrentIndex(0);
     setIsFlipped(false);
     setShowExplanation(false);
+    setSakugaEvent(null);
   };
 
   const handleApplyFilter = (nextFilter: FlashcardFilter) => {
@@ -235,7 +239,27 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
       }
       return next;
     });
+    setSakugaEvent({ id: Date.now(), variant: 'ok', label: 'FLIP!' });
   }, [currentQuestion, onMarkStudied]);
+
+  const handleToggleMastered = useCallback(
+    (qId: string) => {
+      const wasMastered = isMastered(progress.questions[qId]);
+      onToggleMastered(qId);
+      if (!wasMastered) {
+        setSakugaEvent({ id: Date.now(), variant: 'clear', label: 'CLEAR! ✓' });
+      }
+    },
+    [onToggleMastered, progress.questions]
+  );
+
+  const handleToggleFlag = useCallback(
+    (qId: string) => {
+      onToggleFlag(qId);
+      setSakugaEvent({ id: Date.now(), variant: 'ok', label: 'OK!' });
+    },
+    [onToggleFlag]
+  );
 
   const goToPrev = useCallback(() => {
     if (safeIndex <= 0) return;
@@ -296,19 +320,19 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
       const lower = e.key.toLowerCase();
       if (lower === 'g') {
         e.preventDefault();
-        onToggleMastered(currentQuestion.id);
+        handleToggleMastered(currentQuestion.id);
         return;
       }
 
       if (lower === 'f') {
         e.preventDefault();
-        onToggleFlag(currentQuestion.id);
+        handleToggleFlag(currentQuestion.id);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentQuestion, goToPrev, goToNext, handleFlipCard, onToggleMastered, onToggleFlag]);
+  }, [currentQuestion, goToPrev, goToNext, handleFlipCard, handleToggleMastered, handleToggleFlag]);
 
   // Mobile Touch Swipe handlers
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -384,13 +408,13 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         data-no-keyflip="true"
         onClick={(e) => {
           e.stopPropagation();
-          onToggleMastered(q.id);
+          handleToggleMastered(q.id);
         }}
         aria-pressed={isCurrentMastered}
         title="Đánh dấu Đã thuộc (Phím G)"
-        className={`inline-flex cursor-pointer items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition sm:px-3 ${
+        className={`sakuga-btn inline-flex cursor-pointer items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap shadow-[2px_2px_0_0_#6EE7B7] dark:shadow-[2px_2px_0_0_#065F46] sm:px-3 ${
           isCurrentMastered
-            ? 'border-[#059669] bg-[#059669] text-white shadow-sm hover:bg-[#047857] dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16] dark:hover:bg-[#34D399]'
+            ? 'border-[#059669] bg-[#059669] text-white hover:bg-[#047857] dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16] dark:hover:bg-[#34D399]'
             : 'border-[#10B981] bg-[#D1FAE5] text-[#047857] hover:bg-[#A7F3D0] dark:border-[#10B981]/60 dark:bg-[#059669]/25 dark:text-[#34D399] dark:hover:bg-[#059669]/35'
         }`}
       >
@@ -413,14 +437,14 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         data-no-keyflip="true"
         onClick={(e) => {
           e.stopPropagation();
-          onToggleFlag(q.id);
+          handleToggleFlag(q.id);
         }}
         aria-pressed={isCurrentFlagged}
         title="Đánh dấu Phân vân (Phím F)"
-        className={`inline-flex cursor-pointer items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition sm:px-3 ${
+        className={`sakuga-btn inline-flex cursor-pointer items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap sm:px-3 ${
           isCurrentFlagged
-            ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-            : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#E879F9]/55 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
+            ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+            : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] hover:shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#2C302B] dark:hover:border-[#E879F9]/55 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE] dark:hover:shadow-[2px_2px_0_0_#701A75]'
         }`}
       >
         <Flag className={`h-3.5 w-3.5 shrink-0 ${isCurrentFlagged ? 'fill-current' : ''}`} />
@@ -543,9 +567,9 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                         </span>
                       </div>
 
-                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
+                      <div className="sakuga-progress-track mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
                         <div
-                          className="h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
+                          className="sakuga-progress-fill h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
                           style={{ width: `${stat.pct}%` }}
                         />
                       </div>
@@ -738,7 +762,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                   type="button"
                   data-no-keyflip="true"
                   onClick={() => handleApplyFilter('all')}
-                  className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                  className="sakuga-btn mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-4 py-2 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
                 >
                   <span>Xem tất cả thẻ</span>
                 </button>
@@ -746,156 +770,165 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
             </div>
           ) : (
             <>
-              {/* 3D Flip Card Container */}
-              <div
-                style={{ perspective: '1000px' }}
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
-                className="select-none"
-              >
+              {/* Non-rotated outer wrapper so SakugaBurst never mirrors during 3D Y-flip */}
+              <div className="relative">
+                <SakugaBurst
+                  event={sakugaEvent}
+                  className="pointer-events-none absolute -top-3 right-6 z-30 sm:right-10"
+                />
+
+                {/* 3D Flip Card Container */}
                 <div
-                  onClick={handleCardSurfaceClick}
-                  style={{
-                    transformStyle: 'preserve-3d',
-                    transition: 'transform 300ms cubic-bezier(0.22, 1, 0.36, 1)',
-                    transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                  }}
-                  className="grid cursor-pointer [grid-template-areas:'card']"
+                  style={{ perspective: '1000px' }}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  className="select-none"
                 >
-                  {/* ================= FRONT FACE (QUESTION) ================= */}
                   <div
+                    onClick={handleCardSurfaceClick}
                     style={{
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      transform: 'rotateY(0deg)',
+                      transformStyle: 'preserve-3d',
+                      transition: 'transform 300ms cubic-bezier(0.22, 1, 0.36, 1)',
+                      transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
                     }}
-                    className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[0_6px_0_0_#27272A,0_20px_40px_-12px_rgba(24,24,27,0.14)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#3F3F46,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:min-h-[390px] sm:p-6 md:p-8 ${
-                      isFlipped ? 'pointer-events-none' : ''
-                    }`}
+                    className="grid cursor-pointer [grid-template-areas:'card']"
                   >
-                    {/* Top Bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-2.5 dark:border-[#2C322D] dark:bg-[#141714]">
-                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                        <span className="tabular-nums rounded-lg bg-[#4338CA] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-white dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] sm:px-3 sm:py-1">
-                          Thẻ {safeIndex + 1} / {deck.length}
-                        </span>
-                        {renderStatusBadge()}
-                      </div>
-
-                      {renderCardActionButtons(currentQuestion)}
-                    </div>
-
-                    {/* Center Question Prompt */}
-                    <div className="mx-auto my-4 flex w-full max-w-2xl flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-[#D5CFC2] bg-[#FAF8F3] px-5 py-6 text-center dark:border-[#2F3630] dark:bg-[#161917] sm:px-8 sm:py-8">
-                      {currentQuestion.isMultiSelect && (
-                        <span className="mb-3 inline-flex items-center rounded-full border border-[#7DD3FC] bg-[#E0F2FE] px-3 py-0.5 text-xs font-semibold text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0C4A6E]/35 dark:text-[#7DD3FC]">
-                          Chọn nhiều đáp án ({currentQuestion.correctAnswers.length} ý đúng)
-                        </span>
-                      )}
-                      <h2 className="max-w-2xl text-[17px] font-semibold leading-[1.6] text-[#18181B] dark:text-[#F5F5F4] sm:text-[20px] md:text-[22px] md:leading-[1.6]">
-                        {currentQuestion.question}
-                      </h2>
-                    </div>
-
-                    {/* Bottom Flip Hint */}
-                    <div className="flex items-center justify-between gap-2 border-t border-[#D5CFC2]/80 pt-3 text-xs font-medium text-[#656058] dark:border-[#262925] dark:text-[#9CA39B]">
-                      <span className="text-[11px] font-medium">Mặt trước</span>
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-1 text-xs font-semibold text-[#3730A3] dark:border-[#2C322D] dark:bg-[#141714] dark:text-[#A5B4FC]">
-                        <RotateCw className="h-3.5 w-3.5 text-[#4338CA] dark:text-[#818CF8]" />
-                        <span>Chạm thẻ để lật</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* ================= BACK FACE (ANSWER) ================= */}
-                  <div
-                    style={{
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      transform: 'rotateY(180deg)',
-                    }}
-                    className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#059669] bg-white p-4 shadow-[0_6px_0_0_#059669,0_20px_40px_-12px_rgba(5,150,105,0.2)] dark:border-2 dark:border-[#10B981] dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#10B981,0_22px_44px_-12px_rgba(0,0,0,0.85)] sm:min-h-[390px] sm:p-6 md:p-8 ${
-                      !isFlipped ? 'pointer-events-none' : ''
-                    }`}
-                  >
-                    {/* Top Bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#A7F3D0] bg-[#ECFDF5] px-3.5 py-2.5 dark:border-[#059669]/50 dark:bg-[#064E3B]/35">
-                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                        <span className="tabular-nums rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] sm:px-3 sm:py-1">
-                          Đáp án • Thẻ {safeIndex + 1}/{deck.length}
-                        </span>
-                        {renderStatusBadge()}
-                      </div>
-
-                      {renderCardActionButtons(currentQuestion)}
-                    </div>
-
-                    {/* Center Answer Box (Minimal & High-Impact Dopamine Emerald) */}
-                    <div className="my-auto flex flex-col justify-center py-5 sm:py-8">
-                      <p className="mb-3 line-clamp-2 text-center text-xs font-medium text-[#656058] dark:text-[#9CA39B] sm:text-sm">
-                        {currentQuestion.question}
-                      </p>
-
-                      <div className="mx-auto w-full max-w-2xl space-y-2.5 rounded-2xl border-2 border-[#059669] bg-[#D1FAE5] p-4 text-[#064E3B] ring-2 ring-[#10B981]/20 dark:border-2 dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#ECFDF5] dark:ring-2 dark:ring-[#10B981]/25 sm:p-6">
-                        {correctOptionItems.map((opt) => (
-                          <div key={opt.key} className="flex items-start gap-3">
-                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[#059669] bg-[#059669] text-xs font-bold text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]">
-                              {opt.key}
-                            </span>
-                            <span className="flex-1 text-[16px] font-bold leading-relaxed sm:text-[18px] md:text-[20px]">
-                              {opt.text}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Bottom Toggle Explanation */}
+                    {/* ================= FRONT FACE (QUESTION) ================= */}
                     <div
-                      className="border-t border-[#D5CFC2]/80 pt-3 dark:border-[#262925]"
-                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        transform: 'rotateY(0deg)',
+                      }}
+                      className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] sm:min-h-[390px] sm:p-6 md:p-8 ${
+                        isFlipped ? 'pointer-events-none' : ''
+                      }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          data-no-keyflip="true"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowExplanation((prev) => !prev);
-                          }}
-                          className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] px-3 py-1.5 text-xs font-semibold text-[#3730A3] transition hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50"
-                        >
-                          <BookOpen className="h-3.5 w-3.5" />
-                          <span>{showExplanation ? 'Ẩn giải thích' : 'Xem giải thích'}</span>
-                          {showExplanation ? (
-                            <ChevronUp className="h-3.5 w-3.5" />
-                          ) : (
-                            <ChevronDown className="h-3.5 w-3.5" />
-                          )}
-                        </button>
+                      {/* Top Bar */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-2.5 dark:border-[#2C322D] dark:bg-[#141714]">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                          <span className="tabular-nums rounded-lg bg-[#4338CA] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-white dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] sm:px-3 sm:py-1">
+                            Thẻ {safeIndex + 1} / {deck.length}
+                          </span>
+                          {renderStatusBadge()}
+                        </div>
 
-                        <span
-                          onClick={handleFlipCard}
-                          className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-[#656058] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:text-[#A5B4FC]"
-                        >
+                        {renderCardActionButtons(currentQuestion)}
+                      </div>
+
+                      {/* Center Question Prompt */}
+                      <div className="mx-auto my-4 flex w-full max-w-2xl flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-[#D5CFC2] bg-[#FAF8F3] px-5 py-6 text-center dark:border-[#2F3630] dark:bg-[#161917] sm:px-8 sm:py-8">
+                        {currentQuestion.isMultiSelect && (
+                          <span className="mb-3 inline-flex items-center rounded-full border border-[#7DD3FC] bg-[#E0F2FE] px-3 py-0.5 text-xs font-semibold text-[#0369A1] dark:border-[#38BDF8]/50 dark:bg-[#0C4A6E]/35 dark:text-[#7DD3FC]">
+                            Chọn nhiều đáp án ({currentQuestion.correctAnswers.length} ý đúng)
+                          </span>
+                        )}
+                        <h2 className="max-w-2xl text-[17px] font-semibold leading-[1.6] text-[#18181B] dark:text-[#F5F5F4] sm:text-[20px] md:text-[22px] md:leading-[1.6]">
+                          {currentQuestion.question}
+                        </h2>
+                      </div>
+
+                      {/* Bottom Flip Hint */}
+                      <div className="flex items-center justify-between gap-2 border-t border-[#D5CFC2]/80 pt-3 text-xs font-medium text-[#656058] dark:border-[#262925] dark:text-[#9CA39B]">
+                        <span className="text-[11px] font-medium">Mặt trước</span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-1 text-xs font-semibold text-[#3730A3] dark:border-[#2C322D] dark:bg-[#141714] dark:text-[#A5B4FC]">
                           <RotateCw className="h-3.5 w-3.5 text-[#4338CA] dark:text-[#818CF8]" />
                           <span>Chạm thẻ để lật</span>
                         </span>
                       </div>
+                    </div>
 
-                      <AnimatePresence initial={false}>
-                        {showExplanation && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.18 }}
-                            className="overflow-hidden"
+                    {/* ================= BACK FACE (ANSWER) ================= */}
+                    <div
+                      style={{
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        transform: 'rotateY(180deg)',
+                      }}
+                      className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#059669] bg-white p-4 shadow-[6px_6px_0_0_#6EE7B7,0_16px_32px_-12px_rgba(5,150,105,0.14)] dark:border-2 dark:border-[#10B981] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#065F46,0_20px_40px_-12px_rgba(0,0,0,0.8)] sm:min-h-[390px] sm:p-6 md:p-8 ${
+                        !isFlipped ? 'pointer-events-none' : ''
+                      }`}
+                    >
+                      {/* Top Bar */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#A7F3D0] bg-[#ECFDF5] px-3.5 py-2.5 dark:border-[#059669]/50 dark:bg-[#064E3B]/35">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                          <span className="tabular-nums rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] sm:px-3 sm:py-1">
+                            Đáp án • Thẻ {safeIndex + 1}/{deck.length}
+                          </span>
+                          <SakugaMangaTag label="ANSWER ✓" tone="emerald" />
+                          {renderStatusBadge()}
+                        </div>
+
+                        {renderCardActionButtons(currentQuestion)}
+                      </div>
+
+                      {/* Center Answer Box (Minimal & High-Impact Dopamine Emerald) */}
+                      <div className="my-auto flex flex-col justify-center py-5 sm:py-8">
+                        <p className="mb-3 line-clamp-2 text-center text-xs font-medium text-[#656058] dark:text-[#9CA39B] sm:text-sm">
+                          {currentQuestion.question}
+                        </p>
+
+                        <div className="mx-auto w-full max-w-2xl space-y-2.5 rounded-2xl border-2 border-[#059669] bg-[#D1FAE5] p-4 text-[#064E3B] ring-2 ring-[#10B981]/20 dark:border-2 dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#ECFDF5] dark:ring-2 dark:ring-[#10B981]/25 sm:p-6">
+                          {correctOptionItems.map((opt) => (
+                            <div key={opt.key} className="flex items-start gap-3">
+                              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[#059669] bg-[#059669] text-xs font-bold text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]">
+                                {opt.key}
+                              </span>
+                              <span className="flex-1 text-[16px] font-bold leading-relaxed sm:text-[18px] md:text-[20px]">
+                                {opt.text}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Bottom Toggle Explanation */}
+                      <div
+                        className="border-t border-[#D5CFC2]/80 pt-3 dark:border-[#262925]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            data-no-keyflip="true"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowExplanation((prev) => !prev);
+                            }}
+                            className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] px-3 py-1.5 text-xs font-semibold text-[#3730A3] shadow-[2px_2px_0_0_#C7D2FE] hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50"
                           >
-                            <RichExplanation question={currentQuestion} className="mt-3" />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                            <BookOpen className="h-3.5 w-3.5" />
+                            <span>{showExplanation ? 'Ẩn giải thích' : 'Xem giải thích'}</span>
+                            {showExplanation ? (
+                              <ChevronUp className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+
+                          <span
+                            onClick={handleFlipCard}
+                            className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-[#656058] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:text-[#A5B4FC]"
+                          >
+                            <RotateCw className="h-3.5 w-3.5 text-[#4338CA] dark:text-[#818CF8]" />
+                            <span>Chạm thẻ để lật</span>
+                          </span>
+                        </div>
+
+                        <AnimatePresence initial={false}>
+                          {showExplanation && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.18 }}
+                              className="overflow-hidden"
+                            >
+                              <RichExplanation question={currentQuestion} className="mt-3" />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -909,7 +942,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                     data-no-keyflip="true"
                     disabled={safeIndex === 0}
                     onClick={goToPrev}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-semibold text-[#292524] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
+                    className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-semibold text-[#292524] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:shadow-[2px_2px_0_0_#2C302B] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     <span>Thẻ trước</span>
@@ -919,7 +952,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                     type="button"
                     data-no-keyflip="true"
                     onClick={handleFlipCard}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] px-6 py-2.5 text-sm font-semibold text-[#3730A3] transition hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50"
+                    className="sakuga-btn inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] px-6 py-2.5 text-sm font-semibold text-[#3730A3] shadow-[3px_3px_0_0_#C7D2FE] hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50"
                   >
                     <RotateCw className="h-4 w-4" />
                     <span>Lật thẻ</span>
@@ -930,7 +963,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                     data-no-keyflip="true"
                     disabled={safeIndex >= deck.length - 1}
                     onClick={goToNext}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                    className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[2px_2px_0_0_#C7D2FE] hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]"
                   >
                     <span>Thẻ tiếp</span>
                     <ChevronRight className="h-4 w-4" />
@@ -985,7 +1018,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               type="button"
               disabled={safeIndex === 0}
               onClick={goToPrev}
-              className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3.5 py-2.5 text-xs font-semibold text-[#292524] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
+              className="sakuga-btn inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3.5 py-2.5 text-xs font-semibold text-[#292524] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:shadow-[2px_2px_0_0_#2C302B] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Trước</span>
@@ -994,7 +1027,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
             <button
               type="button"
               onClick={handleFlipCard}
-              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] px-3 py-2.5 text-xs font-semibold text-[#3730A3] transition hover:border-[#4338CA] hover:bg-[#E0E7FF] active:scale-[0.99] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50"
+              className="sakuga-btn inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] px-3 py-2.5 text-xs font-semibold text-[#3730A3] shadow-[3px_3px_0_0_#C7D2FE] hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/50"
             >
               <RotateCw className="h-3.5 w-3.5" />
               <span>Lật thẻ</span>
@@ -1004,7 +1037,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               type="button"
               disabled={safeIndex >= deck.length - 1}
               onClick={goToNext}
-              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+              className="sakuga-btn inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-[2px_2px_0_0_#C7D2FE] hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]"
             >
               <span>Tiếp</span>
               <ChevronRight className="h-4 w-4" />

@@ -23,6 +23,7 @@ import {
 import { QuestionItem, QuestionProgress, SubjectId, UserProgressStore } from '../types/quiz';
 import { getDetailedMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
+import { SakugaBurst, SakugaEvent, SakugaMangaTag } from './SakugaVfx';
 
 interface ChapterStudyViewProps {
   subject: SubjectId;
@@ -36,6 +37,8 @@ type QuestionFilter = 'all' | 'wrong' | 'flagged';
 interface SessionAttempt {
   selectedKeys: string[];
   graded: boolean;
+  isCorrect?: boolean;
+  effectiveStreak?: number;
 }
 
 function getQuestionCellClass(qp: QuestionProgress | undefined, hoverable = false): string {
@@ -78,8 +81,29 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
   const [sessionAttempts, setSessionAttempts] = useState<Record<string, SessionAttempt>>({});
   const [sidebarTab, setSidebarTab] = useState<'chapters' | 'grid'>('chapters');
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState<boolean>(false);
+  const [sakugaEvent, setSakugaEvent] = useState<SakugaEvent | null>(null);
+  const [isShaking, setIsShaking] = useState<boolean>(false);
 
   const explanationRef = useRef<HTMLDivElement>(null);
+  const shakeTimerRef = useRef<number | null>(null);
+  const sakugaIdRef = useRef<number>(0);
+
+  const nextSakugaId = () => {
+    const now = Date.now();
+    sakugaIdRef.current = now > sakugaIdRef.current ? now : sakugaIdRef.current + 1;
+    return sakugaIdRef.current;
+  };
+
+  const triggerWrongShake = () => {
+    if (shakeTimerRef.current !== null) {
+      window.clearTimeout(shakeTimerRef.current);
+    }
+    setIsShaking(true);
+    shakeTimerRef.current = window.setTimeout(() => {
+      setIsShaking(false);
+      shakeTimerRef.current = null;
+    }, 240);
+  };
 
   const scrollToExplanationOnMobile = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -99,6 +123,8 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
     setSessionAttempts({});
     setSidebarTab('chapters');
     setIsMobileSheetOpen(false);
+    setSakugaEvent(null);
+    setIsShaking(false);
   }, [subject, chapters]);
 
   const chapterQuestions = useMemo(
@@ -141,6 +167,17 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
   const currentProgress = currentQuestion ? progress.questions[currentQuestion.id] : undefined;
   const isFlagged = Boolean(currentProgress?.flagged);
   const currentDetailedState = getDetailedMasteryState(currentProgress);
+
+  useEffect(() => {
+    setSakugaEvent(null);
+    setIsShaking(false);
+    return () => {
+      if (shakeTimerRef.current !== null) {
+        window.clearTimeout(shakeTimerRef.current);
+        shakeTimerRef.current = null;
+      }
+    };
+  }, [currentQuestion?.id]);
 
   // Compute per-chapter stats ("Đã thuộc" %)
   const chapterStats = useMemo(() => {
@@ -195,19 +232,43 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
     setCurrentIndex(0);
   };
 
+  const commitGradedAttempt = (question: QuestionItem, selectedKeys: string[]) => {
+    const correct = isAnswerCorrect(selectedKeys, question.correctAnswers);
+    const prevProg = progress.questions[question.id];
+    const prevStreak = prevProg?.streak ?? 0;
+    const flagged = Boolean(prevProg?.flagged);
+    const nextStreak = correct && !flagged ? prevStreak + 1 : 0;
+
+    setSessionAttempts((prev) => ({
+      ...prev,
+      [question.id]: {
+        selectedKeys,
+        graded: true,
+        isCorrect: correct,
+        effectiveStreak: nextStreak,
+      },
+    }));
+    onRecordAttempt(question.id, correct);
+    scrollToExplanationOnMobile();
+
+    if (correct) {
+      setSakugaEvent(
+        !flagged && prevStreak + 1 >= 2
+          ? { id: nextSakugaId(), variant: 'clear', label: 'CLEAR! ✓' }
+          : { id: nextSakugaId(), variant: 'nice', label: 'NICE!' }
+      );
+    } else {
+      setSakugaEvent({ id: nextSakugaId(), variant: 'miss', label: 'MISS!' });
+      triggerWrongShake();
+    }
+  };
+
   const handleSelectOption = (question: QuestionItem, optionKey: string) => {
     const existing = sessionAttempts[question.id];
     if (existing?.graded) return;
 
     if (!question.isMultiSelect) {
-      const selectedKeys = [optionKey];
-      const correct = isAnswerCorrect(selectedKeys, question.correctAnswers);
-      setSessionAttempts((prev) => ({
-        ...prev,
-        [question.id]: { selectedKeys, graded: true },
-      }));
-      onRecordAttempt(question.id, correct);
-      scrollToExplanationOnMobile();
+      commitGradedAttempt(question, [optionKey]);
       return;
     }
 
@@ -228,13 +289,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
     const existing = sessionAttempts[question.id];
     if (!existing || existing.graded || existing.selectedKeys.length === 0) return;
 
-    const correct = isAnswerCorrect(existing.selectedKeys, question.correctAnswers);
-    setSessionAttempts((prev) => ({
-      ...prev,
-      [question.id]: { selectedKeys: existing.selectedKeys, graded: true },
-    }));
-    onRecordAttempt(question.id, correct);
-    scrollToExplanationOnMobile();
+    commitGradedAttempt(question, existing.selectedKeys);
   };
 
   const handleRetryQuestion = (questionId: string) => {
@@ -243,6 +298,28 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
       delete next[questionId];
       return next;
     });
+    if (shakeTimerRef.current !== null) {
+      window.clearTimeout(shakeTimerRef.current);
+      shakeTimerRef.current = null;
+    }
+    setIsShaking(false);
+    setSakugaEvent(null);
+  };
+
+  const handleToggleFlag = (questionId: string) => {
+    const willBeFlagged = !progress.questions[questionId]?.flagged;
+    if (willBeFlagged) {
+      setSessionAttempts((prev) => {
+        const existing = prev[questionId];
+        if (!existing?.graded) return prev;
+        return {
+          ...prev,
+          [questionId]: { ...existing, effectiveStreak: 0 },
+        };
+      });
+    }
+    onToggleFlag(questionId);
+    setSakugaEvent({ id: nextSakugaId(), variant: 'ok', label: 'OK!' });
   };
 
   const goToPrev = () => {
@@ -291,7 +368,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
       // f / F: toggle flag
       if (keyLower === 'f') {
         e.preventDefault();
-        onToggleFlag(currentQuestion.id);
+        handleToggleFlag(currentQuestion.id);
         return;
       }
 
@@ -330,8 +407,12 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
   const subjectMeta = SUBJECTS[subject];
 
   const isCurrentCorrect = currentQuestion && currentAttempt.graded
-    ? isAnswerCorrect(currentAttempt.selectedKeys, currentQuestion.correctAnswers)
+    ? currentAttempt.isCorrect ??
+      isAnswerCorrect(currentAttempt.selectedKeys, currentQuestion.correctAnswers)
     : false;
+  const effectiveStreak = isFlagged
+    ? 0
+    : currentAttempt.effectiveStreak ?? currentProgress?.streak ?? 0;
 
   return (
     <>
@@ -448,9 +529,9 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                           </span>
                         </div>
 
-                        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
+                        <div className="sakuga-progress-track mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
                           <div
-                            className="h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
+                            className="sakuga-progress-fill h-full rounded-full bg-[#059669] transition-all duration-300 dark:bg-[#10B981]"
                             style={{ width: `${stat.pct}%` }}
                           />
                         </div>
@@ -668,7 +749,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
 
           {/* Empty Filtered State vs Question Card */}
           {!currentQuestion ? (
-            <div className="rounded-3xl border-2 border-[#27272A] bg-white px-5 py-10 text-center shadow-[0_6px_0_0_#27272A,0_20px_40px_-12px_rgba(24,24,27,0.14)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#3F3F46,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:px-6 sm:py-12">
+            <div className="rounded-3xl border-2 border-[#27272A] bg-white px-5 py-10 text-center shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] sm:px-6 sm:py-12">
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
@@ -684,14 +765,22 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   type="button"
                   data-native-enter="true"
                   onClick={() => handleApplyFilter('all')}
-                  className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                  className="sakuga-btn mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-4 py-2 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] transition-colors hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
                 >
                   <span>Xem tất cả câu</span>
                 </button>
               )}
             </div>
           ) : (
-            <div className="rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[0_6px_0_0_#27272A,0_20px_40px_-12px_rgba(24,24,27,0.14)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#3F3F46,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:p-6 md:p-8">
+            <div
+              className={`relative rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] sm:p-6 md:p-8 ${
+                isShaking ? 'sakuga-shake' : ''
+              }`}
+            >
+              <SakugaBurst
+                event={sakugaEvent}
+                className="pointer-events-none absolute -top-3 right-6 z-20 sm:right-10"
+              />
               {/* Top Metadata Bar */}
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-2.5 dark:border-[#2C322D] dark:bg-[#141714]">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -746,11 +835,11 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                 <button
                   type="button"
                   data-native-enter="true"
-                  onClick={() => onToggleFlag(currentQuestion.id)}
-                  className={`hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors md:inline-flex ${
+                  onClick={() => handleToggleFlag(currentQuestion.id)}
+                  className={`sakuga-btn hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors md:inline-flex ${
                     isFlagged
-                      ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-                      : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#E879F9]/55 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
+                      ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+                      : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#2C302B] dark:hover:border-[#E879F9]/55 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
                   }`}
                 >
                   <Flag
@@ -823,7 +912,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                       }`}
                     >
                       <span
-                        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition-colors sm:h-7 sm:w-7 ${keyBadgeClasses}`}
+                        className={`sakuga-option-badge mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition-colors sm:h-7 sm:w-7 ${keyBadgeClasses}`}
                       >
                         {opt.key}
                       </span>
@@ -853,7 +942,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                     type="button"
                     disabled={currentAttempt.selectedKeys.length === 0}
                     onClick={() => handleGradeMultiSelect(currentQuestion)}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                    className="sakuga-btn inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] transition-colors hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
                   >
                     <Check className="h-4 w-4" />
                     <span>Kiểm tra đáp án</span>
@@ -896,13 +985,29 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                         </span>
                       </>
                     )}
+                    <SakugaMangaTag
+                      label={
+                        isCurrentCorrect
+                          ? effectiveStreak >= 2
+                            ? 'CLEAR! ✓'
+                            : 'NICE!'
+                          : 'MISS!'
+                      }
+                      tone={
+                        isCurrentCorrect
+                          ? effectiveStreak >= 2
+                            ? 'emerald'
+                            : 'amber'
+                          : 'rose'
+                      }
+                    />
                   </div>
 
                   <button
                     type="button"
                     data-native-enter="true"
                     onClick={() => handleRetryQuestion(currentQuestion.id)}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#D5CFC2] bg-white px-2.5 py-1 text-xs font-semibold text-[#656058] transition-colors hover:border-[#4338CA] hover:text-[#4338CA] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8] dark:hover:text-[#A5B4FC] sm:px-3"
+                    className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#D5CFC2] bg-white px-2.5 py-1 text-xs font-semibold text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] transition-colors hover:border-[#4338CA] hover:text-[#4338CA] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#2C302B] dark:hover:border-[#818CF8] dark:hover:text-[#A5B4FC] sm:px-3"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                     <span>Làm lại</span>
@@ -934,7 +1039,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   data-native-enter="true"
                   disabled={safeIndex === 0}
                   onClick={goToPrev}
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-semibold text-[#292524] transition-colors hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#18181B] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#F5F5F4]"
+                  className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-sm font-semibold text-[#292524] transition-colors hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#18181B] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#F5F5F4]"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   <span>Câu trước</span>
@@ -976,7 +1081,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   data-native-enter="true"
                   disabled={safeIndex >= filteredQuestions.length - 1}
                   onClick={goToNext}
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                  className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] transition-colors hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
                 >
                   <span>Câu tiếp</span>
                   <ChevronRight className="h-4 w-4" />
@@ -995,7 +1100,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
               type="button"
               disabled={safeIndex === 0}
               onClick={goToPrev}
-              className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2.5 text-xs font-semibold text-[#292524] transition disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]"
+              className="sakuga-btn inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2.5 text-xs font-semibold text-[#292524] transition disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Trước</span>
@@ -1003,12 +1108,12 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
 
             <button
               type="button"
-              onClick={() => onToggleFlag(currentQuestion.id)}
+              onClick={() => handleToggleFlag(currentQuestion.id)}
               aria-pressed={isFlagged}
-              className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
+              className={`sakuga-btn inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
                 isFlagged
-                  ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-                  : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
+                  ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+                  : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#2C302B]'
               }`}
             >
               <Flag className={`h-3.5 w-3.5 ${isFlagged ? 'fill-current' : ''}`} />
@@ -1020,7 +1125,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                 type="button"
                 disabled={currentAttempt.selectedKeys.length === 0}
                 onClick={() => handleGradeMultiSelect(currentQuestion)}
-                className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                className="sakuga-btn inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
               >
                 <Check className="h-4 w-4" />
                 <span>Kiểm tra ({currentAttempt.selectedKeys.length})</span>
@@ -1030,7 +1135,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                 type="button"
                 disabled={safeIndex >= filteredQuestions.length - 1}
                 onClick={goToNext}
-                className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                className="sakuga-btn inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
               >
                 <span>Câu tiếp</span>
                 <ChevronRight className="h-4 w-4" />

@@ -26,6 +26,7 @@ import { getQuestionsBySubject, isAnswerCorrect, SUBJECTS } from '../data';
 import { ExamHistoryItem, ExamType, QuestionItem, SubjectId, UserProgressStore } from '../types/quiz';
 import { isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
+import { SakugaBurst, SakugaEvent, SakugaMangaTag } from './SakugaVfx';
 
 interface MockExamViewProps {
   subject: SubjectId;
@@ -133,6 +134,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState<boolean>(false);
   const [isMobileResultsSheetOpen, setIsMobileResultsSheetOpen] = useState<boolean>(false);
   const [bulkFlaggedConfirm, setBulkFlaggedConfirm] = useState<number | null>(null);
+  const [resultBurst, setResultBurst] = useState<SakugaEvent | null>(null);
 
   const submittedRef = useRef<boolean>(false);
   const reviewSectionRef = useRef<HTMLElement | null>(null);
@@ -173,6 +175,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
     setIsMobileSheetOpen(false);
     setIsMobileResultsSheetOpen(false);
     setBulkFlaggedConfirm(null);
+    setResultBurst(null);
   }, [subject]);
 
   const subjectHistory = useMemo(
@@ -213,6 +216,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
     setIsMobileSheetOpen(false);
     setIsMobileResultsSheetOpen(false);
     setBulkFlaggedConfirm(null);
+    setResultBurst(null);
     setPhase('active');
   }, [allSubjectQuestions, examType, progress.questions, subject]);
 
@@ -279,6 +283,21 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
     subject,
     subjectMeta.examQuotas,
   ]);
+
+  // Trigger celebratory Sakuga burst once when entering Results view
+  useEffect(() => {
+    if (phase !== 'results' || !lastResult) {
+      setResultBurst(null);
+      return;
+    }
+
+    const passed = lastResult.scoreOn10 >= 5;
+    setResultBurst({
+      id: lastResult.timestamp,
+      variant: passed ? 'complete' : 'ok',
+      label: passed ? 'COMPLETE! ✓' : 'KEEP GOING!',
+    });
+  }, [phase, lastResult]);
 
   // Active exam 1-second tick for elapsed time and optional 60-minute countdown
   useEffect(() => {
@@ -737,7 +756,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 type="button"
                 disabled={isStartDisabled}
                 onClick={startNewExam}
-                className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#4338CA] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3730A3] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3] sm:w-auto sm:py-3"
+                className="sakuga-btn inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#4338CA] px-6 py-3.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3] sm:w-auto sm:py-3"
               >
                 <Play className="h-4 w-4 fill-current" />
                 Bắt đầu làm bài
@@ -960,7 +979,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               <button
                 type="button"
                 onClick={requestSubmit}
-                className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-xl bg-[#4338CA] px-3 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                className="sakuga-btn inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-xl bg-[#4338CA] px-3 py-2 text-xs font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
               >
                 <Send className="h-3.5 w-3.5" />
                 <span>Nộp</span>
@@ -1012,9 +1031,9 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   <span className="text-xs font-semibold text-[#292524] tabular-nums dark:text-[#E7E5E4]">
                     Đã làm: <span className="text-[#4338CA] dark:text-[#818CF8]">{answeredCount}</span>/{examQuestions.length} câu
                   </span>
-                  <div className="h-2 w-24 overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
+                  <div className="sakuga-progress-track h-2 w-24 overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
                     <div
-                      className="h-full rounded-full bg-[#4338CA] transition-all duration-200 dark:bg-[#6366F1]"
+                      className="sakuga-progress-fill h-full rounded-full bg-[#4338CA] transition-all duration-200 dark:bg-[#6366F1]"
                       style={{
                         width: `${Math.round((answeredCount / examQuestions.length) * 100)}%`,
                       }}
@@ -1026,7 +1045,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               <button
                 type="button"
                 onClick={requestSubmit}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                className="sakuga-btn inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#4338CA] px-4 py-2 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
               >
                 <Send className="h-4 w-4" />
                 Nộp bài
@@ -1034,7 +1053,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
             </div>
 
             {/* Question Card (Focal Point Elevation) */}
-            <div className="w-full rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[0_6px_0_0_#27272A,0_20px_40px_-12px_rgba(24,24,27,0.14)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#3F3F46,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:p-6 md:p-8">
+            <div className="w-full rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] sm:p-6 md:p-8">
               {/* Header Metadata */}
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-3.5 py-2.5 dark:border-[#2C322D] dark:bg-[#141714]">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -1061,10 +1080,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onToggleFlag(currentQuestion.id)}
-                  className={`hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition md:inline-flex ${
+                  className={`sakuga-btn hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold md:inline-flex ${
                     isFlagged
-                      ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-                      : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#656058] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#9CA39B] dark:hover:border-[#D946EF]/50 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
+                      ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+                      : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#353B36] dark:hover:border-[#D946EF]/50 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
                   }`}
                 >
                   <Flag
@@ -1104,7 +1123,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                       }`}
                     >
                       <span
-                        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition sm:h-7 sm:w-7 ${
+                        className={`sakuga-option-badge mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold sm:h-7 sm:w-7 ${
                           isSelected
                             ? 'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8] dark:bg-[#4338CA] dark:text-white'
                             : 'border-[#C6BEB0] bg-white text-[#4338CA] group-hover:border-[#4338CA] group-hover:bg-[#4338CA] group-hover:text-white dark:border-[#353B36] dark:bg-[#161816] dark:text-[#A5B4FC] dark:group-hover:border-[#818CF8] dark:group-hover:bg-[#4338CA] dark:group-hover:text-white'
@@ -1129,7 +1148,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   type="button"
                   disabled={currentIndex === 0}
                   onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#F8F6F0] px-4 py-2.5 text-sm font-medium text-[#292524] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]"
+                  className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#F8F6F0] px-4 py-2.5 text-sm font-medium text-[#292524] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#E7E5E4] dark:shadow-[2px_2px_0_0_#353B36] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Câu trước
@@ -1149,7 +1168,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     onClick={() =>
                       setCurrentIndex(prev => Math.min(examQuestions.length - 1, prev + 1))
                     }
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                    className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
                   >
                     Câu tiếp
                     <ChevronRight className="h-4 w-4" />
@@ -1158,7 +1177,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   <button
                     type="button"
                     onClick={requestSubmit}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                    className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
                   >
                     <Send className="h-4 w-4" />
                     Nộp bài ngay
@@ -1176,7 +1195,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               type="button"
               disabled={currentIndex === 0}
               onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
-              className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2.5 text-xs font-semibold text-[#292524] transition disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]"
+              className="sakuga-btn inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2.5 text-xs font-semibold text-[#292524] shadow-[2px_2px_0_0_#D5CFC2] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:shadow-[2px_2px_0_0_#353B36]"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Trước</span>
@@ -1186,10 +1205,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               type="button"
               onClick={() => onToggleFlag(currentQuestion.id)}
               aria-pressed={isFlagged}
-              className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
+              className={`sakuga-btn inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold ${
                 isFlagged
-                  ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-                  : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
+                  ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+                  : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#353B36]'
               }`}
             >
               <Flag className={`h-3.5 w-3.5 ${isFlagged ? 'fill-current' : ''}`} />
@@ -1202,7 +1221,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 onClick={() =>
                   setCurrentIndex(prev => Math.min(examQuestions.length - 1, prev + 1))
                 }
-                className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                className="sakuga-btn inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
               >
                 <span>Câu tiếp</span>
                 <ChevronRight className="h-4 w-4" />
@@ -1211,7 +1230,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               <button
                 type="button"
                 onClick={requestSubmit}
-                className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                className="sakuga-btn inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
               >
                 <Send className="h-4 w-4" />
                 <span>Nộp bài ngay</span>
@@ -1351,14 +1370,14 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setConfirmSubmitOpen(false)}
-                  className="cursor-pointer rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2 text-sm font-medium text-[#292524] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]"
+                  className="sakuga-btn cursor-pointer rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2 text-sm font-medium text-[#292524] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:shadow-[2px_2px_0_0_#353B36] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]"
                 >
                   Tiếp tục làm bài
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmitExam}
-                  className="cursor-pointer rounded-xl bg-[#4338CA] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3]"
+                  className="sakuga-btn cursor-pointer rounded-xl bg-[#4338CA] px-4 py-2 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
                 >
                   Xác nhận nộp bài
                 </button>
@@ -1387,7 +1406,11 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
     <>
       <div className="w-full space-y-6 lg:space-y-8">
         {/* Top Score Summary & Actions */}
-        <section className="rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-4 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-7 lg:p-8">
+        <section className="relative rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-4 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-7 lg:p-8">
+          <SakugaBurst
+            event={resultBurst}
+            className="pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2"
+          />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
             <div className="flex items-center gap-3.5 sm:gap-4">
               <div
@@ -1406,7 +1429,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               </div>
 
               <div>
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-[#A5B4FC] bg-[#EEF2FF] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
                     <Award className="h-3.5 w-3.5 text-[#4338CA] dark:text-[#A5B4FC]" />
                     Kết quả thi thử {subjectMeta.code}
@@ -1420,6 +1443,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   >
                     {isResultMasteredMode ? 'Ôn đã thuộc' : 'Đề đề cương'}
                   </span>
+                  <SakugaMangaTag
+                    label={scoreOn10 >= 5 ? 'COMPLETE! ✓' : 'KEEP GOING!'}
+                    tone={scoreOn10 >= 5 ? 'emerald' : 'amber'}
+                  />
                 </div>
                 <h2 className="mt-1.5 text-lg font-bold text-[#18181B] tabular-nums dark:text-[#F5F5F4] sm:text-xl">
                   Đúng {correctTotal}/{totalCount} câu (
@@ -1438,10 +1465,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   type="button"
                   disabled={bulkFlaggedConfirm !== null}
                   onClick={handleFlagWrongQuestions}
-                  className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold transition sm:w-auto sm:text-sm ${
+                  className={`sakuga-btn inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold sm:w-auto sm:text-sm ${
                     bulkFlaggedConfirm !== null
-                      ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-                      : 'border-[#A21CAF] bg-[#A21CAF] text-white shadow-xs hover:bg-[#86198F] dark:border-[#D946EF]/60 dark:bg-[#A21CAF] dark:hover:bg-[#86198F]'
+                      ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-none dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
+                      : 'border-[#A21CAF] bg-[#A21CAF] text-white shadow-[2px_2px_0_0_#F0ABFC] hover:bg-[#86198F] dark:border-[#D946EF]/60 dark:bg-[#A21CAF] dark:shadow-[2px_2px_0_0_#701A75] dark:hover:bg-[#86198F]'
                   }`}
                 >
                   <Flag className="h-4 w-4 shrink-0 fill-current" />
@@ -1456,7 +1483,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               <button
                 type="button"
                 onClick={handleScrollToReview}
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-xs font-medium text-[#292524] transition hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC] sm:w-auto sm:text-sm"
+                className="sakuga-btn inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-xs font-medium text-[#292524] shadow-[3px_3px_0_0_#C7D2FE] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC] sm:w-auto sm:text-sm"
               >
                 <Eye className="h-4 w-4 shrink-0" />
                 <span>Xem lại bài làm</span>
@@ -1465,7 +1492,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
               <button
                 type="button"
                 onClick={() => setPhase('lobby')}
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3] sm:w-auto sm:text-sm"
+                className="sakuga-btn inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#4338CA] px-5 py-2.5 text-xs font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] hover:bg-[#3730A3] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3] sm:w-auto sm:text-sm"
               >
                 <RotateCcw className="h-4 w-4 shrink-0" />
                 <span>Thi đề khác</span>
@@ -1525,9 +1552,9 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                           </td>
                           <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                             <div className="flex items-center gap-2">
-                              <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
+                              <div className="sakuga-progress-track h-2 flex-1 overflow-hidden rounded-full bg-[#D5CFC2] dark:bg-[#0F100E]">
                                 <div
-                                  className={`h-full rounded-full ${barColor}`}
+                                  className={`sakuga-progress-fill h-full rounded-full ${barColor}`}
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>
@@ -1642,7 +1669,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                     key={tab.id}
                     type="button"
                     onClick={() => setReviewFilter(tab.id)}
-                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                    className={`sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold ${
                       active
                         ? 'bg-[#4338CA] text-white shadow-xs hover:bg-[#3730A3] dark:bg-[#4338CA] dark:hover:bg-[#3730A3]'
                         : 'text-[#292524] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#E7E5E4] dark:hover:bg-[#312E81]/25 dark:hover:text-[#A5B4FC]'
@@ -1683,7 +1710,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                   <article
                     key={q.id}
                     id={`exam-review-q-${q.id}`}
-                    className={`scroll-mt-24 rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[0_6px_0_0_#27272A,0_20px_40px_-12px_rgba(24,24,27,0.14)] transition dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[0_6px_0_0_#3F3F46,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:p-6 md:p-8 ${
+                    className={`scroll-mt-24 rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] transition dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] sm:p-6 md:p-8 ${
                       isHighlighted ? 'ring-2 ring-[#4338CA]/40 dark:ring-[#818CF8]/40' : ''
                     }`}
                   >
@@ -1712,10 +1739,10 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                       <button
                         type="button"
                         onClick={() => onToggleFlag(q.id)}
-                        className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-semibold transition sm:px-3 ${
+                        className={`sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-semibold sm:px-3 ${
                           isFlagged
-                            ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]'
-                            : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#656058] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#9CA39B] dark:hover:border-[#D946EF]/50 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
+                            ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#D946EF]/50 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+                            : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#353B36] dark:hover:border-[#D946EF]/50 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
                         }`}
                       >
                         <Flag
@@ -1768,7 +1795,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
                           >
                             <div className="flex items-start gap-3">
                               <span
-                                className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold sm:h-7 sm:w-7 ${badgeStyle}`}
+                                className={`sakuga-option-badge mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold sm:h-7 sm:w-7 ${badgeStyle}`}
                               >
                                 {opt.key}
                               </span>
