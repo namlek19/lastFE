@@ -251,14 +251,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
     onRecordAttempt(question.id, correct);
     scrollToExplanationOnMobile();
 
-    if (correct) {
-      setSakugaEvent(
-        !flagged && prevStreak + 1 >= 2
-          ? { id: nextSakugaId(), variant: 'clear', label: 'CLEAR! ✓' }
-          : { id: nextSakugaId(), variant: 'nice', label: 'NICE!' }
-      );
-    } else {
-      setSakugaEvent({ id: nextSakugaId(), variant: 'miss', label: 'MISS!' });
+    if (!correct) {
       triggerWrongShake();
     }
   };
@@ -928,9 +921,6 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                       );
                   const showSuccessTag = isGraded && isCurrentCorrect && isCorrectOption;
                   const showMissTag = isGraded && !isCurrentCorrect && missTargetKeys.includes(opt.key);
-                  const isPrimaryBurstOpt = showSuccessTag
-                    ? opt.key === currentQuestion.correctAnswers[0]
-                    : showMissTag && opt.key === missTargetKeys[0];
 
                   return (
                     <button
@@ -938,17 +928,10 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                       type="button"
                       disabled={isGraded}
                       onClick={() => handleSelectOption(currentQuestion, opt.key)}
-                      className={`group relative flex w-full items-start gap-3 rounded-xl p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerClasses} ${
+                      className={`group flex w-full items-start gap-3 rounded-xl p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerClasses} ${
                         isGraded ? 'cursor-default' : 'cursor-pointer'
                       }`}
                     >
-                      {isPrimaryBurstOpt && (
-                        <SakugaBurst
-                          event={sakugaEvent && sakugaEvent.variant !== 'ok' ? sakugaEvent : null}
-                          className="pointer-events-none absolute -top-3 right-3 z-20 sm:right-5"
-                        />
-                      )}
-
                       <span
                         className={`sakuga-option-badge mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition-colors sm:h-7 sm:w-7 ${keyBadgeClasses}`}
                       >

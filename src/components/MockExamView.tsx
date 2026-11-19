@@ -26,7 +26,7 @@ import { getQuestionsBySubject, isAnswerCorrect, SUBJECTS } from '../data';
 import { ExamHistoryItem, ExamType, QuestionItem, SubjectId, UserProgressStore } from '../types/quiz';
 import { isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
-import { SakugaBurst, SakugaEvent, SakugaMangaTag } from './SakugaVfx';
+import { SakugaMangaTag } from './SakugaVfx';
 
 interface MockExamViewProps {
   subject: SubjectId;
@@ -134,7 +134,6 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState<boolean>(false);
   const [isMobileResultsSheetOpen, setIsMobileResultsSheetOpen] = useState<boolean>(false);
   const [bulkFlaggedConfirm, setBulkFlaggedConfirm] = useState<number | null>(null);
-  const [resultBurst, setResultBurst] = useState<SakugaEvent | null>(null);
 
   const submittedRef = useRef<boolean>(false);
   const reviewSectionRef = useRef<HTMLElement | null>(null);
@@ -175,7 +174,6 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
     setIsMobileSheetOpen(false);
     setIsMobileResultsSheetOpen(false);
     setBulkFlaggedConfirm(null);
-    setResultBurst(null);
   }, [subject]);
 
   const subjectHistory = useMemo(
@@ -216,7 +214,6 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
     setIsMobileSheetOpen(false);
     setIsMobileResultsSheetOpen(false);
     setBulkFlaggedConfirm(null);
-    setResultBurst(null);
     setPhase('active');
   }, [allSubjectQuestions, examType, progress.questions, subject]);
 
@@ -283,21 +280,6 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
     subject,
     subjectMeta.examQuotas,
   ]);
-
-  // Trigger celebratory Sakuga burst once when entering Results view
-  useEffect(() => {
-    if (phase !== 'results' || !lastResult) {
-      setResultBurst(null);
-      return;
-    }
-
-    const passed = lastResult.scoreOn10 >= 5;
-    setResultBurst({
-      id: lastResult.timestamp,
-      variant: passed ? 'complete' : 'ok',
-      label: passed ? 'COMPLETE! ✓' : 'KEEP GOING!',
-    });
-  }, [phase, lastResult]);
 
   // Active exam 1-second tick for elapsed time and optional 60-minute countdown
   useEffect(() => {
@@ -1406,11 +1388,7 @@ export const MockExamView: React.FC<MockExamViewProps> = ({
     <>
       <div className="w-full space-y-6 lg:space-y-8">
         {/* Top Score Summary & Actions */}
-        <section className="relative rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-4 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-7 lg:p-8">
-          <SakugaBurst
-            event={resultBurst}
-            className="pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2"
-          />
+        <section className="rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-4 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-7 lg:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
             <div className="flex items-center gap-3.5 sm:gap-4">
               <div

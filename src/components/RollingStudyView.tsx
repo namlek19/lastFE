@@ -129,7 +129,6 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
   const [isChapterSheetOpen, setIsChapterSheetOpen] = useState<boolean>(false);
   const [isStageSheetOpen, setIsStageSheetOpen] = useState<boolean>(false);
   const [sakugaEvent, setSakugaEvent] = useState<SakugaEvent | null>(null);
-  const [stageCompleteEvent, setStageCompleteEvent] = useState<SakugaEvent | null>(null);
   const [isShaking, setIsShaking] = useState<boolean>(false);
 
   const explanationRef = useRef<HTMLDivElement>(null);
@@ -179,7 +178,6 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
     setGradedState(null);
     setTurnFlagged(false);
     setSakugaEvent(null);
-    setStageCompleteEvent(null);
     clearShake();
     setIsChapterSheetOpen(false);
     setIsStageSheetOpen(false);
@@ -204,14 +202,6 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
   const activeStage = activeStageIndex !== null ? stages[activeStageIndex] ?? null : null;
   const currentQuestion = queue[0] ?? null;
-
-  useEffect(() => {
-    if (!currentQuestion && activeStage) {
-      setStageCompleteEvent({ id: Date.now(), variant: 'complete', label: 'COMPLETE! ✓' });
-    } else {
-      setStageCompleteEvent(null);
-    }
-  }, [activeStage, currentQuestion]);
 
   // Sync turnFlagged whenever the head of the queue or turnCounter changes
   useEffect(() => {
@@ -254,7 +244,6 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
     setGradedState(null);
     setTurnFlagged(false);
     setSakugaEvent(null);
-    setStageCompleteEvent(null);
     clearShake();
   }, [clearShake]);
 
@@ -283,12 +272,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
       const nextStreak = isCorrect && !currentFlagged ? prevStreak + 1 : 0;
 
       setGradedState({ isCorrect, nextStreak });
-      if (isCorrect && nextStreak >= 2) {
-        setSakugaEvent({ id: Date.now(), variant: 'clear', label: 'CLEAR! ✓' });
-      } else if (isCorrect) {
-        setSakugaEvent({ id: Date.now(), variant: 'nice', label: 'NICE!' });
-      } else {
-        setSakugaEvent({ id: Date.now(), variant: 'miss', label: 'MISS!' });
+      if (!isCorrect) {
         triggerShake();
       }
       onRecordAttempt(currentQuestion.id, isCorrect, currentFlagged);
@@ -575,10 +559,6 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
             {/* Stage Completion Card */}
             {!currentQuestion ? (
               <div className="relative rounded-3xl border-2 border-[#059669] bg-white p-6 text-center shadow-[4px_4px_0_0_#6EE7B7,0_14px_28px_-12px_rgba(5,150,105,0.14)] dark:border-2 dark:border-[#10B981] dark:bg-[#1E221F] dark:shadow-[4px_4px_0_0_#065F46,0_18px_36px_-12px_rgba(0,0,0,0.8)] sm:p-8 sm:shadow-[6px_6px_0_0_#6EE7B7,0_16px_32px_-12px_rgba(5,150,105,0.14)] dark:sm:shadow-[6px_6px_0_0_#065F46,0_20px_40px_-12px_rgba(0,0,0,0.8)]">
-                <SakugaBurst
-                  event={stageCompleteEvent}
-                  className="pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2"
-                />
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#10B981] bg-[#D1FAE5] text-[#059669] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] sm:h-16 sm:w-16">
                   <Trophy className="h-7 w-7 sm:h-8 sm:w-8" />
                 </div>
@@ -821,11 +801,6 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                       isGraded &&
                       !gradedState.isCorrect &&
                       missTargetKeys.some(k => k.toUpperCase() === opt.key.toUpperCase());
-                    const isPrimaryBurstOpt = showSuccessTag
-                      ? opt.key.toUpperCase() === upperCorrect[0]
-                      : showMissTag &&
-                        missTargetKeys.length > 0 &&
-                        opt.key.toUpperCase() === missTargetKeys[0].toUpperCase();
 
                     return (
                       <button
@@ -833,17 +808,10 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                         type="button"
                         disabled={isGraded}
                         onClick={() => handleOptionClick(opt.key)}
-                        className={`group relative flex w-full items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerCls} ${
+                        className={`group flex w-full items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerCls} ${
                           isGraded ? 'cursor-default' : 'cursor-pointer'
                         }`}
                       >
-                        {isPrimaryBurstOpt && (
-                          <SakugaBurst
-                            event={sakugaEvent && sakugaEvent.variant !== 'ok' ? sakugaEvent : null}
-                            className="pointer-events-none absolute -top-3 right-3 z-20 sm:right-5"
-                          />
-                        )}
-
                         <span
                           className={`sakuga-option-badge mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold sm:h-7 sm:w-7 ${badgeCls}`}
                         >

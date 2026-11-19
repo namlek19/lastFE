@@ -855,7 +855,9 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                           <span className="tabular-nums rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] sm:px-3 sm:py-1">
                             Đáp án • Thẻ {safeIndex + 1}/{deck.length}
                           </span>
-                          <SakugaMangaTag label="ANSWER ✓" tone="emerald" className="hidden sm:inline-flex" />
+                          <span className="hidden sm:inline-flex">
+                            <SakugaMangaTag label="ANSWER ✓" tone="emerald" animateBurst={false} />
+                          </span>
                           {renderStatusBadge()}
                         </div>
 
