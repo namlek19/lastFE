@@ -2,6 +2,8 @@ export type SubjectId = 'mln131' | 'vnr202';
 
 export type StudyMode = 'chapter' | 'rolling' | 'flashcard' | 'exam';
 
+export type StudyTier = 'lazymax' | 'lazy' | 'hardcore';
+
 export interface QuestionOption {
   key: string; // "A" | "B" | "C" | "D" | "E"
   text: string;
@@ -54,4 +56,6 @@ export interface UserProgressStore {
   examHistory: ExamHistoryItem[];
   lastSubject: SubjectId;
   lastMode: StudyMode;
+  lastTier?: StudyTier;
+  subjectMigratedVnr?: boolean;
 }

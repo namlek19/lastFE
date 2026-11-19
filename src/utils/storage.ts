@@ -4,6 +4,7 @@ import {
   ExamHistoryItem,
   QuestionProgress,
   StudyMode,
+  StudyTier,
   SubjectId,
   ThreeStateMastery,
   UserProgressStore,
@@ -39,9 +40,15 @@ export function createDefaultStore(): UserProgressStore {
     version: 1,
     questions: {},
     examHistory: [],
-    lastSubject: 'mln131',
+    lastSubject: 'vnr202',
     lastMode: 'chapter',
+    lastTier: 'lazymax',
+    subjectMigratedVnr: true,
   };
+}
+
+function normalizeTier(raw: unknown): StudyTier {
+  return raw === 'lazy' || raw === 'hardcore' ? raw : 'lazymax';
 }
 
 export function loadStore(): UserProgressStore {
@@ -52,17 +59,26 @@ export function loadStore(): UserProgressStore {
     if (!parsed || parsed.version !== 1 || typeof parsed.questions !== 'object') {
       return createDefaultStore();
     }
+    const migratedVnr = parsed.subjectMigratedVnr === true;
+    const lastSubject: SubjectId = !migratedVnr
+      ? 'vnr202'
+      : parsed.lastSubject === 'mln131'
+        ? 'mln131'
+        : 'vnr202';
+
     return {
       version: 1,
       questions: parsed.questions ?? {},
       examHistory: Array.isArray(parsed.examHistory) ? parsed.examHistory : [],
-      lastSubject: parsed.lastSubject === 'vnr202' ? 'vnr202' : 'mln131',
+      lastSubject,
       lastMode:
         parsed.lastMode === 'rolling' ||
         parsed.lastMode === 'flashcard' ||
         parsed.lastMode === 'exam'
           ? parsed.lastMode
           : 'chapter',
+      lastTier: normalizeTier(parsed.lastTier),
+      subjectMigratedVnr: true,
     };
   } catch {
     return createDefaultStore();
@@ -275,6 +291,7 @@ interface CompactSyncPayload {
   v: 1;
   s: SubjectId;
   m: StudyMode;
+  t?: StudyTier;
   q: CompactTuple[];
   h: ExamHistoryItem[];
 }
@@ -294,6 +311,7 @@ export function exportProgressCode(store: UserProgressStore): string {
     v: 1,
     s: store.lastSubject,
     m: store.lastMode,
+    t: store.lastTier,
     q: tuples,
     h: store.examHistory,
   };
@@ -340,11 +358,13 @@ export function importProgressCode(code: string): UserProgressStore | null {
       version: 1,
       questions,
       examHistory: Array.isArray(parsed.h) ? parsed.h : [],
-      lastSubject: parsed.s === 'vnr202' ? 'vnr202' : 'mln131',
+      lastSubject: parsed.s === 'mln131' ? 'mln131' : 'vnr202',
       lastMode:
         parsed.m === 'rolling' || parsed.m === 'flashcard' || parsed.m === 'exam'
           ? parsed.m
           : 'chapter',
+      lastTier: normalizeTier(parsed.t),
+      subjectMigratedVnr: true,
     };
   } catch {
     return null;

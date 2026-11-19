@@ -6,7 +6,7 @@ import { RollingStudyView } from './components/RollingStudyView';
 import { FlashcardView } from './components/FlashcardView';
 import { MockExamView } from './components/MockExamView';
 import { ProgressSyncModal } from './components/ProgressSyncModal';
-import { ExamHistoryItem, StudyMode, SubjectId, UserProgressStore } from './types/quiz';
+import { ExamHistoryItem, StudyMode, StudyTier, SubjectId, UserProgressStore } from './types/quiz';
 import {
   addExamHistory,
   loadStore,
@@ -45,6 +45,10 @@ export const App: React.FC = () => {
 
   const handleSelectMode = useCallback((mode: StudyMode) => {
     setStore(prev => ({ ...prev, lastMode: mode }));
+  }, []);
+
+  const handleSelectTier = useCallback((tier: StudyTier) => {
+    setStore(prev => ({ ...prev, lastTier: tier }));
   }, []);
 
   const handleRecordAttempt = useCallback(
@@ -86,7 +90,7 @@ export const App: React.FC = () => {
     setStore(prev => resetProgress(prev));
   }, []);
 
-  const { lastSubject: subject, lastMode: mode } = store;
+  const { lastSubject: subject, lastMode: mode, lastTier: tier = 'lazymax' } = store;
 
   return (
     <MotionConfig reducedMotion="user">
@@ -94,10 +98,12 @@ export const App: React.FC = () => {
         <Header
           subject={subject}
           mode={mode}
+          tier={tier}
           theme={theme}
           progress={store}
           onSelectSubject={handleSelectSubject}
           onSelectMode={handleSelectMode}
+          onSelectTier={handleSelectTier}
           onToggleTheme={handleToggleTheme}
           onOpenSyncModal={() => setIsSyncOpen(true)}
         />
