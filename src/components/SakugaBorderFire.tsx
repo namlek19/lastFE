@@ -7,6 +7,8 @@ export interface SakugaBorderFireProps {
   radius?: number;
   /** Compact sizing for narrow sidebar chapter cards. */
   compact?: boolean;
+  /** Ultra-compact flame outline for inline CTA buttons. */
+  mini?: boolean;
 }
 
 interface PerimeterPoint {
@@ -247,6 +249,7 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
   percent,
   radius = 16,
   compact = false,
+  mini = false,
 }) => {
   const clampedPct = clampPercent(percent);
   const active = clampedPct >= 50;
@@ -282,8 +285,8 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const pad = compact ? 12 : 16;
-    const sampleCount = compact ? 140 : 190;
+    const pad = mini ? 7 : compact ? 12 : 16;
+    const sampleCount = mini ? 84 : compact ? 140 : 190;
 
     let width = host.clientWidth;
     let height = host.clientHeight;
@@ -353,8 +356,12 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
       }
 
       // Curtain thickness scales smoothly with % while keeping comfortable margin inside pad
-      const baseMaxH = compact ? 5.2 + ratio * 4.4 : 6.4 + ratio * 5.8;
-      const maxWaveH = Math.min(pad - 2.5, baseMaxH * surgeBoost);
+      const baseMaxH = mini
+        ? 2.4 + ratio * 2.0
+        : compact
+          ? 5.2 + ratio * 4.4
+          : 6.4 + ratio * 5.8;
+      const maxWaveH = Math.min(pad - (mini ? 1.5 : 2.5), baseMaxH * surgeBoost);
 
       // Clip interior of the card using evenodd rule so the fire sheet hugs flush outside border
       ctx.save();
@@ -376,7 +383,7 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
           phaseOffset: 0,
           fillStyle: 'rgba(194, 65, 12, 0.62)',
           shadowColor: 'rgba(234, 88, 12, 0.7)',
-          shadowBlur: compact ? 5 : 8,
+          shadowBlur: mini ? 3.5 : compact ? 5 : 8,
         },
         {
           heightScale: 0.86,
@@ -415,11 +422,13 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
           // Subtle tangential wind curl on tall wave crests
           const tanX = -pt.ny;
           const tanY = pt.nx;
+          const curlScale = mini ? 0.55 : 1;
           const curl =
             (Math.sin(u * TAU * 9 - t * 3.9 + layer.phaseOffset) * 1.7 +
               Math.cos(u * TAU * 17 + t * 4.8) * 0.8) *
             wave *
-            (0.45 + ratio * 0.55);
+            (0.45 + ratio * 0.55) *
+            curlScale;
 
           layerPoints[i].x = pt.px + dirX * disp + tanX * curl;
           layerPoints[i].y = pt.py + dirY * disp + tanY * curl;
@@ -438,16 +447,21 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
 
       // Floating warm ember sparks drifting off the highest flame crests
       if (!prefersReduced && ratio > 0.1) {
-        const emberCount = compact ? Math.round(5 + ratio * 5) : Math.round(8 + ratio * 9);
+        const emberCount = mini
+          ? Math.round(2 + ratio * 3)
+          : compact
+            ? Math.round(5 + ratio * 5)
+            : Math.round(8 + ratio * 9);
         for (let e = 0; e < emberCount; e++) {
           const cycle = (t * 1.15 + e * 0.27) % 1;
           const u = (e + 0.5) / emberCount + Math.sin(e * 4.1) * 0.02;
           const pt = sampleRoundedRectPerimeter(u, pad, pad, width, height, radius);
           const crestH = computeWaveHeight(u, t - cycle * 0.25, 0.42) * maxWaveH;
-          const dist = crestH * 0.8 + 1.2 + cycle * (compact ? 4 : 5.5);
-          const ex = pt.px + pt.nx * dist + Math.sin(cycle * 7 + e * 2.3) * 2;
-          const ey = pt.py + pt.ny * dist - cycle * (compact ? 2.8 : 4);
-          const er = Math.max(0.65, (1 - cycle) * (isMax ? 1.7 : 1.35));
+          const dist = crestH * 0.8 + (mini ? 0.8 : 1.2) + cycle * (mini ? 2.5 : compact ? 4 : 5.5);
+          const ex = pt.px + pt.nx * dist + Math.sin(cycle * 7 + e * 2.3) * (mini ? 1.1 : 2);
+          const ey = pt.py + pt.ny * dist - cycle * (mini ? 2.5 : compact ? 2.8 : 4);
+          const maxEr = mini ? 1.05 : isMax ? 1.7 : 1.35;
+          const er = Math.max(mini ? 0.5 : 0.65, (1 - cycle) * maxEr);
           ctx.beginPath();
           ctx.arc(ex, ey, er, 0, TAU);
           ctx.fillStyle = cycle < 0.42 ? '#FEF08A' : isMax && e % 4 === 0 ? '#6EE7B7' : '#FB923C';
@@ -455,8 +469,8 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
         }
       }
 
-      // Crisp 4-point anime star sparkles at >= 80% & 100%
-      if (curPct >= 80) {
+      // Crisp 4-point anime star sparkles at >= 80% & 100% (disabled on mini button outlines)
+      if (!mini && curPct >= 80) {
         const starCount = isMax ? (compact ? 5 : 8) : compact ? 2 : 4;
         for (let s = 0; s < starCount; s++) {
           const u = (s + 0.22) / starCount;
@@ -593,11 +607,11 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
       document.removeEventListener('visibilitychange', handleVisibility);
       motionQuery.removeEventListener('change', handleMotionChange);
     };
-  }, [active, compact, radius]);
+  }, [active, compact, mini, radius]);
 
   if (!active) return null;
 
-  const pad = compact ? 12 : 16;
+  const pad = mini ? 7 : compact ? 12 : 16;
 
   return (
     <canvas

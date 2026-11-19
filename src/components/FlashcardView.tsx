@@ -477,11 +477,14 @@ const renderCardActionButtons = (q: QuestionItem, isFaceVisible: boolean) => (
       }}
       aria-pressed={isCurrentMastered}
       title="Đánh dấu Đã thuộc (Phím G)"
-      className={`sakuga-btn inline-flex cursor-pointer items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap shadow-[2px_2px_0_0_#6EE7B7] dark:shadow-[2px_2px_0_0_#065F46] sm:px-3 ${isCurrentMastered
+      className={`sakuga-btn relative inline-flex cursor-pointer items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap shadow-[2px_2px_0_0_#6EE7B7] dark:shadow-[2px_2px_0_0_#065F46] sm:px-3 ${isCurrentMastered
           ? 'border-[#059669] bg-[#059669] text-white hover:bg-[#047857] dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16] dark:hover:bg-[#34D399]'
           : 'border-[#10B981] bg-[#D1FAE5] text-[#047857] hover:bg-[#A7F3D0] dark:border-[#10B981]/60 dark:bg-[#059669]/25 dark:text-[#34D399] dark:hover:bg-[#059669]/35'
         }`}
     >
+      {isFlipped && isFaceVisible && !isCurrentMastered && (
+        <SakugaBorderFire percent={78} radius={12} mini />
+      )}
       <Flag className={`h-3.5 w-3.5 shrink-0 ${isCurrentMastered ? 'fill-current' : ''}`} />
       <span>Đã thuộc</span>
       <kbd
@@ -1152,8 +1155,11 @@ return (
                   data-no-keyflip="true"
                   disabled={safeIndex >= deck.length - 1}
                   onClick={goToNext}
-                  className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[2px_2px_0_0_#C7D2FE] hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]"
+                  className="sakuga-btn relative inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[2px_2px_0_0_#C7D2FE] hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]"
                 >
+                  {isFlipped && safeIndex < deck.length - 1 && (
+                    <SakugaBorderFire percent={78} radius={12} mini />
+                  )}
                   <span>Thẻ tiếp</span>
                   <ChevronRight className="h-4 w-4" />
                 </button>
@@ -1226,8 +1232,11 @@ return (
             type="button"
             disabled={safeIndex >= deck.length - 1}
             onClick={goToNext}
-            className="sakuga-btn inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-[2px_2px_0_0_#C7D2FE] hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]"
+            className="sakuga-btn relative inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-[2px_2px_0_0_#C7D2FE] hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]"
           >
+            {isFlipped && safeIndex < deck.length - 1 && (
+              <SakugaBorderFire percent={78} radius={12} mini />
+            )}
             <span>Tiếp</span>
             <ChevronRight className="h-4 w-4" />
           </button>

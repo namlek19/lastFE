@@ -1096,8 +1096,11 @@ return (
                 data-native-enter="true"
                 disabled={safeIndex >= filteredQuestions.length - 1}
                 onClick={goToNext}
-                className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] transition-colors hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
+                className="sakuga-btn relative inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-5 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] transition-colors hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-40 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
               >
+                {currentAttempt.graded && safeIndex < filteredQuestions.length - 1 && (
+                  <SakugaBorderFire percent={78} radius={12} mini />
+                )}
                 <span>Câu tiếp</span>
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -1149,8 +1152,11 @@ return (
               type="button"
               disabled={safeIndex >= filteredQuestions.length - 1}
               onClick={goToNext}
-              className="sakuga-btn inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
+              className="sakuga-btn relative inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-[#4338CA] px-4 py-2.5 text-sm font-semibold text-white shadow-[3px_3px_0_0_#C7D2FE] transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:opacity-45 dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:shadow-[3px_3px_0_0_#312E81] dark:hover:bg-[#3730A3]"
             >
+              {currentAttempt.graded && safeIndex < filteredQuestions.length - 1 && (
+                <SakugaBorderFire percent={78} radius={12} mini />
+              )}
               <span>Câu tiếp</span>
               <ChevronRight className="h-4 w-4" />
             </button>

@@ -33,15 +33,92 @@ const MODE_TABS: {
   id: StudyMode;
   label: string;
   Icon: React.ComponentType<{ className?: string }>;
+  activePlateClass: string;
+  inactiveClass: string;
+  mobileInactiveClass: string;
+  inactiveIconClass: string;
+  accentFill: string;
+  smokeTint: string;
+  sparkleFill: string;
 }[] = [
-  { id: 'chapter', label: 'Theo chương', Icon: BookOpen },
-  { id: 'rolling', label: 'Cuốn chiếu', Icon: Layers },
-  { id: 'flashcard', label: 'Flashcard', Icon: CreditCard },
+  {
+    id: 'chapter',
+    label: 'Theo chương',
+    Icon: BookOpen,
+    activePlateClass:
+      'border-[#1E1B4B] bg-[#4338CA] shadow-[2px_2px_0_0_#A5B4FC] dark:border-[#A5B4FC] dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81]',
+    inactiveClass:
+      'border-transparent text-[#57534E] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/60 dark:hover:bg-[#312E81]/35 dark:hover:text-[#A5B4FC]',
+    mobileInactiveClass:
+      'border-[#C6BEB0] bg-[#FAF9F5] text-[#57534E] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#0A0B0A] dark:hover:border-[#818CF8]/60 dark:hover:bg-[#312E81]/35 dark:hover:text-[#A5B4FC]',
+    inactiveIconClass: 'text-[#4338CA] dark:text-[#818CF8]',
+    accentFill: '#4338CA',
+    smokeTint: '#C7D2FE',
+    sparkleFill: '#6366F1',
+  },
+  {
+    id: 'rolling',
+    label: 'Cuốn chiếu',
+    Icon: Layers,
+    activePlateClass:
+      'border-[#134E4A] bg-[#0D9488] shadow-[2px_2px_0_0_#5EEAD4] dark:border-[#5EEAD4] dark:bg-[#0D9488] dark:shadow-[2px_2px_0_0_#115E59]',
+    inactiveClass:
+      'border-transparent text-[#57534E] hover:border-[#5EEAD4] hover:bg-[#CCFBF1] hover:text-[#0F766E] dark:text-[#9CA39B] dark:hover:border-[#2DD4BF]/60 dark:hover:bg-[#134E4A]/45 dark:hover:text-[#5EEAD4]',
+    mobileInactiveClass:
+      'border-[#C6BEB0] bg-[#FAF9F5] text-[#57534E] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#5EEAD4] hover:bg-[#CCFBF1] hover:text-[#0F766E] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#0A0B0A] dark:hover:border-[#2DD4BF]/60 dark:hover:bg-[#134E4A]/45 dark:hover:text-[#5EEAD4]',
+    inactiveIconClass: 'text-[#0D9488] dark:text-[#2DD4BF]',
+    accentFill: '#0D9488',
+    smokeTint: '#99F6E4',
+    sparkleFill: '#14B8A6',
+  },
+  {
+    id: 'flashcard',
+    label: 'Flashcard',
+    Icon: CreditCard,
+    activePlateClass:
+      'border-[#4C1D95] bg-[#9333EA] shadow-[2px_2px_0_0_#D8B4FE] dark:border-[#D8B4FE] dark:bg-[#9333EA] dark:shadow-[2px_2px_0_0_#581C87]',
+    inactiveClass:
+      'border-transparent text-[#57534E] hover:border-[#D8B4FE] hover:bg-[#F3E8FF] hover:text-[#7E22CE] dark:text-[#9CA39B] dark:hover:border-[#C084FC]/60 dark:hover:bg-[#581C87]/45 dark:hover:text-[#E9D5FF]',
+    mobileInactiveClass:
+      'border-[#C6BEB0] bg-[#FAF9F5] text-[#57534E] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#D8B4FE] hover:bg-[#F3E8FF] hover:text-[#7E22CE] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#0A0B0A] dark:hover:border-[#C084FC]/60 dark:hover:bg-[#581C87]/45 dark:hover:text-[#E9D5FF]',
+    inactiveIconClass: 'text-[#9333EA] dark:text-[#C084FC]',
+    accentFill: '#9333EA',
+    smokeTint: '#E9D5FF',
+    sparkleFill: '#C084FC',
+  },
 ];
 
-const SUBJECT_ITEMS: { id: SubjectId; shortCode: string }[] = [
-  { id: 'vnr202', shortCode: 'VNR' },
-  { id: 'mln131', shortCode: 'MLN' },
+const SUBJECT_ITEMS: {
+  id: SubjectId;
+  shortCode: string;
+  activeClass: string;
+  inactiveClass: string;
+  accentFill: string;
+  smokeTint: string;
+  sparkleFill: string;
+}[] = [
+  {
+    id: 'vnr202',
+    shortCode: 'VNR',
+    activeClass:
+      'border-[#7C2D12] bg-[#EA580C] text-white shadow-[2px_2px_0_0_#FDBA74] hover:bg-[#C2410C] dark:border-[#FDBA74] dark:bg-[#EA580C] dark:text-white dark:shadow-[2px_2px_0_0_#9A3412] dark:hover:bg-[#C2410C]',
+    inactiveClass:
+      'border-transparent bg-transparent text-[#9A3412] hover:border-[#FB923C] hover:bg-[#FFF7ED] hover:text-[#C2410C] dark:text-[#FDBA74]/85 dark:hover:border-[#FB923C]/70 dark:hover:bg-[#7C2D12]/40 dark:hover:text-[#FED7AA]',
+    accentFill: '#EA580C',
+    smokeTint: '#FED7AA',
+    sparkleFill: '#F97316',
+  },
+  {
+    id: 'mln131',
+    shortCode: 'MLN',
+    activeClass:
+      'border-[#0C4A6E] bg-[#0284C7] text-white shadow-[2px_2px_0_0_#7DD3FC] hover:bg-[#0369A1] dark:border-[#7DD3FC] dark:bg-[#0284C7] dark:text-white dark:shadow-[2px_2px_0_0_#075985] dark:hover:bg-[#0369A1]',
+    inactiveClass:
+      'border-transparent bg-transparent text-[#075985] hover:border-[#38BDF8] hover:bg-[#E0F2FE] hover:text-[#0369A1] dark:text-[#7DD3FC]/85 dark:hover:border-[#38BDF8]/70 dark:hover:bg-[#0C4A6E]/45 dark:hover:text-[#BAE6FD]',
+    accentFill: '#0284C7',
+    smokeTint: '#BAE6FD',
+    sparkleFill: '#38BDF8',
+  },
 ];
 
 const TIER_BADGE_STYLES: Record<StudyTier, { pill: string; icon: string }> = {
@@ -178,7 +255,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Chọn môn học"
               className="inline-flex shrink-0 items-center gap-1 overflow-visible rounded-xl border-2 border-[#C6BEB0] bg-[#F4F2EC] p-0.5 dark:border-[#2C302B] dark:bg-[#0F100E] sm:p-1"
             >
-              {SUBJECT_ITEMS.map(({ id, shortCode }) => {
+              {SUBJECT_ITEMS.map(({ id, shortCode, activeClass, inactiveClass, accentFill, smokeTint, sparkleFill }) => {
                 const meta = SUBJECTS[id];
                 const isActive = subject === id;
                 const isBursting = subjectBurst?.id === id;
@@ -198,9 +275,9 @@ export const Header: React.FC<HeaderProps> = ({
                         key={`subj-particles-${id}-${subjectBurst.seq}`}
                         isMiss={false}
                         showShards={true}
-                        accentFill="#4338CA"
-                        smokeTint="#C7D2FE"
-                        sparkleFill="#6366F1"
+                        accentFill={accentFill}
+                        smokeTint={smokeTint}
+                        sparkleFill={sparkleFill}
                         className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[58px] w-[112px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
                       />
                     )}
@@ -221,9 +298,7 @@ export const Header: React.FC<HeaderProps> = ({
                     >
                       <span
                         className={`inline-flex -skew-x-12 items-center justify-center rounded-md border-2 px-2 py-0.5 text-[11px] font-black italic tracking-wider whitespace-nowrap transition-colors duration-150 sm:px-2.5 sm:py-1 sm:text-xs ${
-                          isActive
-                            ? 'border-[#1E1B4B] bg-[#4338CA] text-white shadow-[2px_2px_0_0_#A5B4FC] hover:bg-[#3730A3] dark:border-[#A5B4FC] dark:bg-[#4338CA] dark:text-white dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]'
-                            : 'border-transparent bg-transparent text-[#656058] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/60 dark:hover:bg-[#312E81]/35 dark:hover:text-[#A5B4FC]'
+                          isActive ? activeClass : inactiveClass
                         }`}
                       >
                         <span className="skew-x-12">{shortCode}</span>
@@ -240,7 +315,17 @@ export const Header: React.FC<HeaderProps> = ({
             aria-label="Chế độ học tập"
             className="hidden shrink-0 items-center gap-1 overflow-visible rounded-xl border-2 border-[#C6BEB0] bg-[#F4F2EC] p-1 dark:border-[#2C302B] dark:bg-[#0F100E] lg:flex"
           >
-            {MODE_TABS.map(({ id, label, Icon }) => {
+            {MODE_TABS.map(({
+              id,
+              label,
+              Icon,
+              activePlateClass,
+              inactiveClass,
+              inactiveIconClass,
+              accentFill,
+              smokeTint,
+              sparkleFill,
+            }) => {
               const isActive = mode === id;
               const isBursting = modeBurst?.id === id;
 
@@ -251,9 +336,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => handleModeClick(id)}
                   aria-current={isActive ? 'page' : undefined}
                   className={`sakuga-btn group relative inline-flex cursor-pointer items-center justify-center gap-1.5 overflow-visible rounded-lg border-2 py-1 text-xs font-extrabold tracking-tight whitespace-nowrap lg:px-2.5 xl:px-3 2xl:px-3.5 2xl:text-[13px] ${
-                    isActive
-                      ? 'border-transparent text-white'
-                      : 'border-transparent text-[#57534E] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:border-[#818CF8]/55 dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
+                    isActive ? 'border-transparent text-white' : inactiveClass
                   }`}
                 >
                   {isBursting && modeBurst && (
@@ -261,9 +344,9 @@ export const Header: React.FC<HeaderProps> = ({
                       key={`mode-desktop-particles-${id}-${modeBurst.seq}`}
                       isMiss={false}
                       showShards={false}
-                      accentFill="#4338CA"
-                      smokeTint="#C7D2FE"
-                      sparkleFill="#6366F1"
+                      accentFill={accentFill}
+                      smokeTint={smokeTint}
+                      sparkleFill={sparkleFill}
                       className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[62px] w-[128px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
                     />
                   )}
@@ -271,10 +354,14 @@ export const Header: React.FC<HeaderProps> = ({
                     <motion.span
                       layoutId="header-mode-active-desktop"
                       transition={{ type: 'spring', stiffness: 460, damping: 30 }}
-                      className="pointer-events-none absolute -inset-[2px] z-[1] rounded-lg border-2 border-[#1E1B4B] bg-[#4338CA] shadow-[2px_2px_0_0_#A5B4FC] dark:border-[#A5B4FC] dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81]"
+                      className={`pointer-events-none absolute -inset-[2px] z-[1] rounded-lg border-2 ${activePlateClass}`}
                     />
                   )}
-                  <Icon className="relative z-10 hidden h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:-rotate-6 xl:block" />
+                  <Icon
+                    className={`relative z-10 hidden h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:-rotate-6 xl:block ${
+                      isActive ? 'text-white' : inactiveIconClass
+                    }`}
+                  />
                   <span className="relative z-10">{label}</span>
                 </button>
               );
@@ -329,8 +416,8 @@ export const Header: React.FC<HeaderProps> = ({
                   key={`exam-particles-${examBurstSeq}`}
                   isMiss={false}
                   showShards={true}
-                  accentFill="#4338CA"
-                  smokeTint="#C7D2FE"
+                  accentFill="#EA580C"
+                  smokeTint="#FEF08A"
                   sparkleFill="#FACC15"
                   className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[60px] w-[118px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
                 />
@@ -342,8 +429,8 @@ export const Header: React.FC<HeaderProps> = ({
                 transition={{ type: 'spring', stiffness: 360, damping: 16 }}
                 className={`relative z-10 inline-flex items-center gap-1.5 rounded-lg border-2 px-2 py-1 text-[11px] font-extrabold tracking-tight whitespace-nowrap transition-colors duration-150 sm:px-2.5 sm:text-xs xl:px-3 ${
                   mode === 'exam'
-                    ? 'border-[#1E1B4B] bg-[#4338CA] text-white shadow-[2px_2px_0_0_#A5B4FC] hover:bg-[#3730A3] dark:border-[#A5B4FC] dark:bg-[#4338CA] dark:text-white dark:shadow-[2px_2px_0_0_#312E81] dark:hover:bg-[#3730A3]'
-                    : 'border-[#27272A] bg-[#FFFFFF] text-[#18181B] shadow-[2px_2px_0_0_#27272A] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] hover:shadow-[2px_2px_0_0_#A5B4FC] dark:border-[#52525B] dark:bg-[#1E221F] dark:text-[#F5F5F4] dark:shadow-[2px_2px_0_0_#3F3F46] dark:hover:border-[#A5B4FC] dark:hover:bg-[#312E81]/40 dark:hover:text-[#EEF2FF] dark:hover:shadow-[2px_2px_0_0_#312E81]'
+                    ? 'border-[#7C2D12] bg-[#EA580C] text-white shadow-[2px_2px_0_0_#FACC15] hover:bg-[#C2410C] dark:border-[#FEF08A] dark:bg-[#EA580C] dark:text-white dark:shadow-[2px_2px_0_0_#CA8A04] dark:hover:bg-[#C2410C]'
+                    : 'border-[#92400E] bg-[#FDE68A] text-[#78350F] shadow-[2px_2px_0_0_#D97706] hover:border-[#78350F] hover:bg-[#FCD34D] hover:text-[#451A03] dark:border-[#FBBF24] dark:bg-[#78350F]/75 dark:text-[#FEF3C7] dark:shadow-[2px_2px_0_0_#D97706] dark:hover:bg-[#92400E] dark:hover:text-white'
                 }`}
               >
                 <ClipboardCheck className="hidden h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:-rotate-6 group-hover:scale-110 sm:block lg:hidden xl:block" />
@@ -399,7 +486,17 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label="Chế độ học tập"
           className="grid grid-cols-3 gap-1.5 overflow-visible border-t border-[#D5CFC2]/80 py-2 dark:border-[#262925] lg:hidden"
         >
-          {MODE_TABS.map(({ id, label, Icon }) => {
+          {MODE_TABS.map(({
+            id,
+            label,
+            Icon,
+            activePlateClass,
+            mobileInactiveClass,
+            inactiveIconClass,
+            accentFill,
+            smokeTint,
+            sparkleFill,
+          }) => {
             const isActive = mode === id;
             const isBursting = modeBurst?.id === id;
 
@@ -410,9 +507,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => handleModeClick(id)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`sakuga-btn group relative inline-flex cursor-pointer items-center justify-center gap-1.5 overflow-visible rounded-lg border-2 px-1.5 py-1.5 text-xs font-extrabold tracking-tight whitespace-nowrap sm:px-2.5 sm:text-[13px] ${
-                  isActive
-                    ? 'border-transparent text-white'
-                    : 'border-[#C6BEB0] bg-[#FAF9F5] text-[#57534E] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#A5B4FC] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#0A0B0A] dark:hover:border-[#818CF8]/55 dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
+                  isActive ? 'border-transparent text-white' : mobileInactiveClass
                 }`}
               >
                 {isBursting && modeBurst && (
@@ -420,9 +515,9 @@ export const Header: React.FC<HeaderProps> = ({
                     key={`mode-mobile-particles-${id}-${modeBurst.seq}`}
                     isMiss={false}
                     showShards={false}
-                    accentFill="#4338CA"
-                    smokeTint="#C7D2FE"
-                    sparkleFill="#6366F1"
+                    accentFill={accentFill}
+                    smokeTint={smokeTint}
+                    sparkleFill={sparkleFill}
                     className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[62px] w-[124px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
                   />
                 )}
@@ -430,10 +525,14 @@ export const Header: React.FC<HeaderProps> = ({
                   <motion.span
                     layoutId="header-mode-active-mobile"
                     transition={{ type: 'spring', stiffness: 460, damping: 30 }}
-                    className="pointer-events-none absolute -inset-[2px] z-[1] rounded-lg border-2 border-[#1E1B4B] bg-[#4338CA] shadow-[2px_2px_0_0_#A5B4FC] dark:border-[#A5B4FC] dark:bg-[#4338CA] dark:shadow-[2px_2px_0_0_#312E81]"
+                    className={`pointer-events-none absolute -inset-[2px] z-[1] rounded-lg border-2 ${activePlateClass}`}
                   />
                 )}
-                <Icon className="relative z-10 hidden h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:-rotate-6 sm:block" />
+                <Icon
+                  className={`relative z-10 hidden h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:-rotate-6 sm:block ${
+                    isActive ? 'text-white' : inactiveIconClass
+                  }`}
+                />
                 <span className="relative z-10 truncate">{label}</span>
               </button>
             );
