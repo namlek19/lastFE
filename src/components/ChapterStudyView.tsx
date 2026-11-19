@@ -778,7 +778,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
               }`}
             >
               <SakugaBurst
-                event={sakugaEvent}
+                event={sakugaEvent?.variant === 'ok' ? sakugaEvent : null}
                 className="pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2 sm:left-auto sm:right-10 sm:translate-x-0"
               />
               {/* Top Metadata Bar */}
@@ -831,29 +831,44 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   )}
                 </div>
 
-                {/* Desktop Flag Toggle */}
-                <button
-                  type="button"
-                  data-native-enter="true"
-                  onClick={() => handleToggleFlag(currentQuestion.id)}
-                  className={`sakuga-btn hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors md:inline-flex ${
-                    isFlagged
-                      ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
-                      : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#2C302B] dark:hover:border-[#E879F9]/55 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
-                  }`}
-                >
-                  <Flag
-                    className={`h-3.5 w-3.5 ${
+                {/* Top Metadata Bar Right Actions: Retry (when graded) + Desktop Flag Toggle */}
+                <div className="flex items-center gap-1.5">
+                  {currentAttempt.graded && (
+                    <button
+                      type="button"
+                      data-native-enter="true"
+                      onClick={() => handleRetryQuestion(currentQuestion.id)}
+                      className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-2.5 py-1.5 text-xs font-semibold text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] transition-colors hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#2C302B] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC] sm:px-3"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      <span>Làm lại</span>
+                    </button>
+                  )}
+
+                  {/* Desktop Flag Toggle */}
+                  <button
+                    type="button"
+                    data-native-enter="true"
+                    onClick={() => handleToggleFlag(currentQuestion.id)}
+                    className={`sakuga-btn hidden cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors md:inline-flex ${
                       isFlagged
-                        ? 'fill-[#A21CAF] text-[#A21CAF] dark:fill-[#F5D0FE] dark:text-[#F5D0FE]'
-                        : 'text-[#656058] dark:text-[#9CA39B]'
+                        ? 'border-[#F0ABFC] bg-[#FAE8FF] text-[#A21CAF] shadow-[2px_2px_0_0_#F0ABFC] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE] dark:shadow-[2px_2px_0_0_#701A75]'
+                        : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] hover:border-[#F0ABFC] hover:bg-[#FAE8FF] hover:text-[#A21CAF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#2C302B] dark:hover:border-[#E879F9]/55 dark:hover:bg-[#D946EF]/20 dark:hover:text-[#F5D0FE]'
                     }`}
-                  />
-                  <span>Phân vân</span>
-                  <kbd className="hidden rounded border border-current/25 px-1 py-0.5 font-mono text-[10px] opacity-80 md:inline-block">
-                    F
-                  </kbd>
-                </button>
+                  >
+                    <Flag
+                      className={`h-3.5 w-3.5 ${
+                        isFlagged
+                          ? 'fill-[#A21CAF] text-[#A21CAF] dark:fill-[#F5D0FE] dark:text-[#F5D0FE]'
+                          : 'text-[#656058] dark:text-[#9CA39B]'
+                      }`}
+                    />
+                    <span>Phân vân</span>
+                    <kbd className="hidden rounded border border-current/25 px-1 py-0.5 font-mono text-[10px] opacity-80 md:inline-block">
+                      F
+                    </kbd>
+                  </button>
+                </div>
               </div>
 
               {/* Question Text */}
@@ -901,16 +916,39 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                     }
                   }
 
+                  const hasWrongSelected = currentAttempt.selectedKeys.some(
+                    (k) => !currentQuestion.correctAnswers.includes(k)
+                  );
+                  const missTargetKeys = hasWrongSelected
+                    ? currentAttempt.selectedKeys.filter(
+                        (k) => !currentQuestion.correctAnswers.includes(k)
+                      )
+                    : currentQuestion.correctAnswers.filter(
+                        (k) => !currentAttempt.selectedKeys.includes(k)
+                      );
+                  const showSuccessTag = isGraded && isCurrentCorrect && isCorrectOption;
+                  const showMissTag = isGraded && !isCurrentCorrect && missTargetKeys.includes(opt.key);
+                  const isPrimaryBurstOpt = showSuccessTag
+                    ? opt.key === currentQuestion.correctAnswers[0]
+                    : showMissTag && opt.key === missTargetKeys[0];
+
                   return (
                     <button
                       key={opt.key}
                       type="button"
                       disabled={isGraded}
                       onClick={() => handleSelectOption(currentQuestion, opt.key)}
-                      className={`group flex w-full items-start gap-3 rounded-xl p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerClasses} ${
+                      className={`group relative flex w-full items-start gap-3 rounded-xl p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerClasses} ${
                         isGraded ? 'cursor-default' : 'cursor-pointer'
                       }`}
                     >
+                      {isPrimaryBurstOpt && (
+                        <SakugaBurst
+                          event={sakugaEvent && sakugaEvent.variant !== 'ok' ? sakugaEvent : null}
+                          className="pointer-events-none absolute -top-3 right-3 z-20 sm:right-5"
+                        />
+                      )}
+
                       <span
                         className={`sakuga-option-badge mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition-colors sm:h-7 sm:w-7 ${keyBadgeClasses}`}
                       >
@@ -921,11 +959,25 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                         {opt.text}
                       </span>
 
-                      {isGraded && isCorrectOption && (
-                        <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-[#059669] dark:text-[#10B981] sm:h-5 sm:w-5" />
-                      )}
-                      {isGraded && isSelected && !isCorrectOption && (
-                        <XCircle className="mt-1 h-4 w-4 shrink-0 text-[#E11D48] dark:text-[#FB7185] sm:h-5 sm:w-5" />
+                      {(showSuccessTag ||
+                        showMissTag ||
+                        (isGraded && isCorrectOption) ||
+                        (isGraded && isSelected && !isCorrectOption)) && (
+                        <span className="mt-0.5 flex shrink-0 items-center gap-1.5 sm:gap-2">
+                          {showSuccessTag && (
+                            <SakugaMangaTag
+                              label={effectiveStreak >= 2 ? 'CLEAR! ✓' : 'NICE!'}
+                              tone={effectiveStreak >= 2 ? 'emerald' : 'amber'}
+                            />
+                          )}
+                          {showMissTag && <SakugaMangaTag label="MISS!" tone="rose" />}
+                          {isGraded && isCorrectOption && (
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-[#059669] dark:text-[#10B981] sm:h-5 sm:w-5" />
+                          )}
+                          {isGraded && isSelected && !isCorrectOption && (
+                            <XCircle className="h-4 w-4 shrink-0 text-[#E11D48] dark:text-[#FB7185] sm:h-5 sm:w-5" />
+                          )}
+                        </span>
                       )}
                     </button>
                   );
@@ -946,71 +998,6 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
                   >
                     <Check className="h-4 w-4" />
                     <span>Kiểm tra đáp án</span>
-                  </button>
-                </div>
-              )}
-
-              {currentAttempt.graded && (
-                <div
-                  className={`mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5 sm:mt-5 sm:px-4 sm:py-3 ${
-                    isCurrentCorrect
-                      ? 'border-[#10B981]/60 bg-[#ECFDF5] dark:border-[#10B981]/50 dark:bg-[#064E3B]/40'
-                      : 'border-[#FDA4AF] bg-[#FFF1F2] dark:border-[#FB7185]/45 dark:bg-[#E11D48]/15'
-                  }`}
-                >
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold sm:text-sm">
-                    {isCurrentCorrect ? (
-                      <>
-                        <CheckCircle2 className="h-4 w-4 shrink-0 text-[#059669] dark:text-[#10B981]" />
-                        <span className="text-[#064E3B] dark:text-[#ECFDF5]">Chính xác!</span>
-                        {currentDetailedState === 'mastered' && (
-                          <span className="inline-flex items-center gap-1 rounded-md border border-[#10B981] bg-[#D1FAE5] px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
-                            ✓ Đã thuộc (2/2) ●●
-                          </span>
-                        )}
-                        {currentDetailedState === 'pass1' && (
-                          <span className="inline-flex items-center gap-1 rounded-md border border-[#F59E0B] bg-[#FEF3C7] px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-[#B45309] dark:border-[#F59E0B]/60 dark:bg-[#F59E0B]/20 dark:text-[#FCD34D]">
-                            ✓ Đúng 1/2 lần ●○
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="h-4 w-4 shrink-0 text-[#E11D48] dark:text-[#FB7185]" />
-                        <span className="text-[#BE123C] dark:text-[#FDA4AF]">
-                          Chưa đúng • Đáp án đúng:{' '}
-                          <span className="font-bold">
-                            {currentQuestion.correctAnswers.join(', ')}
-                          </span>
-                        </span>
-                      </>
-                    )}
-                    <SakugaMangaTag
-                      label={
-                        isCurrentCorrect
-                          ? effectiveStreak >= 2
-                            ? 'CLEAR! ✓'
-                            : 'NICE!'
-                          : 'MISS!'
-                      }
-                      tone={
-                        isCurrentCorrect
-                          ? effectiveStreak >= 2
-                            ? 'emerald'
-                            : 'amber'
-                          : 'rose'
-                      }
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    data-native-enter="true"
-                    onClick={() => handleRetryQuestion(currentQuestion.id)}
-                    className="sakuga-btn inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#D5CFC2] bg-white px-2.5 py-1 text-xs font-semibold text-[#656058] shadow-[2px_2px_0_0_#D5CFC2] transition-colors hover:border-[#4338CA] hover:text-[#4338CA] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:shadow-[2px_2px_0_0_#2C302B] dark:hover:border-[#818CF8] dark:hover:text-[#A5B4FC] sm:px-3"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                    <span>Làm lại</span>
                   </button>
                 </div>
               )}

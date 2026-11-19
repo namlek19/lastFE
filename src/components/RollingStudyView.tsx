@@ -667,7 +667,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                 }`}
               >
                 <SakugaBurst
-                  event={sakugaEvent}
+                  event={sakugaEvent?.variant === 'ok' ? sakugaEvent : null}
                   className="pointer-events-none absolute -top-3 left-1/2 z-20 -translate-x-1/2 sm:left-auto sm:right-10 sm:translate-x-0"
                 />
                 {/* Card top badges + Desktop Phân vân toggle */}
@@ -807,16 +807,43 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                       }
                     }
 
+                    const upperCorrect = currentQuestion.correctAnswers.map(c => c.toUpperCase());
+                    const showSuccessTag = isGraded && gradedState.isCorrect && isCorrectOption;
+                    const hasWrongSelected = selectedOptions.some(
+                      k => !upperCorrect.includes(k.toUpperCase())
+                    );
+                    const missTargetKeys = hasWrongSelected
+                      ? selectedOptions.filter(k => !upperCorrect.includes(k.toUpperCase()))
+                      : upperCorrect.filter(
+                          k => !selectedOptions.some(s => s.toUpperCase() === k)
+                        );
+                    const showMissTag =
+                      isGraded &&
+                      !gradedState.isCorrect &&
+                      missTargetKeys.some(k => k.toUpperCase() === opt.key.toUpperCase());
+                    const isPrimaryBurstOpt = showSuccessTag
+                      ? opt.key.toUpperCase() === upperCorrect[0]
+                      : showMissTag &&
+                        missTargetKeys.length > 0 &&
+                        opt.key.toUpperCase() === missTargetKeys[0].toUpperCase();
+
                     return (
                       <button
                         key={opt.key}
                         type="button"
                         disabled={isGraded}
                         onClick={() => handleOptionClick(opt.key)}
-                        className={`group flex w-full items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerCls} ${
+                        className={`group relative flex w-full items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerCls} ${
                           isGraded ? 'cursor-default' : 'cursor-pointer'
                         }`}
                       >
+                        {isPrimaryBurstOpt && (
+                          <SakugaBurst
+                            event={sakugaEvent && sakugaEvent.variant !== 'ok' ? sakugaEvent : null}
+                            className="pointer-events-none absolute -top-3 right-3 z-20 sm:right-5"
+                          />
+                        )}
+
                         <span
                           className={`sakuga-option-badge mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold sm:h-7 sm:w-7 ${badgeCls}`}
                         >
@@ -827,7 +854,14 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                           {opt.text}
                         </span>
 
-                        <span className="mt-1 flex shrink-0 items-center gap-1.5">
+                        <span className="mt-0.5 flex shrink-0 items-center gap-1.5 sm:gap-2">
+                          {showSuccessTag && (
+                            <SakugaMangaTag
+                              label={!turnFlagged && gradedState.nextStreak >= 2 ? 'CLEAR! ✓' : 'NICE!'}
+                              tone={!turnFlagged && gradedState.nextStreak >= 2 ? 'emerald' : 'amber'}
+                            />
+                          )}
+                          {showMissTag && <SakugaMangaTag label="MISS!" tone="rose" />}
                           {!isGraded && (
                             <kbd className="hidden rounded border border-[#D5CFC2] bg-white px-1.5 py-0.5 font-mono text-[10px] text-[#656058] dark:border-[#353B36] dark:bg-[#161816] dark:text-[#9CA39B] lg:inline-block">
                               {idx + 1}
@@ -862,70 +896,12 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   </div>
                 )}
 
-                {/* Graded feedback & explanation with auto-scroll target */}
+                {/* Graded explanation & Next button with auto-scroll target */}
                 {gradedState !== null && (
                   <div
                     ref={explanationRef}
                     className="mt-5 scroll-mt-4 scroll-mb-24 space-y-4 border-t border-[#D5CFC2] pt-4 dark:border-[#262925] sm:mt-6 sm:space-y-5 sm:pt-5"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <div
-                          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold sm:px-3.5 sm:text-sm ${
-                            gradedState.isCorrect
-                              ? 'border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]'
-                              : 'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/55 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
-                          }`}
-                        >
-                          {gradedState.isCorrect ? (
-                            <>
-                              <CheckCircle2 className="h-4 w-4 text-[#059669] dark:text-[#34D399]" />
-                              <span>
-                                Chính xác!{' '}
-                                {!turnFlagged && gradedState.nextStreak >= 2
-                                  ? '• ✓ Đã thuộc (2/2) ●●'
-                                  : !turnFlagged && gradedState.nextStreak === 1
-                                    ? '• ✓ Đúng 1/2 lần ●○'
-                                    : ''}
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <X className="h-4 w-4 text-[#BE123C] dark:text-[#FDA4AF]" />
-                              <span>
-                                Chưa đúng · Đáp án đúng:{' '}
-                                {currentQuestion.correctAnswers.join(', ')}
-                              </span>
-                            </>
-                          )}
-                        </div>
-
-                        <SakugaMangaTag
-                          label={
-                            gradedState.isCorrect
-                              ? gradedState.nextStreak >= 2
-                                ? 'CLEAR! ✓'
-                                : 'NICE!'
-                              : 'MISS!'
-                          }
-                          tone={
-                            gradedState.isCorrect
-                              ? gradedState.nextStreak >= 2
-                                ? 'emerald'
-                                : 'amber'
-                              : 'rose'
-                          }
-                        />
-                      </div>
-
-                      {turnFlagged && (
-                        <span className="inline-flex items-center gap-1 rounded-lg border border-[#F0ABFC] bg-[#FAE8FF] px-2.5 py-1 text-xs font-medium text-[#A21CAF] dark:border-[#E879F9]/55 dark:bg-[#D946EF]/20 dark:text-[#F5D0FE]">
-                          <Flag className="h-3.5 w-3.5 text-[#A21CAF] dark:text-[#F5D0FE]" />
-                          Đang đánh dấu phân vân
-                        </span>
-                      )}
-                    </div>
-
                     <RichExplanation question={currentQuestion} />
 
                     <div className="hidden justify-end lg:flex">
