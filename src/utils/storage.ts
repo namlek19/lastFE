@@ -42,13 +42,14 @@ export function createDefaultStore(): UserProgressStore {
     examHistory: [],
     lastSubject: 'vnr202',
     lastMode: 'chapter',
-    lastTier: 'lazymax',
+    lastTier: 'hardcore',
     subjectMigratedVnr: true,
+    tierMigratedHardcore: true,
   };
 }
 
 function normalizeTier(raw: unknown): StudyTier {
-  return raw === 'lazy' || raw === 'hardcore' ? raw : 'lazymax';
+  return raw === 'lazymax' || raw === 'lazy' ? raw : 'hardcore';
 }
 
 export function loadStore(): UserProgressStore {
@@ -65,6 +66,8 @@ export function loadStore(): UserProgressStore {
       : parsed.lastSubject === 'mln131'
         ? 'mln131'
         : 'vnr202';
+    const migratedHardcore = parsed.tierMigratedHardcore === true;
+    const lastTier: StudyTier = !migratedHardcore ? 'hardcore' : normalizeTier(parsed.lastTier);
 
     return {
       version: 1,
@@ -77,8 +80,9 @@ export function loadStore(): UserProgressStore {
         parsed.lastMode === 'exam'
           ? parsed.lastMode
           : 'chapter',
-      lastTier: normalizeTier(parsed.lastTier),
+      lastTier,
       subjectMigratedVnr: true,
+      tierMigratedHardcore: true,
     };
   } catch {
     return createDefaultStore();
@@ -365,8 +369,78 @@ export function importProgressCode(code: string): UserProgressStore | null {
           : 'chapter',
       lastTier: normalizeTier(parsed.t),
       subjectMigratedVnr: true,
+      tierMigratedHardcore: true,
     };
   } catch {
     return null;
   }
+}
+
+/**
+ * Cumulatively merges an imported progress store into the current local store
+ * so learning on multiple devices/tiers combines mastered & studied questions
+ * and exam history without losing local progress.
+ */
+export function mergeProgressStores(
+  current: UserProgressStore,
+  incoming: UserProgressStore
+): UserProgressStore {
+  const mergedQuestions: Record<string, QuestionProgress> = { ...current.questions };
+
+  for (const [qId, incProg] of Object.entries(incoming.questions)) {
+    const curProg = mergedQuestions[qId];
+    if (!curProg) {
+      mergedQuestions[qId] = incProg;
+      continue;
+    }
+
+    const curMastered = isMastered(curProg);
+    const incMastered = isMastered(incProg);
+    const eitherMastered = curMastered || incMastered;
+
+    const streak = eitherMastered
+      ? Math.max(2, curProg.streak || 0, incProg.streak || 0)
+      : Math.max(curProg.streak || 0, incProg.streak || 0);
+    const flagged = eitherMastered ? false : Boolean(curProg.flagged || incProg.flagged);
+    const studied = Boolean(curProg.studied || incProg.studied || streak > 0);
+    const correctCount = Math.max(curProg.correctCount || 0, incProg.correctCount || 0);
+    const attemptCount = Math.max(curProg.attemptCount || 0, incProg.attemptCount || 0);
+    const lastResult =
+      streak > 0 || curProg.lastResult === 'correct' || incProg.lastResult === 'correct'
+        ? ('correct' as const)
+        : (incProg.lastResult ?? curProg.lastResult);
+
+    mergedQuestions[qId] = {
+      streak,
+      flagged,
+      studied,
+      correctCount,
+      attemptCount,
+      ...(lastResult ? { lastResult } : {}),
+    };
+  }
+
+  const historyMap = new Map<string, ExamHistoryItem>();
+  for (const item of current.examHistory) {
+    historyMap.set(item.id, item);
+  }
+  for (const item of incoming.examHistory) {
+    if (!historyMap.has(item.id)) {
+      historyMap.set(item.id, item);
+    }
+  }
+  const mergedHistory = Array.from(historyMap.values())
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 30);
+
+  return {
+    version: 1,
+    questions: mergedQuestions,
+    examHistory: mergedHistory,
+    lastSubject: current.lastSubject,
+    lastMode: current.lastMode,
+    lastTier: current.lastTier ?? 'hardcore',
+    subjectMigratedVnr: true,
+    tierMigratedHardcore: true,
+  };
 }

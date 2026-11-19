@@ -58,4 +58,5 @@ export interface UserProgressStore {
   lastMode: StudyMode;
   lastTier?: StudyTier;
   subjectMigratedVnr?: boolean;
+  tierMigratedHardcore?: boolean;
 }

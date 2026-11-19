@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Info, X } from 'lucide-react';
 import { StudyTier } from '../types/quiz';
 
 export type SakugaVariant = 'nice' | 'clear' | 'complete' | 'miss' | 'ok';
@@ -547,6 +549,7 @@ export const SakugaTierPicker: React.FC<SakugaTierPickerProps> = ({
   compact = false,
 }) => {
   const [burst, setBurst] = useState<{ tier: StudyTier; seq: number } | null>(null);
+  const [isTierInfoOpen, setIsTierInfoOpen] = useState(false);
 
   useEffect(() => {
     if (!burst) return;
@@ -554,70 +557,223 @@ export const SakugaTierPicker: React.FC<SakugaTierPickerProps> = ({
     return () => window.clearTimeout(timer);
   }, [burst]);
 
-  return (
-    <div
-      role="group"
-      aria-label="Chọn mức độ ôn tập"
-      className={
-        compact
-          ? 'grid w-full grid-cols-3 gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#F4F2EC] p-1 dark:border-[#262925] dark:bg-[#0F100E]'
-          : 'inline-flex shrink-0 items-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#F4F2EC] p-1 dark:border-[#262925] dark:bg-[#0F100E] xl:gap-1.5'
+  useEffect(() => {
+    if (!isTierInfoOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsTierInfoOpen(false);
       }
-    >
-      {STUDY_TIER_ITEMS.map((item) => {
-        const isActive = tier === item.id;
-        const isBursting = burst?.tier === item.id;
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isTierInfoOpen]);
 
-        return (
-          <button
-            key={item.id}
-            type="button"
-            title={item.hint}
-            aria-pressed={isActive}
-            onClick={() => {
-              onSelectTier(item.id);
-              setBurst((prev) => ({ tier: item.id, seq: (prev?.seq ?? 0) + 1 }));
-            }}
-            className={`relative inline-flex cursor-pointer items-center justify-center overflow-visible focus-visible:outline-none ${
-              compact ? 'w-full' : ''
-            }`}
+  const lazyItems = STUDY_TIER_ITEMS.slice(0, 2); // LAZY MAX, LAZY
+  const hardcoreItem = STUDY_TIER_ITEMS[2]; // HARDCORE
+
+  const renderTierButton = (item: TierStampConfig) => {
+    const isActive = tier === item.id;
+    const isBursting = burst?.tier === item.id;
+
+    return (
+      <button
+        key={item.id}
+        type="button"
+        title={item.hint}
+        aria-pressed={isActive}
+        onClick={() => {
+          onSelectTier(item.id);
+          setBurst((prev) => ({ tier: item.id, seq: (prev?.seq ?? 0) + 1 }));
+        }}
+        className={`relative inline-flex cursor-pointer items-center justify-center overflow-visible focus-visible:outline-none ${
+          compact ? 'min-w-0 flex-1' : ''
+        }`}
+      >
+        {isBursting && burst && (
+          <SakugaParticles
+            key={`tier-particles-${item.id}-${burst.seq}`}
+            isMiss={false}
+            showShards={item.showShards}
+            accentFill={item.accentFill}
+            smokeTint={item.smokeTint}
+            sparkleFill={item.sparkleFill}
+            className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[66px] w-[126px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
+          />
+        )}
+
+        <motion.span
+          key={isBursting && burst ? `stamp-${item.id}-${burst.seq}` : `stamp-${item.id}`}
+          initial={
+            isBursting
+              ? { y: -7, scaleX: 1.2, scaleY: 0.82, rotate: -4 }
+              : false
+          }
+          animate={{ y: 0, scaleX: 1, scaleY: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 320, damping: 16 }}
+          className={`relative z-10 inline-flex ${compact ? 'w-full' : ''}`}
+        >
+          <span
+            className={`inline-flex -skew-x-12 items-center justify-center rounded-md border-2 font-black italic tracking-wider whitespace-nowrap transition-colors duration-150 ${
+              compact
+                ? 'w-full px-1.5 py-1 text-[10.5px]'
+                : 'px-2 py-0.5 text-[10px] xl:px-2.5 xl:text-[11px]'
+            } ${isActive ? item.activeClass : item.inactiveClass}`}
           >
-            {isBursting && burst && (
-              <SakugaParticles
-                key={`tier-particles-${item.id}-${burst.seq}`}
-                isMiss={false}
-                showShards={item.showShards}
-                accentFill={item.accentFill}
-                smokeTint={item.smokeTint}
-                sparkleFill={item.sparkleFill}
-                className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[66px] w-[126px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
-              />
-            )}
+            <span className="skew-x-12">{item.label}</span>
+          </span>
+        </motion.span>
+      </button>
+    );
+  };
 
-            <motion.span
-              key={isBursting && burst ? `stamp-${item.id}-${burst.seq}` : `stamp-${item.id}`}
-              initial={
-                isBursting
-                  ? { y: -7, scaleX: 1.2, scaleY: 0.82, rotate: -4 }
-                  : false
-              }
-              animate={{ y: 0, scaleX: 1, scaleY: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 16 }}
-              className={`relative z-10 inline-flex ${compact ? 'w-full' : ''}`}
-            >
-              <span
-                className={`inline-flex -skew-x-12 items-center justify-center rounded-md border-2 font-black italic tracking-wider whitespace-nowrap transition-colors duration-150 ${
-                  compact
-                    ? 'w-full px-1.5 py-1 text-[10.5px]'
-                    : 'px-2 py-0.5 text-[10px] xl:px-2.5 xl:text-[11px]'
-                } ${isActive ? item.activeClass : item.inactiveClass}`}
+  return (
+    <>
+      <div
+        role="group"
+        aria-label="Chọn mức độ ôn tập"
+        className={
+          compact
+            ? 'flex w-full items-center gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#F4F2EC] p-1 dark:border-[#262925] dark:bg-[#0F100E]'
+            : 'inline-flex shrink-0 items-center gap-1 rounded-xl border border-[#D5CFC2] bg-[#F4F2EC] p-1 dark:border-[#262925] dark:bg-[#0F100E] xl:gap-1.5'
+        }
+      >
+        {lazyItems.map(renderTierButton)}
+
+        {/* Circled info icon next to LAZY MAX & LAZY */}
+        <button
+          type="button"
+          onClick={() => setIsTierInfoOpen(true)}
+          aria-expanded={isTierInfoOpen}
+          aria-haspopup="dialog"
+          aria-label="Giới thiệu về các mức LAZY MAX và LAZY"
+          title="Xem lưu ý của Nam về LAZY MAX & LAZY"
+          className={`inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] transition hover:border-[#4338CA] hover:bg-[#4338CA] hover:text-white dark:border-[#818CF8]/55 dark:bg-[#312E81]/45 dark:text-[#A5B4FC] dark:hover:border-[#818CF8] dark:hover:bg-[#4338CA] dark:hover:text-white ${
+            compact ? 'h-6 w-6' : 'h-5 w-5 xl:h-[22px] xl:w-[22px]'
+          }`}
+        >
+          <Info className="h-3 w-3 shrink-0" />
+        </button>
+
+        <span
+          aria-hidden="true"
+          className="h-4 w-px shrink-0 bg-[#D5CFC2] dark:bg-[#2C302B]"
+        />
+
+        {renderTierButton(hardcoreItem)}
+      </div>
+
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {isTierInfoOpen && (
+              <motion.div
+                key="tier-info-backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.16 }}
+                onClick={() => setIsTierInfoOpen(false)}
+                className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/50 p-3 backdrop-blur-xs dark:bg-[#0F100E]/80 sm:p-6"
               >
-                <span className="skew-x-12">{item.label}</span>
-              </span>
-            </motion.span>
-          </button>
-        );
-      })}
-    </div>
+                <motion.div
+                  key="tier-info-dialog"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Lời nhắn từ Nam về 3 mức học"
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full max-w-lg overflow-hidden rounded-2xl border-2 border-[#27272A] bg-[#EAE6DD] shadow-[5px_5px_0_0_#C7D2FE,0_16px_38px_-8px_rgba(24,24,27,0.18)] dark:border-[#52525B] dark:bg-[#161816] dark:shadow-[5px_5px_0_0_#312E81,0_18px_42px_-8px_rgba(0,0,0,0.85)]"
+                >
+                  <div className="flex items-center justify-between border-b border-[#D5CFC2] px-5 py-3.5 dark:border-[#262925]">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/40 dark:text-[#A5B4FC]">
+                        <Info className="h-4 w-4" />
+                      </span>
+                      <span className="inline-flex items-center rounded-full border border-[#A5B4FC] bg-[#EEF2FF] px-2.5 py-0.5 text-xs font-bold text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/35 dark:text-[#A5B4FC]">
+                        from Namblee
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsTierInfoOpen(false)}
+                      aria-label="Đóng hộp thoại"
+                      className="cursor-pointer rounded-xl p-1.5 text-[#656058] transition hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3.5 p-5 text-[13px] leading-relaxed text-[#292524] dark:text-[#E7E5E4] sm:text-sm">
+                    <p className="rounded-xl border border-[#C6BEB0] bg-[#FFFFFF] p-3.5 font-medium text-[#18181B] dark:border-[#323833] dark:bg-[#1E221F] dark:text-[#F5F5F4]">
+                      Hi, Nam đây, t dựa vào 1 vài sách về tư duy và trí nhớ não bộ để rút gọn lại số câu phải học.
+                    </p>
+
+                    <p className="leading-[2.1]">
+                      Thì giờ có 3 mức:{' '}
+                      <SakugaMangaTag
+                        label="HARDCORE"
+                        tone="rose"
+                        animateBurst={false}
+                        className="mx-1 align-middle"
+                      />{' '}
+                      là full source,{' '}
+                      <SakugaMangaTag
+                        label="LAZY"
+                        tone="amber"
+                        animateBurst={false}
+                        className="mx-1 align-middle"
+                      />{' '}
+                      là giảm bớt đi chút,{' '}
+                      <SakugaMangaTag
+                        label="LAZY MAX"
+                        tone="emerald"
+                        animateBurst={false}
+                        className="mx-1 align-middle"
+                      />{' '}
+                      là giảm vãi nồi.
+                    </p>
+
+                    <p className="leading-[2.05]">
+                      Nếu ít thời gian thì có thể học theo kiểu{' '}
+                      <strong className="font-bold text-[#047857] dark:text-[#34D399]">
+                        HỌC HIỂU
+                      </strong>{' '}
+                      <SakugaMangaTag
+                        label="LAZY MAX"
+                        tone="emerald"
+                        animateBurst={false}
+                        className="mx-1 align-middle"
+                      />{' '}
+                      vì nó đã bao gồm các ý chính rồi chỉ cần suy luận là có thể ra đáp án của tất cả các câu còn lại, vẫn khuyến khích nên học full.
+                    </p>
+
+                    <div className="rounded-xl border border-[#C6BEB0] bg-[#FFFFFF] p-3.5 dark:border-[#323833] dark:bg-[#1E221F]">
+                      <p className="mb-2.5 text-center font-semibold text-[#18181B] dark:text-[#F5F5F4]">
+                        Nói chung học theo kiểu này:
+                      </p>
+                      <div className="flex flex-wrap items-center justify-center gap-2">
+                        <SakugaMangaTag label="LAZY MAX" tone="emerald" animateBurst={false} />
+                        <span className="text-xs font-black text-[#656058] dark:text-[#9CA39B]">
+                          -&gt;
+                        </span>
+                        <SakugaMangaTag label="LAZY" tone="amber" animateBurst={false} />
+                        <span className="text-xs font-black text-[#656058] dark:text-[#9CA39B]">
+                          -&gt;
+                        </span>
+                        <SakugaMangaTag label="HARDCORE" tone="rose" animateBurst={false} />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+    </>
   );
 };

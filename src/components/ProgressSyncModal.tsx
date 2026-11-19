@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { getQuestionsBySubject } from '../data/index';
 import { UserProgressStore } from '../types/quiz';
-import { exportProgressCode, importProgressCode, isMastered } from '../utils/storage';
+import { exportProgressCode, importProgressCode, isMastered, mergeProgressStores } from '../utils/storage';
 
 export interface ProgressSyncModalProps {
   isOpen: boolean;
@@ -141,19 +141,35 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
       return;
     }
 
-    let importedMastered = 0;
+    let beforeMastered = 0;
     for (const q of allQuestions) {
-      if (isMastered(imported.questions[q.id])) {
-        importedMastered += 1;
+      if (isMastered(progress.questions[q.id])) {
+        beforeMastered += 1;
       }
     }
 
-    onImportProgress(imported);
+    const merged = mergeProgressStores(progress, imported);
+
+    let afterMastered = 0;
+    for (const q of allQuestions) {
+      if (isMastered(merged.questions[q.id])) {
+        afterMastered += 1;
+      }
+    }
+
+    const addedMastered = Math.max(0, afterMastered - beforeMastered);
+    const addedExams = Math.max(0, merged.examHistory.length - progress.examHistory.length);
+
+    onImportProgress(merged);
     setImportError(null);
     setInputCode('');
     setConfirmReset(false);
     setImportSuccess(
-      `Đã khôi phục tiến độ thành công (${importedMastered} câu đã thuộc, ${imported.examHistory.length} lượt thi thử).`
+      `Đã cộng dồn tiến độ! Tổng: ${afterMastered} câu đã thuộc${
+        addedMastered > 0 ? ` (+${addedMastered} câu mới)` : ''
+      }, ${merged.examHistory.length} lượt thi thử${
+        addedExams > 0 ? ` (+${addedExams} lượt mới)` : ''
+      }.`
     );
   };
 
@@ -296,10 +312,10 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
               {/* Import Section */}
               <section className="rounded-2xl border border-[#C6BEB0] bg-[#FFFFFF] p-4 dark:border-[#323833] dark:bg-[#1E221F]">
                 <h3 className="mb-1 text-sm font-bold text-[#18181B] dark:text-[#F5F5F4]">
-                  Nhập mã tiến độ
+                  Nhập &amp; cộng dồn mã tiến độ
                 </h3>
                 <p className="mb-2.5 text-xs text-[#656058] dark:text-[#9CA39B]">
-                  Dán mã tiến độ đã lưu từ thiết bị khác vào ô bên dưới để khôi phục.
+                  Dán mã từ thiết bị khác để gộp cộng dồn các câu đã học, đã thuộc và lịch sử thi thử vào máy này (không ghi đè mất dữ liệu cũ).
                 </p>
 
                 <textarea
@@ -343,7 +359,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                     className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#4338CA] px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-[#3730A3] disabled:cursor-not-allowed disabled:bg-[#EAE6DD] disabled:text-[#656058] dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:hover:bg-[#3730A3] dark:disabled:border-transparent dark:disabled:bg-[#1C1F1C] dark:disabled:text-[#9CA39B]"
                   >
                     <Upload className="h-3.5 w-3.5" />
-                    <span>Khôi phục tiến độ</span>
+                    <span>Cộng dồn tiến độ</span>
                   </button>
                 </div>
               </section>

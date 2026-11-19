@@ -90,7 +90,7 @@ export const App: React.FC = () => {
     setStore(prev => resetProgress(prev));
   }, []);
 
-  const { lastSubject: subject, lastMode: mode, lastTier: tier = 'lazymax' } = store;
+  const { lastSubject: subject, lastMode: mode, lastTier: tier = 'hardcore' } = store;
 
   return (
     <MotionConfig reducedMotion="user">
