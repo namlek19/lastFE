@@ -503,7 +503,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   <span className="tabular-nums">{stages.length} chặng</span>
                 </div>
 
-                <div className="max-h-[calc(100vh-450px)] min-h-[140px] space-y-2 overflow-y-auto pr-1">
+                <div className="max-h-[calc(100vh-450px)] min-h-[140px] space-y-3.5 overflow-y-auto px-2.5 py-2.5">
                   {stages.map(stage => {
                     const stats = getStageStats(stage.questions, progress);
                     const isCurrentStage = stage.index === activeStage.index;
@@ -512,20 +512,20 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                         key={stage.index}
                         type="button"
                         onClick={() => startStageSession(stage.index)}
-                        className={`flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl border px-3 py-2.5 text-left transition ${
+                        className={`relative flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition ${
                           isCurrentStage
                             ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] shadow-xs dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
-                            : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                            : stats.percent >= 100
+                              ? 'border-[#10B981] bg-[#FAF9F5] ring-2 ring-[#34D399]/35 text-[#292524] hover:border-[#059669] hover:bg-[#ECFDF5] dark:border-[#10B981]/80 dark:bg-[#1C1F1C] dark:ring-[#34D399]/30 dark:text-[#E7E5E4] dark:hover:border-[#34D399] dark:hover:bg-[#059669]/20'
+                              : stats.percent >= 50
+                                ? 'border-[#F59E0B]/70 bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                                : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                         }`}
                       >
-                        <div className="min-w-0">
-                          <div className="text-xs font-bold">
-                            {stage.title} · Câu {stage.startIndex}–{stage.endIndex}
-                          </div>
-                          <div className="text-[11px] text-[#656058] tabular-nums dark:text-[#9CA39B]">
-                            Thuộc {stats.mastered}/{stats.total} · Phân vân {stats.hesitant}
-                          </div>
-                        </div>
+                        <SakugaBorderFire percent={stats.percent} radius={12} compact />
+
+                        <span className="truncate text-xs font-bold">{stage.title}</span>
+
                         <span className="shrink-0 rounded-full border border-[#10B981] bg-[#D1FAE5] px-2 py-0.5 text-[11px] font-bold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
                           {stats.percent}%
                         </span>
@@ -1078,7 +1078,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                           startStageSession(stage.index);
                           setIsStageSheetOpen(false);
                         }}
-                        className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border px-3.5 py-3 text-left transition ${
+                        className={`relative flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left transition ${
                           isCurrentStage
                             ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
                             : stats.percent >= 100
@@ -1090,21 +1090,11 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                       >
                         <SakugaBorderFire percent={stats.percent} radius={12} compact />
 
-                        <div className="flex w-full items-center justify-between gap-3">
-                          <div>
-                            <div className="text-xs font-bold">
-                              {stage.title} · Câu {stage.startIndex}–{stage.endIndex}
-                            </div>
-                            <div className="text-[11px] text-[#656058] tabular-nums dark:text-[#9CA39B]">
-                              Thuộc {stats.mastered}/{stats.total} · Phân vân {stats.hesitant}
-                            </div>
-                          </div>
-                          <span className="rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
-                            {stats.percent}%
-                          </span>
-                        </div>
+                        <span className="truncate text-xs font-bold">{stage.title}</span>
 
-                        <SakugaProgressBar percent={stats.percent} className="h-1.5 w-full" />
+                        <span className="shrink-0 rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
+                          {stats.percent}%
+                        </span>
                       </button>
                     );
                   })}
