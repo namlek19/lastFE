@@ -16,6 +16,11 @@ interface PerimeterPoint {
   ny: number;
 }
 
+interface Point2D {
+  x: number;
+  y: number;
+}
+
 interface BurstShard {
   u: number;
   speed: number;
@@ -25,7 +30,7 @@ interface BurstShard {
   jitter: number;
 }
 
-const FRAME_MS = 1000 / 30;
+const FRAME_MS = 1000 / 45;
 const BURST_DURATION_MS = 850;
 const TAU = Math.PI * 2;
 
@@ -117,7 +122,7 @@ function sampleRoundedRectPerimeter(
   return { px: x, py: y, nx: 0, ny: -1 };
 }
 
-function drawRoundedRectStroke(
+function appendRoundedRectSubPath(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -126,7 +131,6 @@ function drawRoundedRectStroke(
   rRaw: number
 ): void {
   const r = Math.max(0, Math.min(rRaw, w / 2, h / 2));
-  ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
   ctx.arcTo(x + w, y, x + w, y + r, r);
@@ -137,6 +141,18 @@ function drawRoundedRectStroke(
   ctx.lineTo(x, y + r);
   ctx.arcTo(x, y, x + r, y, r);
   ctx.closePath();
+}
+
+function drawRoundedRectStroke(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  rRaw: number
+): void {
+  ctx.beginPath();
+  appendRoundedRectSubPath(ctx, x, y, w, h, rRaw);
 }
 
 function drawStarSpark(
@@ -170,95 +186,40 @@ function drawStarSpark(
   ctx.restore();
 }
 
-function drawCelFlameTongue(
-  ctx: CanvasRenderingContext2D,
-  bx: number,
-  by: number,
-  dirX: number,
-  dirY: number,
-  width: number,
-  height: number,
-  sway: number,
-  outerColor: string
-): void {
-  const perpX = -dirY;
-  const perpY = dirX;
-  const hw = width * 0.5;
-  const tipSway = sway * width * 0.72;
-  const midSway = sway * width * 0.28;
+/**
+ * Multi-octave periodic wave height in [0.18, 1.0].
+ * Uses integer multiples of TAU across u so the closed perimeter loop has zero seam.
+ */
+function computeWaveHeight(u: number, t: number, phaseOffset: number): number {
+  const theta1 = u * TAU * 4 - t * 2.1 + phaseOffset;
+  const theta2 = u * TAU * 7 + t * 1.5 - phaseOffset * 0.7;
+  const theta3 = u * TAU * 11 + t * 3.4 + phaseOffset * 1.3;
+  const theta4 = u * TAU * 23 - t * 5.6 + phaseOffset * 0.8;
 
-  const leftX = bx - perpX * hw;
-  const leftY = by - perpY * hw;
-  const rightX = bx + perpX * hw;
-  const rightY = by + perpY * hw;
-  const tipX = bx + dirX * height + perpX * tipSway;
-  const tipY = by + dirY * height + perpY * tipSway;
+  const billow = 0.5 + 0.5 * Math.sin(theta1);
+  const swell = 0.5 + 0.5 * Math.sin(theta2);
+  const crest = Math.pow(1 - Math.abs(Math.sin(theta3)), 1.4);
+  const lick = Math.pow(1 - Math.abs(Math.cos(theta4)), 1.65);
 
-  // Outer cel-shaded flame silhouette
+  return Math.min(1, 0.18 + 0.24 * billow + 0.2 * swell + 0.24 * crest + 0.14 * lick);
+}
+
+function drawSmoothClosedWave(ctx: CanvasRenderingContext2D, points: readonly Point2D[]): void {
+  const count = points.length;
+  if (count < 3) return;
+
+  const last = points[count - 1];
+  const first = points[0];
   ctx.beginPath();
-  ctx.moveTo(leftX, leftY);
-  ctx.quadraticCurveTo(
-    bx - perpX * (hw * 0.85) + dirX * (height * 0.55) + perpX * midSway,
-    by - perpY * (hw * 0.85) + dirY * (height * 0.55) + perpY * midSway,
-    tipX,
-    tipY
-  );
-  ctx.quadraticCurveTo(
-    bx + perpX * (hw * 0.85) + dirX * (height * 0.55) + perpX * midSway,
-    by + perpY * (hw * 0.85) + dirY * (height * 0.55) + perpY * midSway,
-    rightX,
-    rightY
-  );
-  ctx.closePath();
-  ctx.fillStyle = outerColor;
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(67, 20, 7, 0.42)';
-  ctx.lineWidth = 0.9;
-  ctx.lineJoin = 'round';
-  ctx.stroke();
+  ctx.moveTo((last.x + first.x) * 0.5, (last.y + first.y) * 0.5);
 
-  // Middle golden flame tongue (counter-sway)
-  const midH = height * 0.68;
-  const midHw = hw * 0.62;
-  const mTipSway = -sway * width * 0.25;
-  ctx.beginPath();
-  ctx.moveTo(bx - perpX * midHw + dirX * 0.8, by - perpY * midHw + dirY * 0.8);
-  ctx.quadraticCurveTo(
-    bx - perpX * (midHw * 0.7) + dirX * (midH * 0.56),
-    by - perpY * (midHw * 0.7) + dirY * (midH * 0.56),
-    bx + dirX * midH + perpX * mTipSway,
-    by + dirY * midH + perpY * mTipSway
-  );
-  ctx.quadraticCurveTo(
-    bx + perpX * (midHw * 0.7) + dirX * (midH * 0.56),
-    by + perpY * (midHw * 0.7) + dirY * (midH * 0.56),
-    bx + perpX * midHw + dirX * 0.8,
-    by + perpY * midHw + dirY * 0.8
-  );
-  ctx.closePath();
-  ctx.fillStyle = '#FACC15';
-  ctx.fill();
+  for (let i = 0; i < count; i++) {
+    const cur = points[i];
+    const next = points[(i + 1) % count];
+    ctx.quadraticCurveTo(cur.x, cur.y, (cur.x + next.x) * 0.5, (cur.y + next.y) * 0.5);
+  }
 
-  // Bright hot yellow-cream core
-  const coreH = height * 0.38;
-  const coreHw = hw * 0.34;
-  ctx.beginPath();
-  ctx.moveTo(bx - perpX * coreHw + dirX * 1.1, by - perpY * coreHw + dirY * 1.1);
-  ctx.quadraticCurveTo(
-    bx + dirX * (coreH * 0.65),
-    by + dirY * (coreH * 0.65),
-    bx + dirX * coreH,
-    by + dirY * coreH
-  );
-  ctx.quadraticCurveTo(
-    bx + dirX * (coreH * 0.65),
-    by + dirY * (coreH * 0.65),
-    bx + perpX * coreHw + dirX * 1.1,
-    by + perpY * coreHw + dirY * 1.1
-  );
   ctx.closePath();
-  ctx.fillStyle = '#FEF9C3';
-  ctx.fill();
 }
 
 function buildBurstShards(compact: boolean): BurstShard[] {
@@ -272,6 +233,14 @@ function buildBurstShards(compact: boolean): BurstShard[] {
     isStar: idx % 3 === 0,
     jitter: ((idx * 37) % 10) / 10 - 0.5,
   }));
+}
+
+interface FireLayerSpec {
+  heightScale: number;
+  phaseOffset: number;
+  fillStyle: string;
+  shadowColor?: string;
+  shadowBlur?: number;
 }
 
 export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
@@ -313,7 +282,9 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const pad = compact ? 10 : 13;
+    const pad = compact ? 12 : 16;
+    const sampleCount = compact ? 140 : 190;
+
     let width = host.clientWidth;
     let height = host.clientHeight;
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -321,8 +292,20 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
     let rafId = 0;
     let lastDraw = 0;
 
+    const perimeterSamples: PerimeterPoint[] = [];
+    const layerPoints: Point2D[] = Array.from({ length: sampleCount }, () => ({ x: 0, y: 0 }));
+
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     let prefersReduced = motionQuery.matches;
+
+    const rebuildPerimeterCache = () => {
+      perimeterSamples.length = 0;
+      if (width <= 0 || height <= 0) return;
+      for (let i = 0; i < sampleCount; i++) {
+        const u = i / sampleCount;
+        perimeterSamples.push(sampleRoundedRectPerimeter(u, pad, pad, width, height, radius));
+      }
+    };
 
     const syncSize = () => {
       width = host.clientWidth;
@@ -335,14 +318,18 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
         canvas.height = ch;
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      rebuildPerimeterCache();
     };
 
     const drawFrame = (now: number) => {
-      if (width <= 0 || height <= 0) return;
+      if (width <= 0 || height <= 0 || perimeterSamples.length === 0) return;
 
       const curPct = percentRef.current;
+      const canvasW = width + pad * 2;
+      const canvasH = height + pad * 2;
+
       if (curPct < 50) {
-        ctx.clearRect(0, 0, width + pad * 2, height + pad * 2);
+        ctx.clearRect(0, 0, canvasW, canvasH);
         return;
       }
 
@@ -350,145 +337,186 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
       const isMax = curPct >= 100;
       const t = prefersReduced ? 1.2 : now * 0.001;
 
-      ctx.clearRect(0, 0, width + pad * 2, height + pad * 2);
+      ctx.clearRect(0, 0, canvasW, canvasH);
 
-      // Subtle warm aura line right along the card edge, brightening at 100%
-      ctx.save();
-      drawRoundedRectStroke(ctx, pad, pad, width, height, radius);
-      ctx.strokeStyle = isMax
-        ? 'rgba(16, 185, 129, 0.48)'
-        : `rgba(249, 115, 22, ${(0.12 + ratio * 0.16).toFixed(2)})`;
-      ctx.lineWidth = isMax ? 2 : 1.25;
-      ctx.stroke();
-      ctx.restore();
-
-      // Spaced-out cel-shaded anime flames burning around the perimeter
-      const flameCount = compact
-        ? Math.round(7 + ratio * 7)
-        : Math.round(10 + ratio * 12);
-
-      const maxBaseH = compact ? 5 + ratio * 4.5 : 6 + ratio * 6;
-      const maxBaseW = compact ? 4.4 + ratio * 2.4 : 5.4 + ratio * 3;
-
-      for (let i = 0; i < flameCount; i++) {
-        const seed = i * 1.93 + 0.4;
-        const drift = prefersReduced ? 0 : Math.sin(t * 2.1 + seed) * 0.004;
-        const u = (i + 0.5) / flameCount + drift;
-        const pt = sampleRoundedRectPerimeter(u, pad, pad, width, height, radius);
-
-        // Blend outward normal with upward fire buoyancy while preserving outward direction
-        const rawX = pt.nx;
-        const rawY = pt.ny - 0.36 * (1 - Math.max(0, pt.ny) * 0.78);
-        const norm = Math.hypot(rawX, rawY) || 1;
-        const dirX = rawX / norm;
-        const dirY = rawY / norm;
-
-        const flicker = prefersReduced
-          ? 1
-          : 0.8 + 0.24 * Math.sin(t * 6.8 + seed * 1.7) + 0.12 * Math.cos(t * 10.3 + seed);
-        const edgeFactor = pt.ny > 0.55 ? 0.76 : 1;
-        const fH = maxBaseH * flicker * edgeFactor * (i % 3 === 0 ? 1.12 : 0.92);
-        const fW = maxBaseW * (0.9 + 0.12 * Math.sin(t * 5.2 + seed));
-        const sway = prefersReduced ? 0.1 : Math.sin(t * 7.4 + seed * 2.1);
-
-        const outerColor = isMax && i % 4 === 0 ? '#EA580C' : i % 2 === 0 ? '#F97316' : '#EA580C';
-
-        drawCelFlameTongue(
-          ctx,
-          pt.px - dirX * 0.8,
-          pt.py - dirY * 0.8,
-          dirX,
-          dirY,
-          fW,
-          fH,
-          sway,
-          outerColor
-        );
-
-        // Sparse rising ember spark above alternating flame tips
-        if (!prefersReduced && i % 2 === 0 && ratio > 0.15) {
-          const emberCycle = (t * 1.35 + i * 0.31) % 1;
-          if (emberCycle < 0.82) {
-            const dist = fH + 1.5 + emberCycle * (compact ? 4 : 5.5);
-            const ex = pt.px + dirX * dist + Math.sin(emberCycle * 8 + seed) * 1.6;
-            const ey = pt.py + dirY * dist - emberCycle * 2.2;
-            const er = Math.max(0.7, (1 - emberCycle) * (isMax ? 1.9 : 1.45));
-            ctx.beginPath();
-            ctx.arc(ex, ey, er, 0, TAU);
-            ctx.fillStyle = emberCycle < 0.45 ? '#FDE047' : '#FB923C';
-            ctx.fill();
-          }
+      // Compute one-shot 100% explosion surge progress if active
+      let burstP = -1;
+      let surgeBoost = 1;
+      if (burstStartRef.current !== null && !prefersReduced) {
+        const elapsed = now - burstStartRef.current;
+        if (elapsed >= BURST_DURATION_MS) {
+          burstStartRef.current = null;
+        } else {
+          burstP = elapsed / BURST_DURATION_MS;
+          surgeBoost = 1 + 0.34 * (1 - burstP);
         }
       }
 
-      // Sparse 4-point anime star sparkles at >= 80% and 100%
+      // Curtain thickness scales smoothly with % while keeping comfortable margin inside pad
+      const baseMaxH = compact ? 5.2 + ratio * 4.4 : 6.4 + ratio * 5.8;
+      const maxWaveH = Math.min(pad - 2.5, baseMaxH * surgeBoost);
+
+      // Clip interior of the card using evenodd rule so the fire sheet hugs flush outside border
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, canvasW, canvasH);
+      appendRoundedRectSubPath(
+        ctx,
+        pad + 1,
+        pad + 1,
+        Math.max(0, width - 2),
+        Math.max(0, height - 2),
+        Math.max(0, radius - 1)
+      );
+      ctx.clip('evenodd');
+
+      const layers: FireLayerSpec[] = [
+        {
+          heightScale: 1.04,
+          phaseOffset: 0,
+          fillStyle: 'rgba(194, 65, 12, 0.62)',
+          shadowColor: 'rgba(234, 88, 12, 0.7)',
+          shadowBlur: compact ? 5 : 8,
+        },
+        {
+          heightScale: 0.86,
+          phaseOffset: 0.42,
+          fillStyle: '#F97316',
+        },
+        {
+          heightScale: 0.6,
+          phaseOffset: -0.55,
+          fillStyle: '#FACC15',
+        },
+        {
+          heightScale: 0.34,
+          phaseOffset: 0.9,
+          fillStyle: '#FEF9C3',
+        },
+      ];
+
+      for (const layer of layers) {
+        for (let i = 0; i < sampleCount; i++) {
+          const u = i / sampleCount;
+          const pt = perimeterSamples[i];
+          const wave = computeWaveHeight(u, t, layer.phaseOffset);
+
+          // Blend outward normal with upward fire buoyancy while guaranteeing outward clearance
+          const buoyX = pt.nx;
+          const buoyY = pt.ny - 0.34 * (1 - Math.max(0, pt.ny) * 0.78);
+          const norm = Math.hypot(buoyX, buoyY) || 1;
+          const dirX = buoyX / norm;
+          const dirY = buoyY / norm;
+
+          // Lush billowing crests along top & sides; compact simmering fire rim on bottom
+          const edgeWeight = 0.6 + 0.4 * (1 - Math.max(0, pt.ny));
+          const disp = wave * maxWaveH * layer.heightScale * edgeWeight;
+
+          // Subtle tangential wind curl on tall wave crests
+          const tanX = -pt.ny;
+          const tanY = pt.nx;
+          const curl =
+            (Math.sin(u * TAU * 9 - t * 3.9 + layer.phaseOffset) * 1.7 +
+              Math.cos(u * TAU * 17 + t * 4.8) * 0.8) *
+            wave *
+            (0.45 + ratio * 0.55);
+
+          layerPoints[i].x = pt.px + dirX * disp + tanX * curl;
+          layerPoints[i].y = pt.py + dirY * disp + tanY * curl;
+        }
+
+        ctx.save();
+        if (layer.shadowBlur && layer.shadowColor) {
+          ctx.shadowBlur = layer.shadowBlur;
+          ctx.shadowColor = layer.shadowColor;
+        }
+        drawSmoothClosedWave(ctx, layerPoints);
+        ctx.fillStyle = layer.fillStyle;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Floating warm ember sparks drifting off the highest flame crests
+      if (!prefersReduced && ratio > 0.1) {
+        const emberCount = compact ? Math.round(5 + ratio * 5) : Math.round(8 + ratio * 9);
+        for (let e = 0; e < emberCount; e++) {
+          const cycle = (t * 1.15 + e * 0.27) % 1;
+          const u = (e + 0.5) / emberCount + Math.sin(e * 4.1) * 0.02;
+          const pt = sampleRoundedRectPerimeter(u, pad, pad, width, height, radius);
+          const crestH = computeWaveHeight(u, t - cycle * 0.25, 0.42) * maxWaveH;
+          const dist = crestH * 0.8 + 1.2 + cycle * (compact ? 4 : 5.5);
+          const ex = pt.px + pt.nx * dist + Math.sin(cycle * 7 + e * 2.3) * 2;
+          const ey = pt.py + pt.ny * dist - cycle * (compact ? 2.8 : 4);
+          const er = Math.max(0.65, (1 - cycle) * (isMax ? 1.7 : 1.35));
+          ctx.beginPath();
+          ctx.arc(ex, ey, er, 0, TAU);
+          ctx.fillStyle = cycle < 0.42 ? '#FEF08A' : isMax && e % 4 === 0 ? '#6EE7B7' : '#FB923C';
+          ctx.fill();
+        }
+      }
+
+      // Crisp 4-point anime star sparkles at >= 80% & 100%
       if (curPct >= 80) {
-        const starCount = isMax ? (compact ? 5 : 7) : compact ? 2 : 4;
+        const starCount = isMax ? (compact ? 5 : 8) : compact ? 2 : 4;
         for (let s = 0; s < starCount; s++) {
-          const u = (s + 0.18) / starCount;
+          const u = (s + 0.22) / starCount;
           const pt = sampleRoundedRectPerimeter(u, pad, pad, width, height, radius);
           const pulse = prefersReduced ? 0.85 : 0.55 + 0.45 * Math.sin(t * 4.8 + s * 1.9);
-          if (pulse < 0.32) continue;
-          const offset = (compact ? 6.5 : 8.5) + (s % 2) * 1.5;
+          if (pulse < 0.34) continue;
+          const offset = maxWaveH * 0.82 + (compact ? 2.2 : 3.2);
           const sx = pt.px + pt.nx * offset;
-          const sy = pt.py + pt.ny * offset - 1.2;
-          const outerR = (compact ? 2.8 : 3.5) * pulse;
+          const sy = pt.py + pt.ny * offset - 1;
+          const outerR = (compact ? 2.6 : 3.4) * pulse;
           const fill = s % 2 === 0 ? '#FEF08A' : isMax ? '#6EE7B7' : '#FDE047';
           const stroke = s % 2 === 0 ? 'rgba(120, 53, 15, 0.7)' : 'rgba(6, 78, 59, 0.75)';
           drawStarSpark(ctx, sx, sy, outerR, fill, stroke, t * 1.6 + s);
         }
       }
 
-      // One-shot Sakuga 100% perimeter explosion burst
-      if (burstStartRef.current !== null && !prefersReduced) {
-        const elapsed = now - burstStartRef.current;
-        if (elapsed >= BURST_DURATION_MS) {
-          burstStartRef.current = null;
-        } else {
-          const p = elapsed / BURST_DURATION_MS;
-          const ease = 1 - Math.pow(1 - p, 3);
-          const alpha = 1 - Math.pow(p, 1.4);
+      // One-shot 100% Sakuga perimeter explosion burst
+      if (burstP >= 0) {
+        const ease = 1 - Math.pow(1 - burstP, 3);
+        const alpha = 1 - Math.pow(burstP, 1.4);
 
-          ctx.save();
-          ctx.globalAlpha = Math.max(0, alpha);
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, alpha);
 
-          // Expanding shock ring
-          const ringExpand = ease * (compact ? 8 : 11);
-          drawRoundedRectStroke(
-            ctx,
-            pad - ringExpand,
-            pad - ringExpand,
-            width + ringExpand * 2,
-            height + ringExpand * 2,
-            radius + ringExpand * 0.65
-          );
-          ctx.strokeStyle = p < 0.45 ? '#FEF08A' : '#34D399';
-          ctx.lineWidth = Math.max(0.8, (1 - p) * 2.8);
-          ctx.stroke();
+        const ringExpand = ease * (compact ? 9 : 12);
+        drawRoundedRectStroke(
+          ctx,
+          pad - ringExpand,
+          pad - ringExpand,
+          width + ringExpand * 2,
+          height + ringExpand * 2,
+          radius + ringExpand * 0.65
+        );
+        ctx.strokeStyle = burstP < 0.45 ? '#FEF08A' : '#34D399';
+        ctx.lineWidth = Math.max(0.9, (1 - burstP) * 2.8);
+        ctx.stroke();
 
-          // Radial cel shards & stars
-          for (const shard of burstShardsRef.current) {
-            const pt = sampleRoundedRectPerimeter(shard.u, pad, pad, width, height, radius);
-            const dist = ease * shard.speed;
-            const px = pt.px + pt.nx * dist + shard.jitter * 4 * ease;
-            const py = pt.py + pt.ny * dist + shard.jitter * 4 * ease;
-            const curSize = shard.size * (1 - p * 0.45);
-            if (shard.isStar) {
-              drawStarSpark(ctx, px, py, curSize * 1.45, shard.color, '#18181B', ease * 2.4);
-            } else {
-              ctx.beginPath();
-              ctx.arc(px, py, curSize, 0, TAU);
-              ctx.fillStyle = shard.color;
-              ctx.fill();
-              ctx.strokeStyle = 'rgba(24, 24, 27, 0.55)';
-              ctx.lineWidth = 0.7;
-              ctx.stroke();
-            }
+        for (const shard of burstShardsRef.current) {
+          const pt = sampleRoundedRectPerimeter(shard.u, pad, pad, width, height, radius);
+          const dist = ease * shard.speed;
+          const px = pt.px + pt.nx * dist + shard.jitter * 4 * ease;
+          const py = pt.py + pt.ny * dist + shard.jitter * 4 * ease;
+          const curSize = shard.size * (1 - burstP * 0.45);
+          if (shard.isStar) {
+            drawStarSpark(ctx, px, py, curSize * 1.45, shard.color, '#18181B', ease * 2.4);
+          } else {
+            ctx.beginPath();
+            ctx.arc(px, py, curSize, 0, TAU);
+            ctx.fillStyle = shard.color;
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(24, 24, 27, 0.55)';
+            ctx.lineWidth = 0.7;
+            ctx.stroke();
           }
-
-          ctx.restore();
         }
+
+        ctx.restore();
       }
+
+      ctx.restore(); // End interior card evenodd clip
     };
 
     const tick = (now: number) => {
@@ -569,7 +597,7 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
 
   if (!active) return null;
 
-  const pad = compact ? 10 : 13;
+  const pad = compact ? 12 : 16;
 
   return (
     <canvas
