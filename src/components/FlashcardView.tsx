@@ -20,7 +20,7 @@ import { getChaptersBySubject, getQuestionsBySubject, SUBJECTS } from '../data';
 import { QuestionItem, SubjectId, UserProgressStore } from '../types/quiz';
 import { getDetailedMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
-import { SakugaMangaTag } from './SakugaVfx';
+import { SakugaBurst, SakugaEvent, SakugaMangaTag } from './SakugaVfx';
 
 export interface FlashcardViewProps {
   subject: SubjectId;
@@ -65,6 +65,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const [showExplanation, setShowExplanation] = useState<boolean>(false);
   const [sidebarTab, setSidebarTab] = useState<'chapters' | 'grid'>('chapters');
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState<boolean>(false);
+  const [sakugaEvent, setSakugaEvent] = useState<SakugaEvent | null>(null);
   const [justMasteredId, setJustMasteredId] = useState<string | null>(null);
   const [masteredBurstSeq, setMasteredBurstSeq] = useState<number>(0);
 
@@ -84,6 +85,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     setShowExplanation(false);
     setSidebarTab('chapters');
     setIsMobileSheetOpen(false);
+    setSakugaEvent(null);
     setJustMasteredId(null);
   }, [subject, chapters]);
 
@@ -180,6 +182,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     setCurrentIndex(0);
     setIsFlipped(false);
     setShowExplanation(false);
+    setSakugaEvent(null);
     setJustMasteredId(null);
   };
 
@@ -244,6 +247,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
       }
       return next;
     });
+    setSakugaEvent({ id: Date.now(), variant: 'ok', label: 'FLIP!' });
   }, [currentQuestion, onMarkStudied]);
 
   const handleToggleMastered = useCallback(
@@ -251,6 +255,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
       const wasMastered = isMastered(progress.questions[qId]);
       onToggleMastered(qId);
       if (!wasMastered) {
+        setSakugaEvent(null);
         setJustMasteredId(qId);
         setMasteredBurstSeq((seq) => seq + 1);
       } else {
@@ -791,7 +796,13 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
             </div>
           ) : (
             <>
+              {/* Non-rotated outer wrapper so SakugaBurst never mirrors during 3D Y-flip */}
               <div className="relative">
+                <SakugaBurst
+                  event={sakugaEvent}
+                  className="pointer-events-none absolute -top-3 left-1/2 z-30 -translate-x-1/2 sm:left-auto sm:right-10 sm:translate-x-0"
+                />
+
                 {/* 3D Flip Card Container */}
                 <div
                   style={{ perspective: '1000px' }}
@@ -815,16 +826,18 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                         WebkitBackfaceVisibility: 'hidden',
                         transform: 'rotateY(0deg)',
                       }}
-                      className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[4px_4px_0_0_#C7D2FE,0_14px_28px_-12px_rgba(24,24,27,0.10)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[4px_4px_0_0_#312E81,0_18px_36px_-12px_rgba(0,0,0,0.75)] sm:min-h-[390px] sm:p-6 sm:shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:sm:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] md:p-8 ${
-                        isFlipped ? 'pointer-events-none' : ''
-                      }`}
+                      className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 bg-white p-4 transition-colors duration-200 dark:bg-[#1E221F] sm:min-h-[390px] sm:p-6 md:p-8 ${
+                        isCurrentMastered
+                          ? 'border-[#059669] shadow-[4px_4px_0_0_#6EE7B7,0_14px_28px_-12px_rgba(5,150,105,0.14)] dark:border-[#10B981] dark:shadow-[4px_4px_0_0_#065F46,0_18px_36px_-12px_rgba(0,0,0,0.8)] sm:shadow-[6px_6px_0_0_#6EE7B7,0_16px_32px_-12px_rgba(5,150,105,0.14)] dark:sm:shadow-[6px_6px_0_0_#065F46,0_20px_40px_-12px_rgba(0,0,0,0.8)]'
+                          : 'border-[#27272A] shadow-[4px_4px_0_0_#C7D2FE,0_14px_28px_-12px_rgba(24,24,27,0.10)] dark:border-[#52525B] dark:shadow-[4px_4px_0_0_#312E81,0_18px_36px_-12px_rgba(0,0,0,0.75)] sm:shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:sm:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)]'
+                      } ${isFlipped ? 'pointer-events-none' : ''}`}
                     >
                       {/* Top Bar */}
                       <div
                         className={`relative flex flex-wrap items-center justify-between gap-2 rounded-2xl border px-3.5 py-2.5 transition-colors duration-200 ${
                           isCurrentMastered
-                            ? 'border-[#10B981] bg-[#EAE6DD] dark:border-[#10B981]/60 dark:bg-[#141714]'
-                            : 'border-[#D5CFC2] bg-[#EAE6DD] dark:border-[#2C322D] dark:bg-[#141714]'
+                            ? 'border-[#10B981] bg-[#EEF2FF] dark:border-[#10B981]/60 dark:bg-[#312E81]/40'
+                            : 'border-[#A5B4FC] bg-[#EEF2FF] dark:border-[#6366F1]/50 dark:bg-[#312E81]/40'
                         }`}
                       >
                         {isCurrentMastered && (
@@ -836,15 +849,23 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                               key={`front-bar-wave-${currentQuestion.id}-${masteredBurstSeq}`}
                               className={
                                 isJustMastered && !isFlipped
-                                  ? 'sakuga-green-wave absolute inset-0 bg-[#D1FAE5] dark:bg-[#064E3B]/65'
-                                  : 'absolute inset-0 bg-[#D1FAE5] dark:bg-[#064E3B]/65'
+                                  ? 'sakuga-green-wave absolute inset-0 bg-[#D1FAE5] dark:bg-[#064E3B]'
+                                  : 'absolute inset-0 bg-[#D1FAE5] dark:bg-[#064E3B]'
                               }
                             />
                           </span>
                         )}
 
                         <div className="relative z-10 flex flex-wrap items-center gap-1.5 sm:gap-2">
-                          <span className="tabular-nums rounded-lg bg-[#4338CA] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-white dark:border dark:border-[#818CF8]/50 dark:bg-[#4338CA] sm:px-3 sm:py-1">
+                          <span
+                            className={`tabular-nums rounded-lg border px-2.5 py-0.5 text-xs font-bold whitespace-nowrap transition-colors sm:px-3 sm:py-1 ${
+                              isCurrentMastered
+                                ? `${
+                                    isJustMastered && !isFlipped ? 'sakuga-purple-to-green-arrival ' : ''
+                                  }border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]`
+                                : 'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8]/60 dark:bg-[#4338CA] dark:text-white'
+                            }`}
+                          >
                             Thẻ {safeIndex + 1} / {deck.length}
                           </span>
                           {renderStatusBadge()}
@@ -857,8 +878,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                       <div
                         className={`relative mx-auto my-4 flex w-full max-w-2xl flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl px-5 py-6 text-center sm:px-8 sm:py-8 ${
                           isCurrentMastered
-                            ? 'border-2 border-[#059669] bg-[#FAF8F3] ring-2 ring-[#10B981]/20 dark:border-2 dark:border-[#10B981] dark:bg-[#161917] dark:ring-2 dark:ring-[#10B981]/25'
-                            : 'border border-dashed border-[#D5CFC2] bg-[#FAF8F3] dark:border-[#2F3630] dark:bg-[#161917]'
+                            ? 'border-2 border-[#059669] bg-[#EEF2FF]/65 ring-2 ring-[#10B981]/20 dark:border-2 dark:border-[#10B981] dark:bg-[#1E1B4B]/45 dark:ring-2 dark:ring-[#10B981]/25'
+                            : 'border border-dashed border-[#A5B4FC] bg-[#EEF2FF]/65 dark:border-[#6366F1]/45 dark:bg-[#1E1B4B]/45'
                         }`}
                       >
                         {isCurrentMastered && (
@@ -867,8 +888,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                             aria-hidden="true"
                             className={
                               isJustMastered && !isFlipped
-                                ? 'sakuga-green-wave pointer-events-none absolute inset-0 z-0 bg-[#D1FAE5] dark:bg-[#064E3B]/65'
-                                : 'pointer-events-none absolute inset-0 z-0 bg-[#D1FAE5] dark:bg-[#064E3B]/65'
+                                ? 'sakuga-green-wave pointer-events-none absolute inset-0 z-0 bg-[#D1FAE5] dark:bg-[#064E3B]'
+                                : 'pointer-events-none absolute inset-0 z-0 bg-[#D1FAE5] dark:bg-[#064E3B]'
                             }
                           />
                         )}
@@ -906,16 +927,18 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                         WebkitBackfaceVisibility: 'hidden',
                         transform: 'rotateY(180deg)',
                       }}
-                      className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 border-[#059669] bg-white p-4 shadow-[4px_4px_0_0_#6EE7B7,0_14px_28px_-12px_rgba(5,150,105,0.14)] dark:border-2 dark:border-[#10B981] dark:bg-[#1E221F] dark:shadow-[4px_4px_0_0_#065F46,0_18px_36px_-12px_rgba(0,0,0,0.8)] sm:min-h-[390px] sm:p-6 sm:shadow-[6px_6px_0_0_#6EE7B7,0_16px_32px_-12px_rgba(5,150,105,0.14)] dark:sm:shadow-[6px_6px_0_0_#065F46,0_20px_40px_-12px_rgba(0,0,0,0.8)] md:p-8 ${
-                        !isFlipped ? 'pointer-events-none' : ''
-                      }`}
+                      className={`[grid-area:card] flex min-h-[340px] flex-col justify-between rounded-3xl border-2 bg-white p-4 transition-colors duration-200 dark:bg-[#1E221F] sm:min-h-[390px] sm:p-6 md:p-8 ${
+                        isCurrentMastered
+                          ? 'border-[#059669] shadow-[4px_4px_0_0_#6EE7B7,0_14px_28px_-12px_rgba(5,150,105,0.14)] dark:border-[#10B981] dark:shadow-[4px_4px_0_0_#065F46,0_18px_36px_-12px_rgba(0,0,0,0.8)] sm:shadow-[6px_6px_0_0_#6EE7B7,0_16px_32px_-12px_rgba(5,150,105,0.14)] dark:sm:shadow-[6px_6px_0_0_#065F46,0_20px_40px_-12px_rgba(0,0,0,0.8)]'
+                          : 'border-[#27272A] shadow-[4px_4px_0_0_#C7D2FE,0_14px_28px_-12px_rgba(24,24,27,0.10)] dark:border-[#52525B] dark:shadow-[4px_4px_0_0_#312E81,0_18px_36px_-12px_rgba(0,0,0,0.75)] sm:shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:sm:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)]'
+                      } ${!isFlipped ? 'pointer-events-none' : ''}`}
                     >
                       {/* Top Bar */}
                       <div
                         className={`relative flex flex-wrap items-center justify-between gap-2 rounded-2xl border px-3.5 py-2.5 transition-colors duration-200 ${
                           isCurrentMastered
-                            ? 'border-[#10B981] bg-[#EAE6DD] dark:border-[#10B981]/60 dark:bg-[#141714]'
-                            : 'border-[#D5CFC2] bg-[#EAE6DD] dark:border-[#2C322D] dark:bg-[#141714]'
+                            ? 'border-[#10B981] bg-[#EEF2FF] dark:border-[#10B981]/60 dark:bg-[#312E81]/40'
+                            : 'border-[#A5B4FC] bg-[#EEF2FF] dark:border-[#6366F1]/50 dark:bg-[#312E81]/40'
                         }`}
                       >
                         {isCurrentMastered && (
@@ -927,15 +950,23 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                               key={`back-bar-wave-${currentQuestion.id}-${masteredBurstSeq}`}
                               className={
                                 isJustMastered && isFlipped
-                                  ? 'sakuga-green-wave absolute inset-0 bg-[#D1FAE5] dark:bg-[#064E3B]/65'
-                                  : 'absolute inset-0 bg-[#D1FAE5] dark:bg-[#064E3B]/65'
+                                  ? 'sakuga-green-wave absolute inset-0 bg-[#D1FAE5] dark:bg-[#064E3B]'
+                                  : 'absolute inset-0 bg-[#D1FAE5] dark:bg-[#064E3B]'
                               }
                             />
                           </span>
                         )}
 
                         <div className="relative z-10 flex flex-wrap items-center gap-1.5 sm:gap-2">
-                          <span className="tabular-nums rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399] sm:px-3 sm:py-1">
+                          <span
+                            className={`tabular-nums rounded-full border px-2.5 py-0.5 text-xs font-bold whitespace-nowrap transition-colors sm:px-3 sm:py-1 ${
+                              isCurrentMastered
+                                ? `${
+                                    isJustMastered && isFlipped ? 'sakuga-purple-to-green-arrival ' : ''
+                                  }border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]`
+                                : 'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8]/60 dark:bg-[#4338CA] dark:text-white'
+                            }`}
+                          >
                             Đáp án • Thẻ {safeIndex + 1}/{deck.length}
                           </span>
                           {renderStatusBadge()}
@@ -944,7 +975,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                         {renderCardActionButtons(currentQuestion, isFlipped)}
                       </div>
 
-                      {/* Center Answer Box (Minimal & High-Impact Dopamine Emerald) */}
+                      {/* Center Answer Box (Purple on flip, sweeps Purple -> Emerald when Mastered) */}
                       <div className="my-auto flex flex-col justify-center py-5 sm:py-8">
                         <p className="mb-3 line-clamp-2 text-center text-xs font-medium text-[#656058] dark:text-[#9CA39B] sm:text-sm">
                           {currentQuestion.question}
@@ -953,8 +984,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                         <div
                           className={`relative mx-auto w-full max-w-2xl space-y-2.5 overflow-hidden rounded-2xl border-2 p-4 sm:p-6 ${
                             isCurrentMastered
-                              ? 'border-[#059669] bg-[#F8F6F0] text-[#064E3B] ring-2 ring-[#10B981]/20 dark:border-[#10B981] dark:bg-[#252A26] dark:text-[#ECFDF5] dark:ring-2 dark:ring-[#10B981]/25'
-                              : 'border-[#059669] bg-[#F8F6F0] text-[#18181B] ring-2 ring-[#10B981]/15 dark:border-[#10B981] dark:bg-[#252A26] dark:text-[#F5F5F4] dark:ring-2 dark:ring-[#10B981]/20'
+                              ? 'border-[#059669] bg-[#EEF2FF] text-[#064E3B] ring-2 ring-[#10B981]/20 dark:border-[#10B981] dark:bg-[#1E1B4B]/85 dark:text-[#ECFDF5] dark:ring-2 dark:ring-[#10B981]/25'
+                              : 'border-[#4338CA] bg-[#EEF2FF] text-[#1E1B4B] ring-2 ring-[#818CF8]/20 dark:border-[#818CF8] dark:bg-[#1E1B4B]/85 dark:text-[#EEF2FF] dark:ring-2 dark:ring-[#818CF8]/25'
                           }`}
                         >
                           {isCurrentMastered && (
@@ -963,8 +994,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                               aria-hidden="true"
                               className={
                                 isJustMastered && isFlipped
-                                  ? 'sakuga-green-wave pointer-events-none absolute inset-0 z-0 bg-[#D1FAE5] dark:bg-[#064E3B]/65'
-                                  : 'pointer-events-none absolute inset-0 z-0 bg-[#D1FAE5] dark:bg-[#064E3B]/65'
+                                  ? 'sakuga-green-wave pointer-events-none absolute inset-0 z-0 bg-[#D1FAE5] dark:bg-[#064E3B]'
+                                  : 'pointer-events-none absolute inset-0 z-0 bg-[#D1FAE5] dark:bg-[#064E3B]'
                               }
                             />
                           )}
@@ -975,9 +1006,9 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                                 className={`sakuga-option-badge mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition-colors ${
                                   isCurrentMastered
                                     ? `${
-                                        isJustMastered && isFlipped ? 'sakuga-green-key-arrival ' : ''
+                                        isJustMastered && isFlipped ? 'sakuga-purple-to-green-arrival ' : ''
                                       }border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]`
-                                    : 'border-[#C6BEB0] bg-white text-[#4338CA] dark:border-[#353B36] dark:bg-[#161816] dark:text-[#A5B4FC]'
+                                    : 'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8] dark:bg-[#4338CA] dark:text-white'
                                 }`}
                               >
                                 {opt.key}

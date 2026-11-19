@@ -199,6 +199,58 @@ button:active .sakuga-option-badge {
   animation: sakuga-key-arrival-dark 780ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+@keyframes sakuga-purple-to-green-light {
+  0%,
+  62% {
+    background-color: #4338ca;
+    border-color: #4338ca;
+    color: #ffffff;
+    transform: scale(1);
+  }
+  74% {
+    background-color: #059669;
+    border-color: #059669;
+    color: #ffffff;
+    transform: scale(1.14);
+  }
+  100% {
+    background-color: #059669;
+    border-color: #059669;
+    color: #ffffff;
+    transform: scale(1);
+  }
+}
+
+@keyframes sakuga-purple-to-green-dark {
+  0%,
+  62% {
+    background-color: #4338ca;
+    border-color: #818cf8;
+    color: #ffffff;
+    transform: scale(1);
+  }
+  74% {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: #052e16;
+    transform: scale(1.14);
+  }
+  100% {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: #052e16;
+    transform: scale(1);
+  }
+}
+
+.sakuga-purple-to-green-arrival {
+  animation: sakuga-purple-to-green-light 780ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.dark .sakuga-purple-to-green-arrival {
+  animation: sakuga-purple-to-green-dark 780ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sakuga-btn:active:not(:disabled),
   button:active .sakuga-option-badge {
@@ -208,7 +260,9 @@ button:active .sakuga-option-badge {
   .sakuga-shake,
   .sakuga-green-wave,
   .sakuga-green-key-arrival,
-  .dark .sakuga-green-key-arrival {
+  .dark .sakuga-green-key-arrival,
+  .sakuga-purple-to-green-arrival,
+  .dark .sakuga-purple-to-green-arrival {
     animation: none;
     transform: none;
   }
