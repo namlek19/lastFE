@@ -178,6 +178,12 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const isCurrentMastered = currentState === 'mastered';
   const isCurrentFlagged = currentState === 'hesitant';
   const isJustMastered = Boolean(currentQuestion && justMasteredId === currentQuestion.id);
+  const activeChapterStat = chapterStats.get(selectedChapter) ?? {
+    mastered: 0,
+    studied: 0,
+    total: chapterQuestions.length,
+    pct: 0,
+  };
 
   const handleSelectChapter = (chapterNum: number) => {
     setSelectedChapter(chapterNum);
@@ -683,34 +689,63 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
         {/* Main Flashcard Area */}
         <div className="w-full min-w-0 flex-1">
-          {/* Mobile & Tablet Compact 1-Row Toolbar (< 1024px) */}
-          <div className="mb-3 flex items-center justify-between gap-2 lg:hidden">
+          {/* Mobile & Tablet Unified Interactive Progress & Filter Card (< 1024px) */}
+          <div className="mb-3.5 px-1 pt-1 lg:hidden">
             <button
               type="button"
               onClick={() => setIsMobileSheetOpen(true)}
-              className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#D5CFC2] bg-[#EAE6DD] px-3 py-2 text-left text-xs font-semibold text-[#18181B] shadow-xs transition active:scale-[0.99] dark:border-[#262925] dark:bg-[#161816] dark:text-[#F5F5F4]"
-            >
-              <span className="flex min-w-0 items-center gap-2">
-                <Menu className="h-4 w-4 shrink-0 text-[#4338CA] dark:text-[#818CF8]" />
-                <span className="truncate tabular-nums">
-                  Chương {selectedChapter} • Thẻ {deck.length > 0 ? safeIndex + 1 : 0}/{deck.length}
-                </span>
-              </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-[#656058] dark:text-[#9CA39B]" />
-            </button>
-
-            <button
-              type="button"
-              onClick={handleToggleShuffle}
-              aria-pressed={isShuffled}
-              title="Trộn thẻ ngẫu nhiên"
-              className={`inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-xl border px-2.5 py-2 text-xs font-semibold transition ${
-                isShuffled
-                  ? 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
-                  : 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
+              className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border bg-[#EAE6DD] px-3.5 py-2.5 text-left shadow-xs transition active:scale-[0.99] dark:bg-[#161816] ${
+                activeChapterStat.pct >= 100
+                  ? 'border-[#10B981] ring-2 ring-[#34D399]/35 dark:border-[#10B981]/80 dark:ring-[#34D399]/30'
+                  : activeChapterStat.pct >= 50
+                    ? 'border-[#F59E0B]/70 dark:border-[#F59E0B]/55'
+                    : 'border-[#D5CFC2] dark:border-[#262925]'
               }`}
             >
-              <Shuffle className="h-3.5 w-3.5" />
+              <SakugaBorderFire percent={activeChapterStat.pct} radius={12} compact />
+
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-[#18181B] dark:text-[#F5F5F4]">
+                  <Menu className="h-4 w-4 shrink-0 text-[#4338CA] dark:text-[#818CF8]" />
+                  <span className="truncate tabular-nums">
+                    Chương {selectedChapter} • Thẻ {deck.length > 0 ? safeIndex + 1 : 0}/{deck.length}
+                  </span>
+                  {filter !== 'all' && (
+                    <span className="shrink-0 rounded-full border border-[#A5B4FC] bg-[#EEF2FF] px-1.5 py-0.5 text-[10px] font-bold text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
+                      {filter === 'unlearned'
+                        ? 'Chưa'
+                        : filter === 'studied'
+                          ? 'Đã học'
+                          : filter === 'flagged'
+                            ? 'Phân vân'
+                            : 'Thuộc'}
+                    </span>
+                  )}
+                  {isShuffled && (
+                    <span className="inline-flex shrink-0 items-center rounded-full border border-[#A5B4FC] bg-[#EEF2FF] px-1.5 py-0.5 text-[10px] font-bold text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
+                      <Shuffle className="h-2.5 w-2.5" />
+                    </span>
+                  )}
+                </span>
+
+                <span className="flex shrink-0 items-center gap-1.5">
+                  <span
+                    className={`tabular-nums rounded-full border px-2 py-0.5 text-[11px] font-bold ${
+                      activeChapterStat.pct >= 50
+                        ? 'border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]'
+                        : 'border-[#F59E0B]/60 bg-[#FEF3C7] text-[#92400E] dark:border-[#F59E0B]/45 dark:bg-[#92400E]/25 dark:text-[#FDE68A]'
+                    }`}
+                  >
+                    {activeChapterStat.mastered}/{activeChapterStat.total} ({activeChapterStat.pct}%)
+                  </span>
+                  <span className="inline-flex items-center gap-0.5 rounded-lg border border-[#D5CFC2] bg-[#FAF9F5] px-1.5 py-0.5 text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]">
+                    <Filter className="h-3 w-3 shrink-0" />
+                    <ChevronDown className="h-3 w-3 shrink-0" />
+                  </span>
+                </span>
+              </div>
+
+              <SakugaProgressBar percent={activeChapterStat.pct} className="h-1.5 w-full" />
             </button>
           </div>
 
@@ -1293,7 +1328,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                   <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
                     Chọn chương
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3.5 px-1.5 py-1.5">
                     {chapters.map((ch) => {
                       const stat = chapterStats.get(ch.chapter) ?? {
                         mastered: 0,
@@ -1310,24 +1345,34 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                             handleSelectChapter(ch.chapter);
                             setIsMobileSheetOpen(false);
                           }}
-                          className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left transition ${
+                          className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border px-3.5 py-2.5 text-left transition ${
                             active
                               ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
-                              : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30'
+                              : stat.pct >= 100
+                                ? 'border-[#10B981] bg-[#FAF9F5] ring-2 ring-[#34D399]/35 text-[#292524] hover:border-[#059669] hover:bg-[#ECFDF5] dark:border-[#10B981]/80 dark:bg-[#1C1F1C] dark:ring-[#34D399]/30 dark:text-[#E7E5E4] dark:hover:border-[#34D399] dark:hover:bg-[#059669]/20'
+                                : stat.pct >= 50
+                                  ? 'border-[#F59E0B]/70 bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30'
+                                  : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30'
                           }`}
                         >
-                          <div className="min-w-0">
-                            <div className={`text-xs font-bold ${active ? 'text-[#3730A3] dark:text-[#A5B4FC]' : ''}`}>
-                              Chương {ch.chapter}{' '}
-                              <span className="font-normal text-[#656058] dark:text-[#9CA39B]">
-                                (Thuộc {stat.mastered}/{stat.total})
-                              </span>
+                          <SakugaBorderFire percent={stat.pct} radius={12} compact />
+
+                          <div className="flex w-full items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className={`text-xs font-bold ${active ? 'text-[#3730A3] dark:text-[#A5B4FC]' : ''}`}>
+                                Chương {ch.chapter}{' '}
+                                <span className="font-normal text-[#656058] dark:text-[#9CA39B]">
+                                  (Thuộc {stat.mastered}/{stat.total})
+                                </span>
+                              </div>
+                              <div className="truncate text-xs opacity-85">{ch.title}</div>
                             </div>
-                            <div className="truncate text-xs opacity-85">{ch.title}</div>
+                            <span className="shrink-0 rounded-full border border-[#10B981] bg-[#D1FAE5] px-2 py-0.5 text-[11px] font-semibold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
+                              {stat.pct}%
+                            </span>
                           </div>
-                          <span className="shrink-0 rounded-full border border-[#10B981] bg-[#D1FAE5] px-2 py-0.5 text-[11px] font-semibold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
-                            {stat.pct}%
-                          </span>
+
+                          <SakugaProgressBar percent={stat.pct} className="h-1.5 w-full" />
                         </button>
                       );
                     })}

@@ -539,31 +539,54 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 
           {/* Main Practice Area */}
           <div className="w-full min-w-0 flex-1 space-y-3 sm:space-y-5">
-            {/* Mobile & Tablet Compact 1-Line Session Toolbar (< 1024px) */}
-            <div className="flex items-center justify-between gap-2 lg:hidden">
+            {/* Mobile & Tablet Unified Interactive Progress Card (< 1024px) */}
+            <div className="px-1 pt-1 lg:hidden">
               <button
                 type="button"
                 onClick={() => setIsStageSheetOpen(true)}
-                className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#D5CFC2] bg-[#EAE6DD] px-3 py-2 text-left text-xs font-semibold text-[#18181B] shadow-xs transition active:scale-[0.99] dark:border-[#262925] dark:bg-[#161816] dark:text-[#F5F5F4]"
+                className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border bg-[#EAE6DD] px-3.5 py-2.5 text-left shadow-xs transition active:scale-[0.99] dark:bg-[#161816] ${
+                  stageStats.percent >= 100
+                    ? 'border-[#10B981] ring-2 ring-[#34D399]/35 dark:border-[#10B981]/80 dark:ring-[#34D399]/30'
+                    : stageStats.percent >= 50
+                      ? 'border-[#F59E0B]/70 dark:border-[#F59E0B]/55'
+                      : 'border-[#D5CFC2] dark:border-[#262925]'
+                }`}
               >
-                <span className="flex min-w-0 items-center gap-2">
-                  <Menu className="h-4 w-4 shrink-0 text-[#4338CA] dark:text-[#818CF8]" />
-                  <span className="truncate tabular-nums">
-                    C{selectedChapter} • {activeStage.title} ({stageStats.percent}%)
-                  </span>
-                </span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-[#656058] dark:text-[#9CA39B]" />
-              </button>
+                <SakugaBorderFire percent={stageStats.percent} radius={12} compact />
 
-              {currentQuestion ? (
-                <span className="shrink-0 rounded-xl border border-[#A5B4FC] bg-[#EEF2FF] px-2.5 py-2 text-xs font-semibold text-[#3730A3] tabular-nums dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
-                  Còn {queue.length}
-                </span>
-              ) : (
-                <span className="shrink-0 rounded-xl border border-[#10B981] bg-[#D1FAE5] px-2.5 py-2 text-xs font-semibold text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
-                  Xong
-                </span>
-              )}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-[#18181B] dark:text-[#F5F5F4]">
+                    <Menu className="h-4 w-4 shrink-0 text-[#4338CA] dark:text-[#818CF8]" />
+                    <span className="truncate tabular-nums">
+                      C{selectedChapter} • {activeStage.title}
+                    </span>
+                    {currentQuestion ? (
+                      <span className="shrink-0 rounded-full border border-[#A5B4FC] bg-[#EEF2FF] px-1.5 py-0.5 text-[10px] font-bold text-[#3730A3] tabular-nums dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
+                        Còn {queue.length}
+                      </span>
+                    ) : (
+                      <span className="shrink-0 rounded-full border border-[#10B981] bg-[#D1FAE5] px-1.5 py-0.5 text-[10px] font-bold text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
+                        Xong
+                      </span>
+                    )}
+                  </span>
+
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    <span
+                      className={`tabular-nums rounded-full border px-2 py-0.5 text-[11px] font-bold ${
+                        stageStats.percent >= 50
+                          ? 'border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]'
+                          : 'border-[#F59E0B]/60 bg-[#FEF3C7] text-[#92400E] dark:border-[#F59E0B]/45 dark:bg-[#92400E]/25 dark:text-[#FDE68A]'
+                      }`}
+                    >
+                      {stageStats.mastered}/{stageStats.total} ({stageStats.percent}%)
+                    </span>
+                    <ChevronDown className="h-4 w-4 shrink-0 text-[#656058] dark:text-[#9CA39B]" />
+                  </span>
+                </div>
+
+                <SakugaProgressBar percent={stageStats.percent} className="h-1.5 w-full" />
+              </button>
             </div>
 
             {/* Stage Completion Card */}
@@ -1043,7 +1066,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                   </div>
                 </div>
 
-                <div className="space-y-2.5 overflow-y-auto px-4 pb-6 pt-4">
+                <div className="space-y-3.5 overflow-y-auto px-4 pb-6 pt-4">
                   {stages.map(stage => {
                     const stats = getStageStats(stage.questions, progress);
                     const isCurrentStage = stage.index === activeStage.index;
@@ -1055,23 +1078,33 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                           startStageSession(stage.index);
                           setIsStageSheetOpen(false);
                         }}
-                        className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
+                        className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border px-3.5 py-3 text-left transition ${
                           isCurrentStage
                             ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
-                            : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
+                            : stats.percent >= 100
+                              ? 'border-[#10B981] bg-[#FAF9F5] ring-2 ring-[#34D399]/35 text-[#292524] dark:border-[#10B981]/80 dark:bg-[#1C1F1C] dark:ring-[#34D399]/30 dark:text-[#E7E5E4]'
+                              : stats.percent >= 50
+                                ? 'border-[#F59E0B]/70 bg-[#FAF9F5] text-[#292524] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
+                                : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
                         }`}
                       >
-                        <div>
-                          <div className="text-xs font-bold">
-                            {stage.title} · Câu {stage.startIndex}–{stage.endIndex}
+                        <SakugaBorderFire percent={stats.percent} radius={12} compact />
+
+                        <div className="flex w-full items-center justify-between gap-3">
+                          <div>
+                            <div className="text-xs font-bold">
+                              {stage.title} · Câu {stage.startIndex}–{stage.endIndex}
+                            </div>
+                            <div className="text-[11px] text-[#656058] tabular-nums dark:text-[#9CA39B]">
+                              Thuộc {stats.mastered}/{stats.total} · Phân vân {stats.hesitant}
+                            </div>
                           </div>
-                          <div className="text-[11px] text-[#656058] tabular-nums dark:text-[#9CA39B]">
-                            Thuộc {stats.mastered}/{stats.total} · Phân vân {stats.hesitant}
-                          </div>
+                          <span className="rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
+                            {stats.percent}%
+                          </span>
                         </div>
-                        <span className="rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
-                          {stats.percent}%
-                        </span>
+
+                        <SakugaProgressBar percent={stats.percent} className="h-1.5 w-full" />
                       </button>
                     );
                   })}
