@@ -31,7 +31,7 @@ const VARIANT_CONFIG: Record<SakugaVariant, SakugaThemeTokens> = {
     accentFill: '#F59E0B',
     smokeTint: '#FDE68A',
     sparkleFill: '#F59E0B',
-    durationMs: 620,
+    durationMs: 880,
   },
   clear: {
     defaultLabel: 'CLEAR! ✓',
@@ -40,7 +40,7 @@ const VARIANT_CONFIG: Record<SakugaVariant, SakugaThemeTokens> = {
     accentFill: '#10B981',
     smokeTint: '#A7F3D0',
     sparkleFill: '#059669',
-    durationMs: 680,
+    durationMs: 960,
   },
   complete: {
     defaultLabel: 'COMPLETE! ✓',
@@ -49,7 +49,7 @@ const VARIANT_CONFIG: Record<SakugaVariant, SakugaThemeTokens> = {
     accentFill: '#10B981',
     smokeTint: '#A7F3D0',
     sparkleFill: '#34D399',
-    durationMs: 1050,
+    durationMs: 1200,
   },
   miss: {
     defaultLabel: 'MISS!',
@@ -58,7 +58,7 @@ const VARIANT_CONFIG: Record<SakugaVariant, SakugaThemeTokens> = {
     accentFill: '#E11D48',
     smokeTint: '#FECDD3',
     sparkleFill: '#FB7185',
-    durationMs: 620,
+    durationMs: 860,
   },
   ok: {
     defaultLabel: 'OK!',
@@ -67,7 +67,7 @@ const VARIANT_CONFIG: Record<SakugaVariant, SakugaThemeTokens> = {
     accentFill: '#4338CA',
     smokeTint: '#C7D2FE',
     sparkleFill: '#6366F1',
-    durationMs: 520,
+    durationMs: 760,
   },
 };
 
@@ -99,7 +99,7 @@ const SakugaParticles: React.FC<SakugaParticlesProps> = ({
           strokeDasharray="110"
           initial={{ strokeDashoffset: 110, opacity: 0.95 }}
           animate={{ strokeDashoffset: 0, opacity: 0 }}
-          transition={{ duration: 0.42, ease: 'easeOut' }}
+          transition={{ duration: 0.58, ease: 'easeOut' }}
         />
         <motion.path
           d="M32 60 L108 26"
@@ -109,15 +109,15 @@ const SakugaParticles: React.FC<SakugaParticlesProps> = ({
           strokeDasharray="90"
           initial={{ strokeDashoffset: 90, opacity: 0.85 }}
           animate={{ strokeDashoffset: 0, opacity: 0 }}
-          transition={{ duration: 0.36, delay: 0.05, ease: 'easeOut' }}
+          transition={{ duration: 0.64, delay: 0.06, ease: 'easeOut' }}
         />
       </>
     ) : (
       <>
         <motion.g
           initial={{ scale: 0.5, opacity: 0.95, x: 0, y: 0 }}
-          animate={{ scale: 1.12, opacity: 0, x: -12, y: -6 }}
-          transition={{ duration: 0.52, ease: 'easeOut' }}
+          animate={{ scale: 1.15, opacity: 0, x: -13, y: -6 }}
+          transition={{ duration: 0.78, ease: 'easeOut' }}
           style={{ originX: '28px', originY: '36px' }}
         >
           <circle cx="24" cy="38" r="8" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2" />
@@ -126,8 +126,8 @@ const SakugaParticles: React.FC<SakugaParticlesProps> = ({
 
         <motion.g
           initial={{ scale: 0.5, opacity: 0.95, x: 0, y: 0 }}
-          animate={{ scale: 1.15, opacity: 0, x: 12, y: -5 }}
-          transition={{ duration: 0.54, ease: 'easeOut' }}
+          animate={{ scale: 1.18, opacity: 0, x: 13, y: -5 }}
+          transition={{ duration: 0.82, ease: 'easeOut' }}
           style={{ originX: '112px', originY: '36px' }}
         >
           <circle cx="114" cy="36" r="7.5" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2" />
@@ -140,8 +140,8 @@ const SakugaParticles: React.FC<SakugaParticlesProps> = ({
           stroke="#1E1B4B"
           strokeWidth="1.8"
           initial={{ scale: 0, rotate: -15, opacity: 1 }}
-          animate={{ scale: 0.95, rotate: 12, opacity: 0 }}
-          transition={{ duration: 0.48, ease: 'easeOut' }}
+          animate={{ scale: 1, rotate: 12, opacity: 0 }}
+          transition={{ duration: 0.72, ease: 'easeOut' }}
         />
         <motion.path
           d="M122 10 L124.5 16 L130.5 18.5 L124.5 21 L122 27 L119.5 21 L113.5 18.5 L119.5 16 Z"
@@ -149,8 +149,8 @@ const SakugaParticles: React.FC<SakugaParticlesProps> = ({
           stroke="#1E1B4B"
           strokeWidth="1.6"
           initial={{ scale: 0, rotate: 15, opacity: 1 }}
-          animate={{ scale: 1.05, rotate: -10, opacity: 0 }}
-          transition={{ duration: 0.52, delay: 0.04, ease: 'easeOut' }}
+          animate={{ scale: 1.08, rotate: -10, opacity: 0 }}
+          transition={{ duration: 0.78, delay: 0.06, ease: 'easeOut' }}
         />
       </>
     )}
@@ -163,8 +163,8 @@ const SakugaParticles: React.FC<SakugaParticlesProps> = ({
           stroke="#1E1B4B"
           strokeWidth="1.6"
           initial={{ y: 12, opacity: 1, scale: 0.6 }}
-          animate={{ y: -14, opacity: 0, scale: 1 }}
-          transition={{ duration: 0.58, ease: 'easeOut' }}
+          animate={{ y: -15, opacity: 0, scale: 1.04 }}
+          transition={{ duration: 0.84, ease: 'easeOut' }}
         />
         <motion.polygon
           points="92,4 97,10 92,16 87,10"
@@ -172,8 +172,8 @@ const SakugaParticles: React.FC<SakugaParticlesProps> = ({
           stroke="#1E1B4B"
           strokeWidth="1.6"
           initial={{ y: 14, opacity: 1, scale: 0.6 }}
-          animate={{ y: -16, opacity: 0, scale: 1.05 }}
-          transition={{ duration: 0.62, delay: 0.04, ease: 'easeOut' }}
+          animate={{ y: -17, opacity: 0, scale: 1.08 }}
+          transition={{ duration: 0.88, delay: 0.06, ease: 'easeOut' }}
         />
       </>
     )}
@@ -229,7 +229,7 @@ export const SakugaBurst: React.FC<SakugaBurstProps> = ({ event, className = '' 
             <motion.span
               initial={{ scaleX: 1.18, scaleY: 0.84 }}
               animate={{ scaleX: 1, scaleY: 1 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 17 }}
               className={`relative z-10 inline-block -skew-x-12 rounded-md border-2 px-2.5 py-0.5 text-[11px] font-black italic tracking-wider whitespace-nowrap sm:text-xs ${cfg.plateClass}`}
             >
               {activeEvent.label ?? cfg.defaultLabel}
@@ -317,11 +317,11 @@ export const SakugaMangaTag: React.FC<SakugaMangaTagProps> = ({
       <motion.span
         initial={
           animateBurst
-            ? { y: -13, scaleX: 1.24, scaleY: 0.82, rotate: -6 }
+            ? { y: -15, scaleX: 1.24, scaleY: 0.82, rotate: -6 }
             : false
         }
         animate={{ y: 0, scaleX: 1, scaleY: 1, rotate: 0 }}
-        transition={{ type: 'spring', stiffness: 410, damping: 17, mass: 0.8 }}
+        transition={{ type: 'spring', stiffness: 240, damping: 16, mass: 1.05 }}
         className="relative z-10 inline-flex"
       >
         <span

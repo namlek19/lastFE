@@ -127,14 +127,90 @@ button:active .sakuga-option-badge {
   animation: sakuga-shake 220ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
+@keyframes sakuga-wave-rtl {
+  0% {
+    transform: scaleX(0);
+    animation-timing-function: cubic-bezier(0.28, 0.12, 0.25, 1);
+  }
+  48% {
+    transform: scaleX(0.33);
+    animation-timing-function: cubic-bezier(0.08, 0.96, 0.18, 1);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+.sakuga-green-wave {
+  transform-origin: right center;
+  animation: sakuga-wave-rtl 780ms forwards;
+  will-change: transform;
+}
+
+@keyframes sakuga-key-arrival-light {
+  0%,
+  62% {
+    background-color: #ffffff;
+    border-color: #c6beb0;
+    color: #4338ca;
+    transform: scale(1);
+  }
+  74% {
+    background-color: #059669;
+    border-color: #059669;
+    color: #ffffff;
+    transform: scale(1.16);
+  }
+  100% {
+    background-color: #059669;
+    border-color: #059669;
+    color: #ffffff;
+    transform: scale(1);
+  }
+}
+
+@keyframes sakuga-key-arrival-dark {
+  0%,
+  62% {
+    background-color: #161816;
+    border-color: #353b36;
+    color: #a5b4fc;
+    transform: scale(1);
+  }
+  74% {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: #052e16;
+    transform: scale(1.16);
+  }
+  100% {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: #052e16;
+    transform: scale(1);
+  }
+}
+
+.sakuga-green-key-arrival {
+  animation: sakuga-key-arrival-light 780ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.dark .sakuga-green-key-arrival {
+  animation: sakuga-key-arrival-dark 780ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sakuga-btn:active:not(:disabled),
   button:active .sakuga-option-badge {
     transform: none;
   }
 
-  .sakuga-shake {
+  .sakuga-shake,
+  .sakuga-green-wave,
+  .sakuga-green-key-arrival,
+  .dark .sakuga-green-key-arrival {
     animation: none;
+    transform: none;
   }
 }
 

@@ -771,9 +771,9 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                     } else if (isGraded) {
                       if (isCorrectOption) {
                         containerCls =
-                          'border-2 border-[#059669] bg-[#D1FAE5] text-[#064E3B] ring-2 ring-[#10B981]/20 dark:border-2 dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#ECFDF5] dark:ring-2 dark:ring-[#10B981]/25';
+                          'border-2 border-[#059669] bg-[#F8F6F0] text-[#064E3B] ring-2 ring-[#10B981]/20 dark:border-2 dark:border-[#10B981] dark:bg-[#252A26] dark:text-[#ECFDF5] dark:ring-2 dark:ring-[#10B981]/25';
                         badgeCls =
-                          'border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]';
+                          'sakuga-green-key-arrival border-[#059669] bg-[#059669] text-white dark:border-[#10B981] dark:bg-[#10B981] dark:text-[#052E16]';
                       } else if (isSelected && !isCorrectOption) {
                         containerCls =
                           'border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/55 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]';
@@ -808,21 +808,30 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
                         type="button"
                         disabled={isGraded}
                         onClick={() => handleOptionClick(opt.key)}
-                        className={`group flex w-full items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerCls} ${
+                        className={`group relative flex w-full items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerCls} ${
                           isGraded ? 'cursor-default' : 'cursor-pointer'
                         }`}
                       >
+                        {isGraded && isCorrectOption && (
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[10px]"
+                          >
+                            <span className="sakuga-green-wave absolute inset-0 bg-[#D1FAE5] dark:bg-[#064E3B]/65" />
+                          </span>
+                        )}
+
                         <span
-                          className={`sakuga-option-badge mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold sm:h-7 sm:w-7 ${badgeCls}`}
+                          className={`relative z-10 sakuga-option-badge mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold sm:h-7 sm:w-7 ${badgeCls}`}
                         >
                           {opt.key}
                         </span>
 
-                        <span className="flex-1 pt-0.5 text-[15px] font-medium leading-relaxed sm:text-[16px]">
+                        <span className="relative z-10 flex-1 pt-0.5 text-[15px] font-medium leading-relaxed sm:text-[16px]">
                           {opt.text}
                         </span>
 
-                        <span className="mt-0.5 flex shrink-0 items-center gap-1.5 sm:gap-2">
+                        <span className="relative z-10 mt-0.5 flex shrink-0 items-center gap-1.5 sm:gap-2">
                           {showSuccessTag && (
                             <SakugaMangaTag
                               label={!turnFlagged && gradedState.nextStreak >= 2 ? 'CLEAR! ✓' : 'NICE!'}
