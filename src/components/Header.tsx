@@ -9,7 +9,6 @@ import {
   Cloud,
   CreditCard,
   GraduationCap,
-  Info,
   Layers,
   Moon,
   Sun,
@@ -73,10 +72,8 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleTheme,
   onOpenSyncModal,
 }) => {
-  const [isRuleInfoOpen, setIsRuleInfoOpen] = useState(false);
   const [isSubjectMenuOpen, setIsSubjectMenuOpen] = useState(false);
   const [badgeBounceSeq, setBadgeBounceSeq] = useState(0);
-  const ruleInfoContainerRef = useRef<HTMLDivElement>(null);
   const subjectContainerRef = useRef<HTMLDivElement>(null);
   const prevTierRef = useRef<StudyTier>(tier);
 
@@ -100,15 +97,9 @@ export const Header: React.FC<HeaderProps> = ({
   }, [activeQuestions, progress.questions]);
 
   useEffect(() => {
-    if (!isRuleInfoOpen && !isSubjectMenuOpen) return;
+    if (!isSubjectMenuOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        ruleInfoContainerRef.current &&
-        !ruleInfoContainerRef.current.contains(event.target as Node)
-      ) {
-        setIsRuleInfoOpen(false);
-      }
       if (
         subjectContainerRef.current &&
         !subjectContainerRef.current.contains(event.target as Node)
@@ -119,7 +110,6 @@ export const Header: React.FC<HeaderProps> = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setIsRuleInfoOpen(false);
         setIsSubjectMenuOpen(false);
       }
     };
@@ -130,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isRuleInfoOpen, isSubjectMenuOpen]);
+  }, [isSubjectMenuOpen]);
 
   const activeSubjectMeta = SUBJECTS[subject];
 
@@ -248,121 +238,37 @@ export const Header: React.FC<HeaderProps> = ({
             <SakugaTierPicker tier={tier} onSelectTier={onSelectTier} />
           </div>
 
-          {/* Right Cluster: Mastery Badge + Rule Info, Sync Modal Button, Theme Toggle */}
+          {/* Right Cluster: Mastery Badge, Sync Modal Button, Theme Toggle */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {/* Overall Mastery Badge (Color & Anime Jump keyed to Study Tier) + Info Popover */}
-            <div ref={ruleInfoContainerRef} className="relative flex items-center gap-1">
-              <motion.div
-                key={badgeBounceSeq > 0 ? `mastery-bounce-${badgeBounceSeq}` : 'mastery-static'}
-                initial={
-                  badgeBounceSeq > 0
-                    ? { y: 0, scaleX: 1.18, scaleY: 0.84 }
-                    : false
-                }
-                animate={
-                  badgeBounceSeq > 0
-                    ? {
+            {/* Overall Mastery Badge (Color & Anime Jump keyed to Study Tier) */}
+            <motion.div
+              key={badgeBounceSeq > 0 ? `mastery-bounce-${badgeBounceSeq}` : 'mastery-static'}
+              initial={
+                badgeBounceSeq > 0
+                  ? { y: 0, scaleX: 1.18, scaleY: 0.84 }
+                  : false
+              }
+              animate={
+                badgeBounceSeq > 0
+                  ? {
                       y: [0, -11, 2, 0],
                       scaleX: [1.18, 0.9, 1.06, 1],
                       scaleY: [0.84, 1.14, 0.94, 1],
                     }
-                    : { y: 0, scaleX: 1, scaleY: 1 }
-                }
-                transition={{ duration: 0.44, times: [0, 0.36, 0.72, 1], ease: [0.22, 1, 0.36, 1] }}
-                className={`inline-flex items-center gap-1 rounded-full border-2 px-2.5 py-1 text-[11px] font-semibold tabular-nums whitespace-nowrap transition-colors duration-200 sm:gap-1.5 sm:px-3 sm:text-xs ${TIER_BADGE_STYLES[tier].pill}`}
-                title={`Đã thuộc ${masteredCount} trên ${activeQuestions.length} câu môn ${activeSubjectMeta.code}`}
-              >
-                <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${TIER_BADGE_STYLES[tier].icon}`} />
-                <span>
-                  {masteredCount}/{activeQuestions.length}
-                  <span className="hidden sm:inline lg:hidden xl:inline"> Đã thuộc</span>
-                </span>
-          </motion.div>
-
-          <button
-            type="button"
-            onClick={() => setIsRuleInfoOpen((prev) => !prev)}
-            aria-expanded={isRuleInfoOpen}
-            aria-haspopup="true"
-            aria-label="Quy tắc tính tiến độ Đã thuộc"
-            title="Xem quy tắc đạt Đã thuộc"
-            className={`inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border text-xs transition sm:h-7 sm:w-7 ${isRuleInfoOpen
-                ? 'border-[#4338CA] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
-                : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
-              }`}
-          >
-            <Info className="h-3.5 w-3.5" />
-          </button>
-
-          {isRuleInfoOpen && (
-            <div
-              role="dialog"
-              aria-label="Quy tắc tính tiến độ"
-              className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-[#C6BEB0] bg-[#FFFFFF] p-4 shadow-[0_14px_34px_-8px_rgba(28,25,23,0.09)] dark:border-[#323833] dark:bg-[#1E221F] dark:shadow-[0_16px_38px_-8px_rgba(0,0,0,0.7)] sm:w-80"
+                  : { y: 0, scaleX: 1, scaleY: 1 }
+              }
+              transition={{ duration: 0.44, times: [0, 0.36, 0.72, 1], ease: [0.22, 1, 0.36, 1] }}
+              className={`inline-flex items-center gap-1 rounded-full border-2 px-2.5 py-1 text-[11px] font-semibold tabular-nums whitespace-nowrap transition-colors duration-200 sm:gap-1.5 sm:px-3 sm:text-xs ${TIER_BADGE_STYLES[tier].pill}`}
+              title={`Đã thuộc ${masteredCount} trên ${activeQuestions.length} câu môn ${activeSubjectMeta.code}`}
             >
-              <div className="mb-2.5 flex items-center justify-between border-b border-[#D5CFC2] pb-2 dark:border-[#262925]">
-                <span className="text-xs font-bold text-[#18181B] dark:text-[#F5F5F4]">
-                  Quy tắc tính tiến độ học tập
-                </span>
-                <span className="rounded-md border border-[#A5B4FC] bg-[#EEF2FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
-                  Đồng bộ 2 chiều
-                </span>
-              </div>
+              <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${TIER_BADGE_STYLES[tier].icon}`} />
+              <span>
+                {masteredCount}/{activeQuestions.length}
+                <span className="hidden sm:inline lg:hidden xl:inline"> Đã thuộc</span>
+              </span>
+            </motion.div>
 
-              <p className="mb-2.5 text-[11px] text-[#656058] dark:text-[#9CA39B]">
-                <span className="font-semibold text-[#18181B] dark:text-[#F5F5F4]">
-                  {activeSubjectMeta.code}
-                </span>{' '}
-                • {activeSubjectMeta.name} ({activeSubjectMeta.chapters.length} chương,{' '}
-                {activeQuestions.length} câu)
-              </p>
-
-              <div className="space-y-3 text-xs leading-relaxed text-[#292524] dark:text-[#E7E5E4]">
-                <div className="rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
-                  <div className="mb-1 font-bold text-[#4338CA] dark:text-[#818CF8]">
-                    1. Học theo chương &amp; Học cuốn chiếu
-                  </div>
-                  <ul className="space-y-1 text-[11px]">
-                    <li>
-                      • Trả lời đúng lần 1 →{' '}
-                      <span className="font-semibold text-[#B45309] dark:text-[#FCD34D]">
-                        ✓ Đúng 1/2 lần (● ○)
-                      </span>
-                    </li>
-                    <li>
-                      • Trả lời đúng <strong>2 lần liên tiếp</strong> (không bấm phân vân) →{' '}
-                      <span className="font-semibold text-[#047857] dark:text-[#34D399]">
-                        ✓ Đã thuộc (● ●)
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
-                  <div className="mb-1 font-bold text-[#0369A1] dark:text-[#38BDF8]">
-                    2. Flashcard (Lật thẻ nhanh)
-                  </div>
-                  <ul className="space-y-1 text-[11px]">
-                    <li>
-                      • Lật xem đáp án mặt sau →{' '}
-                      <span className="font-semibold text-[#B45309] dark:text-[#FCD34D]">
-                        Đã học
-                      </span>
-                    </li>
-                    <li>
-                      • Bấm nút <strong>Cờ xanh lá</strong> →{' '}
-                      <span className="font-semibold text-[#047857] dark:text-[#34D399]">
-                        ✓ Đã thuộc
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Progress Sync Button */}
+            {/* Progress Sync Button */}
         <button
           type="button"
           onClick={onOpenSyncModal}
