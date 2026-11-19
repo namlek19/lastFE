@@ -251,7 +251,7 @@ export interface SakugaMangaTagProps {
   animateBurst?: boolean;
 }
 
-const TONE_MAP: Record<
+export const TONE_MAP: Record<
   NonNullable<SakugaMangaTagProps['tone']>,
   {
     plateClass: string;
