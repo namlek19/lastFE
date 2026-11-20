@@ -93,14 +93,26 @@ const SHARD_SHAPES = [
   '0,-6 6,4 -4,2',
 ] as const;
 
-const SHARD_PALETTE = [
+const SHARD_PALETTE_LIGHT = [
+  { color: '#312E81', strokeColor: '#E0E7FF' },
+  { color: '#0284C7', strokeColor: '#E0F2FE' },
+  { color: '#6D28D9', strokeColor: '#EDE9FE' },
+  { color: '#DB2777', strokeColor: '#FCE7F3' },
+] as const;
+
+const SHARD_PALETTE_DARK = [
   { color: '#FFFFFF', strokeColor: '#7C3AED' },
   { color: '#A5F3FC', strokeColor: '#0891B2' },
   { color: '#DDD6FE', strokeColor: '#7C3AED' },
   { color: '#F9A8D4', strokeColor: '#BE185D' },
 ] as const;
 
-const TRAIL_COLORS = ['#FFFFFF', '#E0F2FE', '#DDD6FE', '#FBCFE8'] as const;
+const TRAIL_COLORS_LIGHT = ['#4338CA', '#7C3AED', '#0284C7', '#DB2777'] as const;
+const TRAIL_COLORS_DARK = ['#FFFFFF', '#E0F2FE', '#DDD6FE', '#FBCFE8'] as const;
+
+function isDarkModeActive(): boolean {
+  return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+}
 
 function randBetween(min: number, max: number): number {
   return min + Math.random() * Math.max(0, max - min);
@@ -264,6 +276,10 @@ function sampleByArcLength(
 }
 
 function createShatterBurst(id: number, x: number, y: number): ShatterBurst {
+  const isDark = isDarkModeActive();
+  const shardPalette = isDark ? SHARD_PALETTE_DARK : SHARD_PALETTE_LIGHT;
+  const trailPalette = isDark ? TRAIL_COLORS_DARK : TRAIL_COLORS_LIGHT;
+
   const minis: ShatterMiniButterfly[] = Array.from({ length: 6 }, (_, i) => {
     const angleDeg = i * 60 + randBetween(-18, 18);
     const rad = (angleDeg * Math.PI) / 180;
@@ -291,7 +307,7 @@ function createShatterBurst(id: number, x: number, y: number): ShatterBurst {
   const shards: ShatterShard[] = Array.from({ length: 12 }, (_, i) => {
     const angle = (i / 12) * Math.PI * 2 + randBetween(-0.26, 0.26);
     const dist = randBetween(45, 145);
-    const swatch = SHARD_PALETTE[i % SHARD_PALETTE.length];
+    const swatch = shardPalette[i % shardPalette.length];
     return {
       id: i,
       tx: Math.cos(angle) * dist,
@@ -316,7 +332,7 @@ function createShatterBurst(id: number, x: number, y: number): ShatterBurst {
       size: randBetween(3, 6),
       duration: randBetween(0.75, 1.35),
       delay: randBetween(0, 0.1),
-      color: TRAIL_COLORS[i % TRAIL_COLORS.length],
+      color: trailPalette[i % trailPalette.length],
       isStar: i % 3 === 0,
     };
   });
@@ -331,700 +347,709 @@ interface OrigamiButterflySvgProps {
 }
 
 /**
- * Sleek luminous origami swallowtail butterfly (30x28px) with independent left/right
- * 3D wing layers driven directly at 60fps from the flight loop (100% Zero-Gradient).
+ * Luminous origami swallowtail butterfly (38x36px) with high-contrast dark jewel facets
+ * in Light Mode and radiant prism white/violet/cyan facets in Dark Mode (100% Zero-Gradient).
  */
 const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
   ({ leftWingRef, rightWingRef, coreGlowRef }) => {
     const wingGlowClass =
-      'h-full w-full overflow-visible drop-shadow-[0_0_3px_rgba(255,255,255,0.95)] drop-shadow-[0_0_8px_rgba(167,139,250,0.65)] drop-shadow-[0_0_14px_rgba(103,232,249,0.45)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_11px_rgba(196,181,253,0.9)] dark:drop-shadow-[0_0_22px_rgba(103,232,249,0.65)]';
+    'h-full w-full overflow-visible drop-shadow-[0_0_4px_rgba(79,70,229,0.55)] drop-shadow-[0_0_10px_rgba(124,58,237,0.42)] drop-shadow-[0_0_16px_rgba(219,39,119,0.28)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_11px_rgba(196,181,253,0.9)] dark:drop-shadow-[0_0_22px_rgba(103,232,249,0.65)]';
 
     return (
-      <div className="relative flex h-7 w-[30px] scale-90 items-center justify-center md:scale-100">
-        {/* Pinpoint luminous core aura pulsing smoothly in sync with wingbeat */}
-        <span
-          ref={coreGlowRef}
-          aria-hidden="true"
-          className="pointer-events-none absolute h-3.5 w-3.5 rounded-full bg-[#FFFFFF]/75 blur-[4px] dark:bg-[#E0F2FE]/70"
-        />
-
-        {/* Left 3D origami wing layer */}
-        <div
-          ref={leftWingRef}
-          style={{ transformOrigin: '50% 47%' }}
-          className="pointer-events-none absolute inset-0 will-change-transform"
-        >
-          <svg viewBox="0 0 36 34" aria-hidden="true" className={wingGlowClass}>
-            <polygon
-              points="18,14 1.5,5 12,18"
-              fill="#FFFFFF"
-              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-              strokeWidth="0.45"
-              strokeLinejoin="round"
-            />
-            <polygon
-              points="18,14 12,18 17.4,19"
-              fill="#DDD6FE"
-              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-              strokeWidth="0.45"
-              strokeLinejoin="round"
-            />
-            <polygon
-              points="17.6,18 8.5,20 12.2,31.5"
-              fill="#F5F3FF"
-              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-              strokeWidth="0.45"
-              strokeLinejoin="round"
-            />
-            <polygon
-              points="17.6,18 12.2,31.5 16.2,24.5"
-              fill="#F472B6"
-              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-              strokeWidth="0.45"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-
-        {/* Right 3D origami wing layer */}
-        <div
-          ref={rightWingRef}
-          style={{ transformOrigin: '50% 47%' }}
-          className="pointer-events-none absolute inset-0 will-change-transform"
-        >
-          <svg viewBox="0 0 36 34" aria-hidden="true" className={wingGlowClass}>
-            <polygon
-              points="18,14 34.5,5 24,18"
-              fill="#FFFFFF"
-              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-              strokeWidth="0.45"
-              strokeLinejoin="round"
-            />
-            <polygon
-              points="18,14 24,18 18.6,19"
-              fill="#E0E7FF"
-              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-              strokeWidth="0.45"
-              strokeLinejoin="round"
-            />
-            <polygon
-              points="18.4,18 27.5,20 23.8,31.5"
-              fill="#FFFFFF"
-              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-              strokeWidth="0.45"
-              strokeLinejoin="round"
-            />
-            <polygon
-              points="18.4,18 23.8,31.5 19.8,24.5"
-              fill="#C4B5FD"
-              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-              strokeWidth="0.45"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-
-        {/* Pinpoint white origami spine */}
-        <svg
-          viewBox="0 0 36 34"
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
-        >
-          <polygon
-            points="18,11.5 18.8,17 18,22 17.2,17"
-            fill="#FFFFFF"
-            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-            strokeWidth="0.4"
-            strokeLinejoin="round"
+        <div className="relative flex h-[36px] w-[38px] scale-90 items-center justify-center md:scale-100">
+          {/* Pinpoint luminous core aura pulsing smoothly in sync with wingbeat */}
+          <span
+            ref={coreGlowRef}
+            aria-hidden="true"
+            className="pointer-events-none absolute h-[18px] w-[18px] rounded-full bg-[#6366F1]/45 blur-[5px] dark:bg-[#E0F2FE]/70"
           />
-        </svg>
-      </div>
-    );
+
+          {/* Left 3D origami wing layer */}
+          <div
+            ref={leftWingRef}
+            style={{ transformOrigin: '50% 47%' }}
+            className="pointer-events-none absolute inset-0 will-change-transform"
+          >
+            <svg viewBox="0 0 36 34" aria-hidden="true" className={wingGlowClass}>
+              <polygon
+                points="18,14 1.5,5 12,18"
+                className="fill-[#312E81] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
+                strokeWidth="0.45"
+                strokeLinejoin="round"
+              />
+              <polygon
+                points="18,14 12,18 17.4,19"
+                className="fill-[#4F46E5] stroke-[#E0E7FF]/55 dark:fill-[#DDD6FE] dark:[stroke:none]"
+                strokeWidth="0.45"
+                strokeLinejoin="round"
+              />
+              <polygon
+                points="17.6,18 8.5,20 12.2,31.5"
+                className="fill-[#1E1B4B] stroke-[#E0E7FF]/55 dark:fill-[#F5F3FF] dark:[stroke:none]"
+                strokeWidth="0.45"
+                strokeLinejoin="round"
+              />
+              <polygon
+                points="17.6,18 12.2,31.5 16.2,24.5"
+                className="fill-[#DB2777] stroke-[#E0E7FF]/55 dark:fill-[#F472B6] dark:[stroke:none]"
+                strokeWidth="0.45"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+
+          {/* Right 3D origami wing layer */}
+          <div
+            ref={rightWingRef}
+            style={{ transformOrigin: '50% 47%' }}
+            className="pointer-events-none absolute inset-0 will-change-transform"
+          >
+            <svg viewBox="0 0 36 34" aria-hidden="true" className={wingGlowClass}>
+              <polygon
+                points="18,14 34.5,5 24,18"
+                className="fill-[#3730A3] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
+                strokeWidth="0.45"
+                strokeLinejoin="round"
+              />
+              <polygon
+                points="18,14 24,18 18.6,19"
+                className="fill-[#6D28D9] stroke-[#E0E7FF]/55 dark:fill-[#E0E7FF] dark:[stroke:none]"
+                strokeWidth="0.45"
+                strokeLinejoin="round"
+              />
+              <polygon
+                points="18.4,18 27.5,20 23.8,31.5"
+                className="fill-[#1E1B4B] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
+                strokeWidth="0.45"
+                strokeLinejoin="round"
+              />
+              <polygon
+                points="18.4,18 23.8,31.5 19.8,24.5"
+                className="fill-[#0284C7] stroke-[#E0E7FF]/55 dark:fill-[#C4B5FD] dark:[stroke:none]"
+                strokeWidth="0.45"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+
+          {/* Pinpoint origami spine */}
+          <svg
+            viewBox="0 0 36 34"
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+          >
+            <polygon
+              points="18,11.5 18.8,17 18,22 17.2,17"
+              className="fill-[#0F172A] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
+              strokeWidth="0.4"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+        );
   }
-);
+        );
 
-OrigamiButterflySvg.displayName = 'OrigamiButterflySvg';
+        OrigamiButterflySvg.displayName = 'OrigamiButterflySvg';
 
-const MINI_VARIANT_COLORS: Record<0 | 1 | 2, { wing: string; crease: string }> = {
-  0: { wing: '#E0F2FE', crease: '#A5F3FC' },
-  1: { wing: '#EDE9FE', crease: '#DDD6FE' },
-  2: { wing: '#FCE7F3', crease: '#FBCFE8' },
+        const MINI_VARIANT_CLASSES: Record<
+  0 | 1 | 2,
+        {leftTop: string; leftBottom: string; rightTop: string; rightBottom: string }
+> = {
+          0: {
+          leftTop: 'fill-[#312E81] dark:fill-[#FFFFFF]',
+        leftBottom: 'fill-[#0284C7] dark:fill-[#E0F2FE]',
+        rightTop: 'fill-[#1E1B4B] dark:fill-[#E0F2FE]',
+        rightBottom: 'fill-[#4F46E5] dark:fill-[#A5F3FC]',
+  },
+        1: {
+          leftTop: 'fill-[#3730A3] dark:fill-[#FFFFFF]',
+        leftBottom: 'fill-[#6D28D9] dark:fill-[#EDE9FE]',
+        rightTop: 'fill-[#312E81] dark:fill-[#EDE9FE]',
+        rightBottom: 'fill-[#7C3AED] dark:fill-[#DDD6FE]',
+  },
+        2: {
+          leftTop: 'fill-[#4C1D95] dark:fill-[#FFFFFF]',
+        leftBottom: 'fill-[#DB2777] dark:fill-[#FCE7F3]',
+        rightTop: 'fill-[#312E81] dark:fill-[#FCE7F3]',
+        rightBottom: 'fill-[#BE185D] dark:fill-[#FBCFE8]',
+  },
 };
 
-const MiniOrigamiButterflySvg: React.FC<{ variant: 0 | 1 | 2; flapDuration: number }> = ({
-  variant,
-  flapDuration,
+        const MiniOrigamiButterflySvg: React.FC<{ variant: 0 | 1 | 2; flapDuration: number }> = ({
+          variant,
+          flapDuration,
 }) => {
-  const palette = MINI_VARIANT_COLORS[variant];
-  const glowClass =
-    'pointer-events-none absolute inset-0 h-full w-full overflow-visible drop-shadow-[0_0_3px_rgba(255,255,255,0.92)] drop-shadow-[0_0_8px_rgba(196,181,253,0.75)] drop-shadow-[0_0_14px_rgba(103,232,249,0.5)]';
+        const palette = MINI_VARIANT_CLASSES[variant];
+        const glowClass =
+        'pointer-events-none absolute inset-0 h-full w-full overflow-visible drop-shadow-[0_0_4px_rgba(79,70,229,0.55)] drop-shadow-[0_0_9px_rgba(124,58,237,0.4)] dark:drop-shadow-[0_0_3px_rgba(255,255,255,0.92)] dark:drop-shadow-[0_0_8px_rgba(196,181,253,0.75)] dark:drop-shadow-[0_0_14px_rgba(103,232,249,0.5)]';
 
-  return (
-    <div className="relative h-5 w-5">
-      <motion.svg
-        viewBox="0 0 28 26"
-        aria-hidden="true"
-        style={{ transformOrigin: '50% 50%', transformPerspective: 75 }}
-        animate={{ rotateY: [-12, 72, -12] }}
-        transition={{ duration: flapDuration, repeat: Infinity, ease: 'easeInOut' }}
-        className={glowClass}
-      >
-        <polygon
-          points="14,11 1.5,4 9.5,14.5"
-          fill="#FFFFFF"
-          className="stroke-[#6D28D9]/20 dark:[stroke:none]"
-          strokeWidth="0.4"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points="13.7,14 6.5,15.5 9.5,24.5"
-          fill={palette.wing}
-          className="stroke-[#6D28D9]/20 dark:[stroke:none]"
-          strokeWidth="0.4"
-          strokeLinejoin="round"
-        />
-      </motion.svg>
-      <motion.svg
-        viewBox="0 0 28 26"
-        aria-hidden="true"
-        style={{ transformOrigin: '50% 50%', transformPerspective: 75 }}
-        animate={{ rotateY: [12, -72, 12] }}
-        transition={{ duration: flapDuration, repeat: Infinity, ease: 'easeInOut' }}
-        className={glowClass}
-      >
-        <polygon
-          points="14,11 26.5,4 18.5,14.5"
-          fill={palette.wing}
-          className="stroke-[#6D28D9]/20 dark:[stroke:none]"
-          strokeWidth="0.4"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points="14.3,14 21.5,15.5 18.5,24.5"
-          fill={palette.crease}
-          className="stroke-[#6D28D9]/20 dark:[stroke:none]"
-          strokeWidth="0.4"
-          strokeLinejoin="round"
-        />
-      </motion.svg>
-      <svg
-        viewBox="0 0 28 26"
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
-      >
-        <polygon points="14,9 14.7,13.5 14,18 13.3,13.5" fill="#FFFFFF" />
-      </svg>
-    </div>
-  );
+        return (
+          <div className="relative h-6 w-6">
+            <motion.svg
+              viewBox="0 0 28 26"
+              aria-hidden="true"
+              style={{ transformOrigin: '50% 50%', transformPerspective: 75 }}
+              animate={{ rotateY: [-12, 72, -12] }}
+              transition={{ duration: flapDuration, repeat: Infinity, ease: 'easeInOut' }}
+              className={glowClass}
+            >
+              <polygon
+                points="14,11 1.5,4 9.5,14.5"
+                className={`${palette.leftTop} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
+                strokeWidth="0.4"
+                strokeLinejoin="round"
+              />
+              <polygon
+                points="13.7,14 6.5,15.5 9.5,24.5"
+                className={`${palette.leftBottom} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
+                strokeWidth="0.4"
+                strokeLinejoin="round"
+              />
+            </motion.svg>
+            <motion.svg
+              viewBox="0 0 28 26"
+              aria-hidden="true"
+              style={{ transformOrigin: '50% 50%', transformPerspective: 75 }}
+              animate={{ rotateY: [12, -72, 12] }}
+              transition={{ duration: flapDuration, repeat: Infinity, ease: 'easeInOut' }}
+              className={glowClass}
+            >
+              <polygon
+                points="14,11 26.5,4 18.5,14.5"
+                className={`${palette.rightTop} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
+                strokeWidth="0.4"
+                strokeLinejoin="round"
+              />
+              <polygon
+                points="14.3,14 21.5,15.5 18.5,24.5"
+                className={`${palette.rightBottom} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
+                strokeWidth="0.4"
+                strokeLinejoin="round"
+              />
+            </motion.svg>
+            <svg
+              viewBox="0 0 28 26"
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+            >
+              <polygon
+                points="14,9 14.7,13.5 14,18 13.3,13.5"
+                className="fill-[#0F172A] dark:fill-[#FFFFFF]"
+              />
+            </svg>
+          </div>
+          );
 };
 
-export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = ({ mode }) => {
+          export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = ({mode}) => {
   const prefersReducedMotion = Boolean(useReducedMotion());
-  const isDisabled = mode === 'exam' || prefersReducedMotion;
+            const isDisabled = mode === 'exam' || prefersReducedMotion;
 
-  const [isVisible, setIsVisible] = useState(false);
-  const [bursts, setBursts] = useState<ShatterBurst[]>([]);
+            const [isVisible, setIsVisible] = useState(false);
+            const [bursts, setBursts] = useState<ShatterBurst[]>([]);
 
-  const mvX = useMotionValue(-100);
-  const mvY = useMotionValue(-100);
-  const mvRotate = useMotionValue(0);
-  const mvOpacity = useMotionValue(0);
+            const mvX = useMotionValue(-100);
+            const mvY = useMotionValue(-100);
+            const mvRotate = useMotionValue(0);
+            const mvOpacity = useMotionValue(0);
 
-  const leftWingRef = useRef<HTMLDivElement>(null);
-  const rightWingRef = useRef<HTMLDivElement>(null);
-  const coreGlowRef = useRef<HTMLSpanElement>(null);
+            const leftWingRef = useRef<HTMLDivElement>(null);
+              const rightWingRef = useRef<HTMLDivElement>(null);
+                const coreGlowRef = useRef<HTMLSpanElement>(null);
 
-  const isVisibleRef = useRef(false);
-  const hasVisitedOnceRef = useRef(false);
+                  const isVisibleRef = useRef(false);
+                  const hasVisitedOnceRef = useRef(false);
 
-  const spawnTimerRef = useRef<number | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const burstTimersRef = useRef<number[]>([]);
-  const idCounterRef = useRef(1);
-  const startFlightRef = useRef<(() => void) | null>(null);
+                  const spawnTimerRef = useRef<number | null>(null);
+                  const rafRef = useRef<number | null>(null);
+                  const burstTimersRef = useRef<number[]>([]);
+                  const idCounterRef = useRef(1);
+                  const startFlightRef = useRef<(() => void) | null>(null);
 
-  const trailElRefs = useRef<Array<HTMLSpanElement | null>>([]);
-  const trailSlotsRef = useRef<TrailSlot[]>(
-    Array.from({ length: TRAIL_POOL_SIZE }, () => ({
-      active: false,
-      birth: 0,
-      x: 0,
-      y: 0,
-      vx: 0,
-      vy: 0,
-      size: 3,
-      color: '#FFFFFF',
+                  const trailElRefs = useRef<Array<HTMLSpanElement | null>>([]);
+                    const trailSlotsRef = useRef<TrailSlot[]>(
+                    Array.from({length: TRAIL_POOL_SIZE }, () => ({
+                      active: false,
+                    birth: 0,
+                    x: 0,
+                    y: 0,
+                    vx: 0,
+                    vy: 0,
+                    size: 3,
+                    color: '#FFFFFF',
     }))
-  );
-  const trailCursorRef = useRef(0);
+                    );
+                    const trailCursorRef = useRef(0);
 
   const nextId = () => {
-    idCounterRef.current += 1;
-    return idCounterRef.current;
+                      idCounterRef.current += 1;
+                    return idCounterRef.current;
   };
 
   const resetTrailPool = useCallback(() => {
     for (let i = 0; i < TRAIL_POOL_SIZE; i++) {
-      trailSlotsRef.current[i].active = false;
-      const el = trailElRefs.current[i];
-      if (el) {
-        el.style.opacity = '0';
+                      trailSlotsRef.current[i].active = false;
+                    const el = trailElRefs.current[i];
+                    if (el) {
+                      el.style.opacity = '0';
       }
     }
   }, []);
 
   const cancelFlightLoop = useCallback(() => {
     if (rafRef.current !== null) {
-      window.cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
+                      window.cancelAnimationFrame(rafRef.current);
+                    rafRef.current = null;
     }
   }, []);
 
   const clearSpawnTimer = useCallback(() => {
     if (spawnTimerRef.current !== null) {
-      window.clearTimeout(spawnTimerRef.current);
-      spawnTimerRef.current = null;
+                      window.clearTimeout(spawnTimerRef.current);
+                    spawnTimerRef.current = null;
     }
   }, []);
 
   const clearBurstTimers = useCallback(() => {
     for (const id of burstTimersRef.current) {
-      window.clearTimeout(id);
+                      window.clearTimeout(id);
     }
-    burstTimersRef.current = [];
+                    burstTimersRef.current = [];
   }, []);
 
-  const scheduleVisit = useCallback(
+                    const scheduleVisit = useCallback(
     (isInitial: boolean) => {
-      clearSpawnTimer();
-      if (isDisabled || document.visibilityState === 'hidden' || isVisibleRef.current) return;
-      const delay = isInitial
-        ? Math.round(randBetween(FIRST_VISIT_MIN_MS, FIRST_VISIT_MAX_MS))
-        : Math.round(randBetween(COOLDOWN_MIN_MS, COOLDOWN_MAX_MS));
+                      clearSpawnTimer();
+                    if (isDisabled || document.visibilityState === 'hidden' || isVisibleRef.current) return;
+                    const delay = isInitial
+                    ? Math.round(randBetween(FIRST_VISIT_MIN_MS, FIRST_VISIT_MAX_MS))
+                    : Math.round(randBetween(COOLDOWN_MIN_MS, COOLDOWN_MAX_MS));
 
       spawnTimerRef.current = window.setTimeout(() => {
-        spawnTimerRef.current = null;
-        startFlightRef.current?.();
+                      spawnTimerRef.current = null;
+                    startFlightRef.current?.();
       }, delay);
     },
-    [clearSpawnTimer, isDisabled]
-  );
+                    [clearSpawnTimer, isDisabled]
+                    );
 
   useEffect(() => {
     if (isDisabled) {
-      clearSpawnTimer();
-      cancelFlightLoop();
-      clearBurstTimers();
-      resetTrailPool();
-      isVisibleRef.current = false;
-      setIsVisible(false);
-      setBursts([]);
-      return;
+                      clearSpawnTimer();
+                    cancelFlightLoop();
+                    clearBurstTimers();
+                    resetTrailPool();
+                    isVisibleRef.current = false;
+                    setIsVisible(false);
+                    setBursts([]);
+                    return;
     }
 
-    let unmounted = false;
+                    let unmounted = false;
 
     const startFlight = () => {
       if (unmounted || isDisabled || document.visibilityState === 'hidden') return;
-      cancelFlightLoop();
-      resetTrailPool();
+                    cancelFlightLoop();
+                    resetTrailPool();
 
-      const path = buildSmoothFlightPath();
-      const lut = buildArcLengthLut(path, 180);
-      const speedPxPerSec = randBetween(92, 118);
-      const durationMs = clamp((lut.totalLen / speedPxPerSec) * 1000, 7500, 18000);
+                    const path = buildSmoothFlightPath();
+                    const lut = buildArcLengthLut(path, 180);
+                    const speedPxPerSec = randBetween(92, 118);
+                    const durationMs = clamp((lut.totalLen / speedPxPerSec) * 1000, 7500, 18000);
 
-      const startTime = performance.now();
-      let prevNow = startTime;
-      let lastTrailSpawn = startTime;
+                    const startTime = performance.now();
+                    let prevNow = startTime;
+                    let lastTrailSpawn = startTime;
 
-      const initSample = sampleByArcLength(lut, 0);
-      let curAngle = Math.atan2(initSample.ty, initSample.tx) * (180 / Math.PI) + 90;
+                    const initSample = sampleByArcLength(lut, 0);
+                    let curAngle = Math.atan2(initSample.ty, initSample.tx) * (180 / Math.PI) + 90;
 
-      mvX.set(initSample.x);
-      mvY.set(initSample.y);
-      mvRotate.set(curAngle);
-      mvOpacity.set(0);
+                    mvX.set(initSample.x);
+                    mvY.set(initSample.y);
+                    mvRotate.set(curAngle);
+                    mvOpacity.set(0);
 
-      isVisibleRef.current = true;
-      hasVisitedOnceRef.current = true;
-      setIsVisible(true);
+                    isVisibleRef.current = true;
+                    hasVisitedOnceRef.current = true;
+                    setIsVisible(true);
 
       const step = (now: number) => {
         if (unmounted || !isVisibleRef.current) return;
 
-        const elapsed = now - startTime;
-        const dt = Math.min(0.05, Math.max(0.001, (now - prevNow) / 1000));
-        prevNow = now;
+                    const elapsed = now - startTime;
+                    const dt = Math.min(0.05, Math.max(0.001, (now - prevNow) / 1000));
+                    prevNow = now;
 
-        const s = Math.min(1, elapsed / durationMs);
-        const sample = sampleByArcLength(lut, s);
+                    const s = Math.min(1, elapsed / durationMs);
+                    const sample = sampleByArcLength(lut, s);
 
-        // Drive true 3D perspective wing-flapping & occasional open-wing glide at 60fps
-        const beatSec = elapsed * 0.001;
-        const glideMix = clamp((Math.sin(beatSec * 1.15) - 0.72) / 0.28, 0, 1);
-        const rawWave = 0.5 - 0.5 * Math.cos(beatSec * Math.PI * 6.2);
-        const flapCurve = Math.pow(rawWave, 0.82); // 0 = wide open, 1 = folded up
-        const activeFlapDeg = -14 + flapCurve * 88; // -14deg .. +74deg
-        const glideDeg = 10 + Math.sin(beatSec * 4.5) * 8;
-        const wingDeg = activeFlapDeg * (1 - glideMix) + glideDeg * glideMix;
+                    // Drive true 3D perspective wing-flapping & occasional open-wing glide at 60fps
+                    const beatSec = elapsed * 0.001;
+                    const glideMix = clamp((Math.sin(beatSec * 1.15) - 0.72) / 0.28, 0, 1);
+                    const rawWave = 0.5 - 0.5 * Math.cos(beatSec * Math.PI * 6.2);
+                    const flapCurve = Math.pow(rawWave, 0.82); // 0 = wide open, 1 = folded up
+                    const activeFlapDeg = -14 + flapCurve * 88; // -14deg .. +74deg
+                    const glideDeg = 10 + Math.sin(beatSec * 4.5) * 8;
+                    const wingDeg = activeFlapDeg * (1 - glideMix) + glideDeg * glideMix;
 
-        if (leftWingRef.current) {
-          leftWingRef.current.style.transform = `perspective(95px) rotateY(${wingDeg.toFixed(1)}deg)`;
+                    if (leftWingRef.current) {
+                      leftWingRef.current.style.transform = `perspective(95px) rotateY(${wingDeg.toFixed(1)}deg)`;
         }
-        if (rightWingRef.current) {
-          rightWingRef.current.style.transform = `perspective(95px) rotateY(${(-wingDeg).toFixed(1)}deg)`;
+                    if (rightWingRef.current) {
+                      rightWingRef.current.style.transform = `perspective(95px) rotateY(${(-wingDeg).toFixed(1)}deg)`;
         }
-        if (coreGlowRef.current) {
+                    if (coreGlowRef.current) {
           const openAmt = 1 - clamp((wingDeg + 14) / 88, 0, 1);
-          coreGlowRef.current.style.transform = `scale(${(0.88 + openAmt * 0.34).toFixed(2)})`;
-          coreGlowRef.current.style.opacity = (0.42 + openAmt * 0.42).toFixed(2);
+                    coreGlowRef.current.style.transform = `scale(${(0.88 + openAmt * 0.34).toFixed(2)})`;
+                    coreGlowRef.current.style.opacity = (0.42 + openAmt * 0.42).toFixed(2);
         }
 
-        // Gentle perpendicular air-current drift + aerodynamic lift from wing downstroke
-        const sway = Math.sin(elapsed * 0.0034) * 9;
-        const wingLift = (1 - flapCurve) * (1 - glideMix) * 3.2;
-        const liveX = sample.x + -sample.ty * sway;
-        const liveY = sample.y + sample.tx * sway - wingLift;
+                    // Gentle perpendicular air-current drift + aerodynamic lift from wing downstroke
+                    const sway = Math.sin(elapsed * 0.0034) * 9;
+                    const wingLift = (1 - flapCurve) * (1 - glideMix) * 3.2;
+                    const liveX = sample.x + -sample.ty * sway;
+                    const liveY = sample.y + sample.tx * sway - wingLift;
 
-        const targetDeg =
-          Math.atan2(sample.ty, sample.tx) * (180 / Math.PI) +
-          90 +
-          Math.cos(elapsed * 0.0034) * 5;
-        const deltaDeg = ((targetDeg - curAngle + 540) % 360) - 180;
-        const alpha = 1 - Math.exp(-dt * 6);
-        curAngle += deltaDeg * alpha;
+                    const targetDeg =
+                    Math.atan2(sample.ty, sample.tx) * (180 / Math.PI) +
+                    90 +
+                    Math.cos(elapsed * 0.0034) * 5;
+                    const deltaDeg = ((targetDeg - curAngle + 540) % 360) - 180;
+                    const alpha = 1 - Math.exp(-dt * 6);
+                    curAngle += deltaDeg * alpha;
 
-        const fadeIn = Math.min(1, elapsed / 600);
-        const fadeOut = Math.min(1, Math.max(0, (durationMs - elapsed) / 600));
-        mvOpacity.set(Math.min(fadeIn, fadeOut));
-        mvX.set(liveX);
-        mvY.set(liveY);
-        mvRotate.set(curAngle);
+                    const fadeIn = Math.min(1, elapsed / 600);
+                    const fadeOut = Math.min(1, Math.max(0, (durationMs - elapsed) / 600));
+                    mvOpacity.set(Math.min(fadeIn, fadeOut));
+                    mvX.set(liveX);
+                    mvY.set(liveY);
+                    mvRotate.set(curAngle);
 
         // Spawn trail mote directly into pooled DOM slots (0 React re-renders!)
         if (now - lastTrailSpawn >= 170 && elapsed > 450 && durationMs - elapsed > 820) {
-          lastTrailSpawn = now;
-          const idx = trailCursorRef.current % TRAIL_POOL_SIZE;
-          trailCursorRef.current += 1;
-          const slot = trailSlotsRef.current[idx];
-          const color = TRAIL_COLORS[trailCursorRef.current % TRAIL_COLORS.length];
+                      lastTrailSpawn = now;
+                    const idx = trailCursorRef.current % TRAIL_POOL_SIZE;
+                    trailCursorRef.current += 1;
+                    const slot = trailSlotsRef.current[idx];
+                    const trailPalette = isDarkModeActive() ? TRAIL_COLORS_DARK : TRAIL_COLORS_LIGHT;
+                    const color = trailPalette[trailCursorRef.current % trailPalette.length];
 
-          slot.active = true;
-          slot.birth = now;
-          slot.x = liveX - sample.tx * 10 + randBetween(-3, 3);
-          slot.y = liveY - sample.ty * 10 + randBetween(-3, 3);
-          slot.vx = -sample.tx * 14 + randBetween(-5, 5);
-          slot.vy = -sample.ty * 14 - randBetween(3, 8);
-          slot.size = randBetween(2.5, 4);
-          slot.color = color;
+                    slot.active = true;
+                    slot.birth = now;
+                    slot.x = liveX - sample.tx * 10 + randBetween(-3, 3);
+                    slot.y = liveY - sample.ty * 10 + randBetween(-3, 3);
+                    slot.vx = -sample.tx * 14 + randBetween(-5, 5);
+                    slot.vy = -sample.ty * 14 - randBetween(3, 8);
+                    slot.size = randBetween(3, 4.8);
+                    slot.color = color;
 
-          const el = trailElRefs.current[idx];
-          if (el) {
-            el.style.width = `${slot.size}px`;
-            el.style.height = `${slot.size}px`;
-            el.style.backgroundColor = slot.color;
+                    const el = trailElRefs.current[idx];
+                    if (el) {
+                      el.style.width = `${slot.size}px`;
+                    el.style.height = `${slot.size}px`;
+                    el.style.backgroundColor = slot.color;
           }
         }
 
-        // Update pooled GPU trail motes inline
-        for (let i = 0; i < TRAIL_POOL_SIZE; i++) {
+                    // Update pooled GPU trail motes inline
+                    for (let i = 0; i < TRAIL_POOL_SIZE; i++) {
           const slot = trailSlotsRef.current[i];
-          if (!slot.active) continue;
+                    if (!slot.active) continue;
 
-          const age = now - slot.birth;
-          const el = trailElRefs.current[i];
+                    const age = now - slot.birth;
+                    const el = trailElRefs.current[i];
           if (age >= 750) {
-            slot.active = false;
-            if (el) el.style.opacity = '0';
+                      slot.active = false;
+                    if (el) el.style.opacity = '0';
           } else if (el) {
             const p = age / 750;
-            const px = slot.x + slot.vx * p;
-            const py = slot.y + slot.vy * p;
-            const scale = 1 - p * 0.72;
-            const opacity = (1 - p) * 0.85;
-            el.style.transform = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%) scale(${scale})`;
-            el.style.opacity = opacity.toFixed(3);
+                    const px = slot.x + slot.vx * p;
+                    const py = slot.y + slot.vy * p;
+                    const scale = 1 - p * 0.72;
+                    const opacity = (1 - p) * 0.85;
+                    el.style.transform = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%) scale(${scale})`;
+                    el.style.opacity = opacity.toFixed(3);
           }
         }
 
         if (s >= 1) {
-          rafRef.current = null;
-          resetTrailPool();
-          isVisibleRef.current = false;
-          setIsVisible(false);
-          scheduleVisit(false);
-          return;
+                      rafRef.current = null;
+                    resetTrailPool();
+                    isVisibleRef.current = false;
+                    setIsVisible(false);
+                    scheduleVisit(false);
+                    return;
         }
 
-        rafRef.current = window.requestAnimationFrame(step);
+                    rafRef.current = window.requestAnimationFrame(step);
       };
 
-      rafRef.current = window.requestAnimationFrame(step);
+                    rafRef.current = window.requestAnimationFrame(step);
     };
 
-    startFlightRef.current = startFlight;
-    scheduleVisit(true);
+                    startFlightRef.current = startFlight;
+                    scheduleVisit(true);
 
     const handleVisibility = () => {
       if (document.visibilityState === 'hidden') {
-        clearSpawnTimer();
-        cancelFlightLoop();
-        resetTrailPool();
-        if (isVisibleRef.current) {
-          isVisibleRef.current = false;
-          setIsVisible(false);
+                      clearSpawnTimer();
+                    cancelFlightLoop();
+                    resetTrailPool();
+                    if (isVisibleRef.current) {
+                      isVisibleRef.current = false;
+                    setIsVisible(false);
         }
       } else if (!unmounted && !isDisabled) {
-        scheduleVisit(!hasVisitedOnceRef.current);
+                      scheduleVisit(!hasVisitedOnceRef.current);
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibility);
+                    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      unmounted = true;
-      isVisibleRef.current = false;
-      startFlightRef.current = null;
-      document.removeEventListener('visibilitychange', handleVisibility);
-      clearSpawnTimer();
-      cancelFlightLoop();
-      clearBurstTimers();
-      resetTrailPool();
+                      unmounted = true;
+                    isVisibleRef.current = false;
+                    startFlightRef.current = null;
+                    document.removeEventListener('visibilitychange', handleVisibility);
+                    clearSpawnTimer();
+                    cancelFlightLoop();
+                    clearBurstTimers();
+                    resetTrailPool();
     };
   }, [
-    cancelFlightLoop,
-    clearBurstTimers,
-    clearSpawnTimer,
-    isDisabled,
-    mvOpacity,
-    mvRotate,
-    mvX,
-    mvY,
-    resetTrailPool,
-    scheduleVisit,
-  ]);
+                    cancelFlightLoop,
+                    clearBurstTimers,
+                    clearSpawnTimer,
+                    isDisabled,
+                    mvOpacity,
+                    mvRotate,
+                    mvX,
+                    mvY,
+                    resetTrailPool,
+                    scheduleVisit,
+                    ]);
 
   const handleButterflyClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!isVisibleRef.current) return;
+                      e.stopPropagation();
+                    if (!isVisibleRef.current) return;
 
-    const cx = mvX.get();
-    const cy = mvY.get();
+                    const cx = mvX.get();
+                    const cy = mvY.get();
 
-    cancelFlightLoop();
-    clearSpawnTimer();
-    resetTrailPool();
-    isVisibleRef.current = false;
-    setIsVisible(false);
+                    cancelFlightLoop();
+                    clearSpawnTimer();
+                    resetTrailPool();
+                    isVisibleRef.current = false;
+                    setIsVisible(false);
 
-    const burstId = nextId();
-    const burst = createShatterBurst(burstId, cx, cy);
+                    const burstId = nextId();
+                    const burst = createShatterBurst(burstId, cx, cy);
     setBursts((prev) => [...prev, burst]);
 
     const cleanupTimer = window.setTimeout(() => {
-      setBursts((prev) => prev.filter((item) => item.id !== burstId));
+                      setBursts((prev) => prev.filter((item) => item.id !== burstId));
     }, 1850);
-    burstTimersRef.current.push(cleanupTimer);
+                    burstTimersRef.current.push(cleanupTimer);
 
-    scheduleVisit(false);
+                    scheduleVisit(false);
   };
 
-  if (isDisabled) return null;
+                    if (isDisabled) return null;
 
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
-    >
-      {/* Pooled zero-re-render stardust trail specks */}
-      {Array.from({ length: TRAIL_POOL_SIZE }, (_, i) => (
-        <span
-          key={`bf-pool-${i}`}
-          ref={(el) => {
-            trailElRefs.current[i] = el;
-          }}
-          style={{ opacity: 0, width: 3, height: 3, backgroundColor: '#FFFFFF' }}
-          className="pointer-events-none fixed left-0 top-0 rounded-full drop-shadow-[0_0_4px_rgba(196,181,253,0.9)]"
-        />
-      ))}
+                    return (
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
+                    >
+                      {/* Pooled zero-re-render stardust trail specks */}
+                      {Array.from({ length: TRAIL_POOL_SIZE }, (_, i) => (
+                        <span
+                          key={`bf-pool-${i}`}
+                          ref={(el) => {
+                            trailElRefs.current[i] = el;
+                          }}
+                          style={{ opacity: 0, width: 3, height: 3, backgroundColor: '#FFFFFF' }}
+                          className="pointer-events-none fixed left-0 top-0 rounded-full drop-shadow-[0_0_4px_rgba(79,70,229,0.75)] dark:drop-shadow-[0_0_4px_rgba(196,181,253,0.9)]"
+                        />
+                      ))}
 
-      {/* Main wandering luminous origami butterfly */}
-      {isVisible && (
-        <motion.div
-          style={{
-            left: -22,
-            top: -22,
-            x: mvX,
-            y: mvY,
-            rotate: mvRotate,
-            opacity: mvOpacity,
-          }}
-          className="pointer-events-none absolute h-11 w-11 will-change-transform"
-        >
-          <button
-            type="button"
-            tabIndex={-1}
-            onClick={handleButterflyClick}
-            aria-label="Chạm vào bướm ánh sáng"
-            title="Chạm để làm vỡ cánh bướm ánh sáng"
-            className="pointer-events-auto flex h-full w-full cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
-          >
-            <OrigamiButterflySvg
-              leftWingRef={leftWingRef}
-              rightWingRef={rightWingRef}
-              coreGlowRef={coreGlowRef}
-            />
-          </button>
-        </motion.div>
-      )}
+                      {/* Main wandering luminous origami butterfly */}
+                      {isVisible && (
+                        <motion.div
+                          style={{
+                            left: -28,
+                            top: -28,
+                            x: mvX,
+                            y: mvY,
+                            rotate: mvRotate,
+                            opacity: mvOpacity,
+                          }}
+                          className="pointer-events-none absolute h-14 w-14 will-change-transform"
+                        >
+                          <button
+                            type="button"
+                            tabIndex={-1}
+                            onClick={handleButterflyClick}
+                            aria-label="Chạm vào bướm ánh sáng"
+                            title="Chạm để làm vỡ cánh bướm ánh sáng"
+                            className="pointer-events-auto flex h-full w-full cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
+                          >
+                            <OrigamiButterflySvg
+                              leftWingRef={leftWingRef}
+                              rightWingRef={rightWingRef}
+                              coreGlowRef={coreGlowRef}
+                            />
+                          </button>
+                        </motion.div>
+                      )}
 
-      {/* Luminous shatter burst of mini origami butterflies, prism shards & stardust */}
-      {bursts.map((burst) => (
-        <div
-          key={`bf-burst-${burst.id}`}
-          style={{ left: burst.x, top: burst.y }}
-          className="pointer-events-none absolute"
-        >
-          {/* Core prism starburst flash */}
-          <motion.svg
-            viewBox="0 0 64 64"
-            aria-hidden="true"
-            initial={{ scale: 0.25, opacity: 1, rotate: -18 }}
-            animate={{ scale: 1.55, opacity: 0, rotate: 24 }}
-            transition={{ duration: 0.38, ease: 'easeOut' }}
-            className="pointer-events-none absolute -left-8 -top-8 h-16 w-16 overflow-visible drop-shadow-[0_0_12px_rgba(103,232,249,0.95)]"
-          >
-            <polygon
-              points="32,4 36,28 60,32 36,36 32,60 28,36 4,32 28,28"
-              fill="#FFFFFF"
-            />
-          </motion.svg>
+                      {/* Luminous shatter burst of mini origami butterflies, prism shards & stardust */}
+                      {bursts.map((burst) => (
+                        <div
+                          key={`bf-burst-${burst.id}`}
+                          style={{ left: burst.x, top: burst.y }}
+                          className="pointer-events-none absolute"
+                        >
+                          {/* Core prism starburst flash */}
+                          <motion.svg
+                            viewBox="0 0 64 64"
+                            aria-hidden="true"
+                            initial={{ scale: 0.25, opacity: 1, rotate: -18 }}
+                            animate={{ scale: 1.55, opacity: 0, rotate: 24 }}
+                            transition={{ duration: 0.38, ease: 'easeOut' }}
+                            className="pointer-events-none absolute -left-8 -top-8 h-16 w-16 overflow-visible drop-shadow-[0_0_10px_rgba(79,70,229,0.8)] dark:drop-shadow-[0_0_12px_rgba(103,232,249,0.95)]"
+                          >
+                            <polygon
+                              points="32,4 36,28 60,32 36,36 32,60 28,36 4,32 28,28"
+                              className="fill-[#4338CA] dark:fill-[#FFFFFF]"
+                            />
+                          </motion.svg>
 
-          {/* Expanding thin luminous shockwave ring */}
-          <motion.span
-            aria-hidden="true"
-            initial={{ scale: 0.3, opacity: 0.9 }}
-            animate={{ scale: 2.7, opacity: 0 }}
-            transition={{ duration: 0.58, ease: 'easeOut' }}
-            className="pointer-events-none absolute -left-6 -top-6 h-12 w-12 rounded-full border-2 border-[#67E8F9] drop-shadow-[0_0_10px_rgba(167,139,250,0.85)]"
-          />
+                          {/* Expanding thin luminous shockwave ring */}
+                          <motion.span
+                            aria-hidden="true"
+                            initial={{ scale: 0.3, opacity: 0.9 }}
+                            animate={{ scale: 2.7, opacity: 0 }}
+                            transition={{ duration: 0.58, ease: 'easeOut' }}
+                            className="pointer-events-none absolute -left-6 -top-6 h-12 w-12 rounded-full border-2 border-[#4F46E5] drop-shadow-[0_0_8px_rgba(124,58,237,0.75)] dark:border-[#67E8F9] dark:drop-shadow-[0_0_10px_rgba(167,139,250,0.85)]"
+                          />
 
-          {/* Scattered flock of 6 glowing mini origami butterflies */}
-          {burst.minis.map((mini) => (
-            <motion.div
-              key={`bf-mini-${burst.id}-${mini.id}`}
-              initial={{
-                x: -10,
-                y: -10,
-                scale: mini.scale * 0.65,
-                rotate: mini.startRot,
-                opacity: 1,
-              }}
-              animate={{
-                x: [-10, mini.midX - 10, mini.tx - 10],
-                y: [-10, mini.midY - 10, mini.ty - 10],
-                scale: [mini.scale * 0.7, mini.scale, mini.scale * 0.45],
-                rotate: [mini.startRot, (mini.startRot + mini.endRot) / 2, mini.endRot],
-                opacity: [1, 1, 0],
-              }}
-              transition={{
-                duration: mini.duration,
-                delay: mini.delay,
-                times: [0, 0.48, 1],
-                ease: 'easeOut',
-              }}
-              className="pointer-events-none absolute"
-            >
-              <MiniOrigamiButterflySvg
-                variant={mini.variant}
-                flapDuration={0.26 + (mini.id % 3) * 0.04}
-              />
-            </motion.div>
-          ))}
+                          {/* Scattered flock of 6 glowing mini origami butterflies */}
+                          {burst.minis.map((mini) => (
+                            <motion.div
+                              key={`bf-mini-${burst.id}-${mini.id}`}
+                              initial={{
+                                x: -12,
+                                y: -12,
+                                scale: mini.scale * 0.65,
+                                rotate: mini.startRot,
+                                opacity: 1,
+                              }}
+                              animate={{
+                                x: [-12, mini.midX - 12, mini.tx - 12],
+                                y: [-12, mini.midY - 12, mini.ty - 12],
+                                scale: [mini.scale * 0.7, mini.scale, mini.scale * 0.45],
+                                rotate: [mini.startRot, (mini.startRot + mini.endRot) / 2, mini.endRot],
+                                opacity: [1, 1, 0],
+                              }}
+                              transition={{
+                                duration: mini.duration,
+                                delay: mini.delay,
+                                times: [0, 0.48, 1],
+                                ease: 'easeOut',
+                              }}
+                              className="pointer-events-none absolute"
+                            >
+                              <MiniOrigamiButterflySvg
+                                variant={mini.variant}
+                                flapDuration={0.26 + (mini.id % 3) * 0.04}
+                              />
+                            </motion.div>
+                          ))}
 
-          {/* Sharp angular crystal wing shards */}
-          {burst.shards.map((shard) => (
-            <motion.svg
-              key={`bf-shard-${burst.id}-${shard.id}`}
-              viewBox="-10 -10 20 20"
-              aria-hidden="true"
-              initial={{ x: -8, y: -8, scale: shard.scale * 0.85, rotate: 0, opacity: 1 }}
-              animate={{
-                x: shard.tx - 8,
-                y: shard.ty - 8,
-                scale: [shard.scale, shard.scale * 0.85, 0.2],
-                rotate: shard.rot,
-                opacity: [1, 0.9, 0],
-              }}
-              transition={{
-                duration: shard.duration,
-                delay: shard.delay,
-                ease: 'easeOut',
-              }}
-              className="pointer-events-none absolute h-4 w-4 overflow-visible drop-shadow-[0_0_6px_rgba(103,232,249,0.85)]"
-            >
-              <polygon
-                points={shard.points}
-                fill={shard.color}
-                stroke={shard.strokeColor}
-                strokeOpacity="0.45"
-                strokeWidth="0.55"
-                strokeLinejoin="round"
-              />
-            </motion.svg>
-          ))}
+                          {/* Sharp angular crystal wing shards */}
+                          {burst.shards.map((shard) => (
+                            <motion.svg
+                              key={`bf-shard-${burst.id}-${shard.id}`}
+                              viewBox="-10 -10 20 20"
+                              aria-hidden="true"
+                              initial={{ x: -8, y: -8, scale: shard.scale * 0.85, rotate: 0, opacity: 1 }}
+                              animate={{
+                                x: shard.tx - 8,
+                                y: shard.ty - 8,
+                                scale: [shard.scale, shard.scale * 0.85, 0.2],
+                                rotate: shard.rot,
+                                opacity: [1, 0.9, 0],
+                              }}
+                              transition={{
+                                duration: shard.duration,
+                                delay: shard.delay,
+                                ease: 'easeOut',
+                              }}
+                              className="pointer-events-none absolute h-4 w-4 overflow-visible drop-shadow-[0_0_5px_rgba(79,70,229,0.65)] dark:drop-shadow-[0_0_6px_rgba(103,232,249,0.85)]"
+                            >
+                              <polygon
+                                points={shard.points}
+                                fill={shard.color}
+                                stroke={shard.strokeColor}
+                                strokeOpacity="0.45"
+                                strokeWidth="0.55"
+                                strokeLinejoin="round"
+                              />
+                            </motion.svg>
+                          ))}
 
-          {/* Sparkling stardust specks & 4-point glints */}
-          {burst.motes.map((mote) =>
-            mote.isStar ? (
-              <motion.svg
-                key={`bf-mote-${burst.id}-${mote.id}`}
-                viewBox="0 0 16 16"
-                aria-hidden="true"
-                initial={{ x: -6, y: -6, scale: 0.4, opacity: 1, rotate: 0 }}
-                animate={{
-                  x: mote.tx - 6,
-                  y: mote.ty - 6,
-                  scale: [0.6, 1.25, 0],
-                  opacity: [1, 0.95, 0],
-                  rotate: 65,
-                }}
-                transition={{
-                  duration: mote.duration,
-                  delay: mote.delay,
-                  ease: 'easeOut',
-                }}
-                className="pointer-events-none absolute h-3 w-3 overflow-visible drop-shadow-[0_0_6px_rgba(255,255,255,0.95)]"
-              >
-                <polygon points="8,1 9.5,6.5 15,8 9.5,9.5 8,15 6.5,9.5 1,8 6.5,6.5" fill={mote.color} />
-              </motion.svg>
-            ) : (
-              <motion.span
-                key={`bf-mote-${burst.id}-${mote.id}`}
-                initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
-                animate={{
-                  x: mote.tx,
-                  y: mote.ty,
-                  scale: [1, 1.2, 0.1],
-                  opacity: [1, 0.9, 0],
-                }}
-                transition={{
-                  duration: mote.duration,
-                  delay: mote.delay,
-                  ease: 'easeOut',
-                }}
-                style={{
-                  width: mote.size,
-                  height: mote.size,
-                  backgroundColor: mote.color,
-                }}
-                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full drop-shadow-[0_0_6px_rgba(103,232,249,0.95)]"
-              />
-            )
-          )}
-        </div>
-      ))}
-    </div>
-  );
+                          {/* Sparkling stardust specks & 4-point glints */}
+                          {burst.motes.map((mote) =>
+                            mote.isStar ? (
+                              <motion.svg
+                                key={`bf-mote-${burst.id}-${mote.id}`}
+                                viewBox="0 0 16 16"
+                                aria-hidden="true"
+                                initial={{ x: -6, y: -6, scale: 0.4, opacity: 1, rotate: 0 }}
+                                animate={{
+                                  x: mote.tx - 6,
+                                  y: mote.ty - 6,
+                                  scale: [0.6, 1.25, 0],
+                                  opacity: [1, 0.95, 0],
+                                  rotate: 65,
+                                }}
+                                transition={{
+                                  duration: mote.duration,
+                                  delay: mote.delay,
+                                  ease: 'easeOut',
+                                }}
+                                className="pointer-events-none absolute h-3 w-3 overflow-visible drop-shadow-[0_0_5px_rgba(79,70,229,0.75)] dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.95)]"
+                              >
+                                <polygon points="8,1 9.5,6.5 15,8 9.5,9.5 8,15 6.5,9.5 1,8 6.5,6.5" fill={mote.color} />
+                              </motion.svg>
+                            ) : (
+                              <motion.span
+                                key={`bf-mote-${burst.id}-${mote.id}`}
+                                initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                                animate={{
+                                  x: mote.tx,
+                                  y: mote.ty,
+                                  scale: [1, 1.2, 0.1],
+                                  opacity: [1, 0.9, 0],
+                                }}
+                                transition={{
+                                  duration: mote.duration,
+                                  delay: mote.delay,
+                                  ease: 'easeOut',
+                                }}
+                                style={{
+                                  width: mote.size,
+                                  height: mote.size,
+                                  backgroundColor: mote.color,
+                                }}
+                                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full drop-shadow-[0_0_5px_rgba(79,70,229,0.75)] dark:drop-shadow-[0_0_6px_rgba(103,232,249,0.95)]"
+                              />
+                            )
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    );
 };

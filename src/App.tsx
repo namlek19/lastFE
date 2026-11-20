@@ -8,6 +8,7 @@ import { MockExamView } from './components/MockExamView';
 import { ProgressSyncModal } from './components/ProgressSyncModal';
 import { SakugaLuminousButterfly } from './components/SakugaLuminousButterfly';
 import { SakugaSpideyRoamer } from './components/SakugaSpideyRoamer';
+import { WelcomeNoteModal } from './components/WelcomeNoteModal';
 import { ExamHistoryItem, StudyMode, StudyTier, SubjectId, UserProgressStore } from './types/quiz';
 import {
   addExamHistory,
@@ -178,6 +179,8 @@ export const App: React.FC = () => {
           onImportProgress={handleImportProgress}
           onResetAllProgress={handleResetAllProgress}
         />
+
+        <WelcomeNoteModal />
 
         <SakugaSpideyRoamer mode={mode} />
         <SakugaLuminousButterfly mode={mode} />
