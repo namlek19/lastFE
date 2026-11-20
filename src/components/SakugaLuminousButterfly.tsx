@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useMotionValue, useReducedMotion } from 'framer-motion';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { motion, useMotionValue, useReducedMotion } from 'framer-motion';
 import { StudyMode } from '../types/quiz';
 
 export interface SakugaLuminousButterflyProps {
@@ -11,14 +11,26 @@ interface Vec2 {
   y: number;
 }
 
-interface TrailSpark {
-  id: number;
+interface ArcSample {
   x: number;
   y: number;
+  cumLen: number;
+}
+
+interface ArcLengthLut {
+  samples: ArcSample[];
+  totalLen: number;
+}
+
+interface TrailSlot {
+  active: boolean;
+  birth: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
   size: number;
   color: string;
-  dx: number;
-  dy: number;
 }
 
 interface ShatterMiniButterfly {
@@ -68,10 +80,11 @@ interface ShatterBurst {
   motes: ShatterMote[];
 }
 
-const FIRST_VISIT_MIN_MS = 45000;
-const FIRST_VISIT_MAX_MS = 90000;
+const FIRST_VISIT_MIN_MS = 25000;
+const FIRST_VISIT_MAX_MS = 45000;
 const COOLDOWN_MIN_MS = 180000;
 const COOLDOWN_MAX_MS = 360000;
+const TRAIL_POOL_SIZE = 7;
 
 const SHARD_SHAPES = [
   '0,-6 5,2 -2,5',
@@ -81,13 +94,13 @@ const SHARD_SHAPES = [
 ] as const;
 
 const SHARD_PALETTE = [
-  { color: '#FFFFFF', strokeColor: '#0891B2' },
-  { color: '#67E8F9', strokeColor: '#0E7490' },
-  { color: '#C4B5FD', strokeColor: '#7C3AED' },
-  { color: '#F472B6', strokeColor: '#BE185D' },
+  { color: '#FFFFFF', strokeColor: '#7C3AED' },
+  { color: '#A5F3FC', strokeColor: '#0891B2' },
+  { color: '#DDD6FE', strokeColor: '#7C3AED' },
+  { color: '#F9A8D4', strokeColor: '#BE185D' },
 ] as const;
 
-const TRAIL_COLORS = ['#FFFFFF', '#A5F3FC', '#E9D5FF', '#FBCFE8'] as const;
+const TRAIL_COLORS = ['#FFFFFF', '#E0F2FE', '#DDD6FE', '#FBCFE8'] as const;
 
 function randBetween(min: number, max: number): number {
   return min + Math.random() * Math.max(0, max - min);
@@ -151,39 +164,103 @@ function sampleSpline(points: Vec2[], progress: number): Vec2 {
   };
 }
 
-function buildWanderingPath(): Vec2[] {
+/**
+ * Generates a serene, strictly left->right or right->left sweeping glide path
+ * with 3 evenly spaced interior waypoints and flowing vertical undulations.
+ */
+function buildSmoothFlightPath(): Vec2[] {
   const { w: vw, h: vh } = getViewportSize();
-  const minY = getHeaderSafeTop(vw, vh) + 12;
-  const maxY = Math.max(minY + 90, Math.round(vh * (vw < 768 ? 0.72 : 0.84)));
+  const minY = getHeaderSafeTop(vw, vh) + 16;
+  const maxY = Math.max(minY + 90, Math.round(vh * (vw < 768 ? 0.7 : 0.82)));
+  const spanY = maxY - minY;
 
   const enterFromLeft = Math.random() < 0.5;
-  const exitRight = enterFromLeft ? Math.random() < 0.8 : Math.random() < 0.2;
+  const startX = enterFromLeft ? -40 : vw + 40;
+  const endX = enterFromLeft ? vw + 40 : -40;
 
-  const startX = enterFromLeft ? -56 : vw + 56;
-  const endX = exitRight ? vw + 56 : -56;
-  const interiorCount = Math.floor(randBetween(4, 6)); // 4 or 5 interior points -> 6 or 7 total
+  // Monotonic interior X fractions guarantee graceful gliding with zero erratic turnbacks
+  const baseFractions = [0.25, 0.52, 0.78];
+  const interiorXs = baseFractions.map((frac) => {
+    const f = frac + randBetween(-0.06, 0.06);
+    return Math.round((enterFromLeft ? f : 1 - f) * vw);
+  });
 
-  const points: Vec2[] = [
-    { x: startX, y: Math.round(randBetween(minY, maxY)) },
-  ];
+  const ys: number[] = [];
+  let curY = randBetween(minY + spanY * 0.14, maxY - spanY * 0.14);
+  let trend = curY < minY + spanY * 0.5 ? 1 : -1;
 
-  const minSafeX = vw < 768 ? 28 : 56;
-  const maxSafeX = Math.max(minSafeX + 40, vw - minSafeX);
-
-  for (let i = 0; i < interiorCount; i++) {
-    const t = (i + 1) / (interiorCount + 1);
-    const baseSpanX = enterFromLeft
-      ? minSafeX + t * (maxSafeX - minSafeX)
-      : maxSafeX - t * (maxSafeX - minSafeX);
-    // Add wandering backtrack/swoop variation
-    const jitterX = randBetween(-vw * 0.22, vw * 0.22);
-    const x = Math.round(clamp(baseSpanX + jitterX, minSafeX, maxSafeX));
-    const y = Math.round(randBetween(minY, maxY));
-    points.push({ x, y });
+  for (let i = 0; i < 5; i++) {
+    ys.push(Math.round(clamp(curY, minY, maxY)));
+    if (i === 1 && Math.random() < 0.75) {
+      trend = -trend;
+    } else if (i === 3 && Math.random() < 0.5) {
+      trend = -trend;
+    }
+    curY = clamp(curY + trend * randBetween(spanY * 0.16, spanY * 0.36), minY, maxY);
+    if (curY <= minY + 6 || curY >= maxY - 6) {
+      trend = -trend;
+    }
   }
 
-  points.push({ x: endX, y: Math.round(randBetween(minY, maxY)) });
-  return points;
+  return [
+    { x: startX, y: ys[0] },
+    { x: interiorXs[0], y: ys[1] },
+    { x: interiorXs[1], y: ys[2] },
+    { x: interiorXs[2], y: ys[3] },
+    { x: endX, y: ys[4] },
+  ];
+}
+
+function buildArcLengthLut(points: Vec2[], steps = 180): ArcLengthLut {
+  const samples: ArcSample[] = [];
+  let prev = sampleSpline(points, 0);
+  let cumLen = 0;
+  samples.push({ x: prev.x, y: prev.y, cumLen: 0 });
+
+  for (let i = 1; i <= steps; i++) {
+    const pt = sampleSpline(points, i / steps);
+    cumLen += Math.hypot(pt.x - prev.x, pt.y - prev.y);
+    samples.push({ x: pt.x, y: pt.y, cumLen });
+    prev = pt;
+  }
+
+  return { samples, totalLen: Math.max(1, cumLen) };
+}
+
+function sampleByArcLength(
+  lut: ArcLengthLut,
+  fraction: number
+): { x: number; y: number; tx: number; ty: number } {
+  const { samples, totalLen } = lut;
+  const n = samples.length;
+  const targetDist = clamp(fraction, 0, 1) * totalLen;
+
+  let lo = 0;
+  let hi = n - 2;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (samples[mid].cumLen <= targetDist) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+
+  const a = samples[lo];
+  const b = samples[lo + 1];
+  const segLen = b.cumLen - a.cumLen;
+  const localT = segLen > 1e-5 ? (targetDist - a.cumLen) / segLen : 0;
+
+  const x = a.x + (b.x - a.x) * localT;
+  const y = a.y + (b.y - a.y) * localT;
+
+  const tPrev = samples[Math.max(0, lo - 2)];
+  const tNext = samples[Math.min(n - 1, lo + 3)];
+  const dx = tNext.x - tPrev.x;
+  const dy = tNext.y - tPrev.y;
+  const mag = Math.hypot(dx, dy) || 1;
+
+  return { x, y, tx: dx / mag, ty: dy / mag };
 }
 
 function createShatterBurst(id: number, x: number, y: number): ShatterBurst {
@@ -236,7 +313,7 @@ function createShatterBurst(id: number, x: number, y: number): ShatterBurst {
       id: i,
       tx: Math.cos(angle) * dist,
       ty: Math.sin(angle) * dist - randBetween(6, 26),
-      size: randBetween(3, 6.5),
+      size: randBetween(3, 6),
       duration: randBetween(0.75, 1.35),
       delay: randBetween(0, 0.1),
       color: TRAIL_COLORS[i % TRAIL_COLORS.length],
@@ -248,184 +325,138 @@ function createShatterBurst(id: number, x: number, y: number): ShatterBurst {
 }
 
 /**
- * Luminous geometric crystal/origami butterfly matching faceted folded wings
- * with flat facet colors (100% Zero-Gradient) and layered CSS drop-shadow glow.
+ * Sleek luminous origami swallowtail butterfly (30x28px) matching the crisp folded-dart
+ * silhouette in the reference image (100% Zero-Gradient, memoized for zero flight jitter).
  */
-const OrigamiButterflySvg: React.FC<{ prefersReducedMotion: boolean }> = ({
-  prefersReducedMotion,
-}) => (
-  <div className="relative flex h-11 w-12 items-center justify-center">
-    {/* Layered luminous aura behind wings (flat alpha blur discs, Zero-Gradient) */}
-    <motion.span
-      aria-hidden="true"
-      animate={
-        prefersReducedMotion
-          ? { opacity: 0.45 }
-          : { opacity: [0.32, 0.62, 0.32], scale: [0.92, 1.12, 0.92] }
-      }
-      transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-      className="pointer-events-none absolute h-10 w-10 rounded-full bg-[#67E8F9]/35 blur-md dark:bg-[#67E8F9]/30"
-    />
-    <motion.span
-      aria-hidden="true"
-      animate={
-        prefersReducedMotion
-          ? { opacity: 0.5 }
-          : { opacity: [0.42, 0.78, 0.42], scale: [0.9, 1.08, 0.9] }
-      }
-      transition={{ duration: 1.7, repeat: Infinity, ease: 'easeInOut' }}
-      className="pointer-events-none absolute h-6 w-6 rounded-full bg-[#F5D0FE]/45 blur-[3px] dark:bg-[#E879F9]/35"
-    />
-
-    <svg
-      viewBox="0 0 48 44"
-      aria-hidden="true"
-      className="relative h-11 w-12 overflow-visible drop-shadow-[0_0_5px_rgba(14,165,233,0.75)] drop-shadow-[0_0_12px_rgba(139,92,246,0.55)] drop-shadow-[0_0_20px_rgba(244,114,182,0.4)] dark:drop-shadow-[0_0_7px_rgba(103,232,249,0.95)] dark:drop-shadow-[0_0_16px_rgba(167,139,250,0.85)] dark:drop-shadow-[0_0_28px_rgba(244,114,182,0.55)]"
-    >
-      {/* Left faceted origami wings */}
-      <motion.g
-        style={{ transformOrigin: '24px 22px' }}
+const OrigamiButterflySvg: React.FC<{ prefersReducedMotion: boolean }> = memo(
+  ({ prefersReducedMotion }) => (
+    <div className="relative flex h-7 w-[30px] scale-90 items-center justify-center md:scale-100">
+      {/* Pinpoint luminous core aura behind wing waist */}
+      <motion.span
+        aria-hidden="true"
         animate={
           prefersReducedMotion
-            ? undefined
-            : { scaleX: [1, 0.24, 1], skewY: [0, -7, 0] }
+            ? { opacity: 0.55 }
+            : { opacity: [0.42, 0.72, 0.42], scale: [0.92, 1.08, 0.92] }
         }
-        transition={
-          prefersReducedMotion
-            ? undefined
-            : { duration: 0.36, repeat: Infinity, ease: 'easeInOut' }
-        }
-      >
-        {/* Forewing outer ice-cyan & bright crystal facets */}
-        <polygon
-          points="24,18 4,6 9,22"
-          fill="#E0F2FE"
-          className="stroke-[#0891B2]/70 dark:stroke-[#67E8F9]/80"
-          strokeWidth="0.75"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points="24,18 9,22 23,23"
-          fill="#FFFFFF"
-          className="stroke-[#0891B2]/65 dark:stroke-[#67E8F9]/75"
-          strokeWidth="0.7"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points="24,18 4,6 15,8"
-          fill="#A5F3FC"
-          className="stroke-[#0891B2]/65 dark:stroke-[#67E8F9]/75"
-          strokeWidth="0.7"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points="24,18 15,8 23,23"
-          fill="#EDE9FE"
-          className="stroke-[#7C3AED]/60 dark:stroke-[#C4B5FD]/75"
-          strokeWidth="0.7"
-          strokeLinejoin="round"
-        />
-        {/* Swept triangular hindwing + signature rose-pink crystal glint */}
-        <polygon
-          points="23,23 11,24 14,39"
-          fill="#F472B6"
-          className="stroke-[#BE185D]/65 dark:stroke-[#F9A8D4]/80"
-          strokeWidth="0.75"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points="23,23 14,39 22,32"
-          fill="#FBCFE8"
-          className="stroke-[#7C3AED]/55 dark:stroke-[#C4B5FD]/70"
-          strokeWidth="0.7"
-          strokeLinejoin="round"
-        />
-      </motion.g>
-
-      {/* Right faceted origami wings */}
-      <motion.g
-        style={{ transformOrigin: '24px 22px' }}
-        animate={
-          prefersReducedMotion
-            ? undefined
-            : { scaleX: [1, 0.24, 1], skewY: [0, 7, 0] }
-        }
-        transition={
-          prefersReducedMotion
-            ? undefined
-            : { duration: 0.36, repeat: Infinity, ease: 'easeInOut' }
-        }
-      >
-        <polygon
-          points="24,18 44,6 39,22"
-          fill="#E0F2FE"
-          className="stroke-[#0891B2]/70 dark:stroke-[#67E8F9]/80"
-          strokeWidth="0.75"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points="24,18 39,22 25,23"
-          fill="#FFFFFF"
-          className="stroke-[#0891B2]/65 dark:stroke-[#67E8F9]/75"
-          strokeWidth="0.7"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points="24,18 44,6 33,8"
-          fill="#A5F3FC"
-          className="stroke-[#0891B2]/65 dark:stroke-[#67E8F9]/75"
-          strokeWidth="0.7"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points="24,18 33,8 25,23"
-          fill="#C4B5FD"
-          className="stroke-[#7C3AED]/60 dark:stroke-[#C4B5FD]/75"
-          strokeWidth="0.7"
-          strokeLinejoin="round"
-        />
-        {/* Swept triangular hindwing */}
-        <polygon
-          points="25,23 37,24 34,39"
-          fill="#EDE9FE"
-          className="stroke-[#7C3AED]/60 dark:stroke-[#C4B5FD]/75"
-          strokeWidth="0.75"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points="25,23 34,39 26,32"
-          fill="#FFFFFF"
-          className="stroke-[#0891B2]/60 dark:stroke-[#67E8F9]/75"
-          strokeWidth="0.7"
-          strokeLinejoin="round"
-        />
-      </motion.g>
-
-      {/* Luminous central prism spine & antennae */}
-      <polygon
-        points="24,11 25.6,22 24,33 22.4,22"
-        fill="#FFFFFF"
-        className="stroke-[#0891B2]/80 dark:stroke-[#67E8F9]"
-        strokeWidth="0.8"
-        strokeLinejoin="round"
+        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+        className="pointer-events-none absolute h-3.5 w-3.5 rounded-full bg-[#FFFFFF]/70 blur-[4px] dark:bg-[#E0F2FE]/65"
       />
-      <path
-        d="M23.5 12 L20 6 M24.5 12 L28 6"
-        fill="none"
-        className="stroke-[#0891B2]/85 dark:stroke-[#FFFFFF]"
-        strokeWidth="1"
-        strokeLinecap="round"
-      />
-      <circle cx="20" cy="6" r="1" fill="#A5F3FC" />
-      <circle cx="28" cy="6" r="1" fill="#FBCFE8" />
-    </svg>
-  </div>
+
+      <svg
+        viewBox="0 0 36 34"
+        aria-hidden="true"
+        className="relative h-7 w-[30px] overflow-visible drop-shadow-[0_0_3px_rgba(255,255,255,0.95)] drop-shadow-[0_0_8px_rgba(167,139,250,0.65)] drop-shadow-[0_0_14px_rgba(103,232,249,0.45)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_11px_rgba(196,181,253,0.9)] dark:drop-shadow-[0_0_22px_rgba(103,232,249,0.65)]"
+      >
+        {/* Left folded swallowtail wings */}
+        <motion.g
+          style={{ transformOrigin: '18px 16px' }}
+          animate={prefersReducedMotion ? undefined : { scaleX: [1, 0.26, 0.96, 1] }}
+          transition={
+            prefersReducedMotion
+              ? undefined
+              : {
+                  duration: 0.52,
+                  times: [0, 0.42, 0.82, 1],
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }
+          }
+        >
+          <polygon
+            points="18,14 1.5,5 12,18"
+            fill="#FFFFFF"
+            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+            strokeWidth="0.45"
+            strokeLinejoin="round"
+          />
+          <polygon
+            points="18,14 12,18 17.4,19"
+            fill="#DDD6FE"
+            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+            strokeWidth="0.45"
+            strokeLinejoin="round"
+          />
+          <polygon
+            points="17.6,18 8.5,20 12.2,31.5"
+            fill="#F5F3FF"
+            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+            strokeWidth="0.45"
+            strokeLinejoin="round"
+          />
+          <polygon
+            points="17.6,18 12.2,31.5 16.2,24.5"
+            fill="#F472B6"
+            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+            strokeWidth="0.45"
+            strokeLinejoin="round"
+          />
+        </motion.g>
+
+        {/* Right folded swallowtail wings */}
+        <motion.g
+          style={{ transformOrigin: '18px 16px' }}
+          animate={prefersReducedMotion ? undefined : { scaleX: [1, 0.26, 0.96, 1] }}
+          transition={
+            prefersReducedMotion
+              ? undefined
+              : {
+                  duration: 0.52,
+                  times: [0, 0.42, 0.82, 1],
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }
+          }
+        >
+          <polygon
+            points="18,14 34.5,5 24,18"
+            fill="#FFFFFF"
+            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+            strokeWidth="0.45"
+            strokeLinejoin="round"
+          />
+          <polygon
+            points="18,14 24,18 18.6,19"
+            fill="#E0E7FF"
+            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+            strokeWidth="0.45"
+            strokeLinejoin="round"
+          />
+          <polygon
+            points="18.4,18 27.5,20 23.8,31.5"
+            fill="#FFFFFF"
+            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+            strokeWidth="0.45"
+            strokeLinejoin="round"
+          />
+          <polygon
+            points="18.4,18 23.8,31.5 19.8,24.5"
+            fill="#C4B5FD"
+            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+            strokeWidth="0.45"
+            strokeLinejoin="round"
+          />
+        </motion.g>
+
+        {/* Pinpoint white origami spine */}
+        <polygon
+          points="18,11.5 18.8,17 18,22 17.2,17"
+          fill="#FFFFFF"
+          className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+          strokeWidth="0.4"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
+  )
 );
 
-const MINI_VARIANT_COLORS: Record<0 | 1 | 2, { wing: string; stroke: string }> = {
-  0: { wing: '#A5F3FC', stroke: '#0891B2' },
-  1: { wing: '#DDD6FE', stroke: '#7C3AED' },
-  2: { wing: '#FBCFE8', stroke: '#BE185D' },
+OrigamiButterflySvg.displayName = 'OrigamiButterflySvg';
+
+const MINI_VARIANT_COLORS: Record<0 | 1 | 2, { wing: string; crease: string }> = {
+  0: { wing: '#E0F2FE', crease: '#A5F3FC' },
+  1: { wing: '#EDE9FE', crease: '#DDD6FE' },
+  2: { wing: '#FCE7F3', crease: '#FBCFE8' },
 };
 
 const MiniOrigamiButterflySvg: React.FC<{ variant: 0 | 1 | 2; flapDuration: number }> = ({
@@ -438,53 +469,49 @@ const MiniOrigamiButterflySvg: React.FC<{ variant: 0 | 1 | 2; flapDuration: numb
     <svg
       viewBox="0 0 28 26"
       aria-hidden="true"
-      className="h-6 w-6 overflow-visible drop-shadow-[0_0_5px_rgba(103,232,249,0.85)] drop-shadow-[0_0_10px_rgba(167,139,250,0.65)]"
+      className="h-5 w-5 overflow-visible drop-shadow-[0_0_3px_rgba(255,255,255,0.92)] drop-shadow-[0_0_8px_rgba(196,181,253,0.75)] drop-shadow-[0_0_14px_rgba(103,232,249,0.5)]"
     >
       <motion.g
         style={{ transformOrigin: '14px 13px' }}
-        animate={{ scaleX: [1, 0.2, 1] }}
+        animate={{ scaleX: [1, 0.22, 1] }}
         transition={{ duration: flapDuration, repeat: Infinity, ease: 'easeInOut' }}
       >
         <polygon
-          points="14,11 2,4 7,15"
-          fill={palette.wing}
-          stroke={palette.stroke}
-          strokeOpacity="0.65"
-          strokeWidth="0.7"
+          points="14,11 1.5,4 9.5,14.5"
+          fill="#FFFFFF"
+          className="stroke-[#6D28D9]/20 dark:[stroke:none]"
+          strokeWidth="0.4"
           strokeLinejoin="round"
         />
         <polygon
-          points="14,14 7,15 10,23"
-          fill="#FFFFFF"
-          stroke={palette.stroke}
-          strokeOpacity="0.6"
-          strokeWidth="0.65"
+          points="13.7,14 6.5,15.5 9.5,24.5"
+          fill={palette.wing}
+          className="stroke-[#6D28D9]/20 dark:[stroke:none]"
+          strokeWidth="0.4"
           strokeLinejoin="round"
         />
       </motion.g>
       <motion.g
         style={{ transformOrigin: '14px 13px' }}
-        animate={{ scaleX: [1, 0.2, 1] }}
+        animate={{ scaleX: [1, 0.22, 1] }}
         transition={{ duration: flapDuration, repeat: Infinity, ease: 'easeInOut' }}
       >
         <polygon
-          points="14,11 26,4 21,15"
-          fill="#FFFFFF"
-          stroke={palette.stroke}
-          strokeOpacity="0.65"
-          strokeWidth="0.7"
+          points="14,11 26.5,4 18.5,14.5"
+          fill={palette.wing}
+          className="stroke-[#6D28D9]/20 dark:[stroke:none]"
+          strokeWidth="0.4"
           strokeLinejoin="round"
         />
         <polygon
-          points="14,14 21,15 18,23"
-          fill={palette.wing}
-          stroke={palette.stroke}
-          strokeOpacity="0.6"
-          strokeWidth="0.65"
+          points="14.3,14 21.5,15.5 18.5,24.5"
+          fill={palette.crease}
+          className="stroke-[#6D28D9]/20 dark:[stroke:none]"
+          strokeWidth="0.4"
           strokeLinejoin="round"
         />
       </motion.g>
-      <polygon points="14,7 15,13 14,19 13,13" fill="#FFFFFF" />
+      <polygon points="14,9 14.7,13.5 14,18 13.3,13.5" fill="#FFFFFF" />
     </svg>
   );
 };
@@ -494,27 +521,51 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
   const isDisabled = mode === 'exam' || prefersReducedMotion;
 
   const [isVisible, setIsVisible] = useState(false);
-  const [trails, setTrails] = useState<TrailSpark[]>([]);
   const [bursts, setBursts] = useState<ShatterBurst[]>([]);
 
   const mvX = useMotionValue(-100);
   const mvY = useMotionValue(-100);
   const mvRotate = useMotionValue(0);
+  const mvOpacity = useMotionValue(0);
 
   const isVisibleRef = useRef(false);
-  isVisibleRef.current = isVisible;
+  const hasVisitedOnceRef = useRef(false);
 
   const spawnTimerRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
-  const trailTimersRef = useRef<number[]>([]);
   const burstTimersRef = useRef<number[]>([]);
   const idCounterRef = useRef(1);
   const startFlightRef = useRef<(() => void) | null>(null);
+
+  const trailElRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const trailSlotsRef = useRef<TrailSlot[]>(
+    Array.from({ length: TRAIL_POOL_SIZE }, () => ({
+      active: false,
+      birth: 0,
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      size: 3,
+      color: '#FFFFFF',
+    }))
+  );
+  const trailCursorRef = useRef(0);
 
   const nextId = () => {
     idCounterRef.current += 1;
     return idCounterRef.current;
   };
+
+  const resetTrailPool = useCallback(() => {
+    for (let i = 0; i < TRAIL_POOL_SIZE; i++) {
+      trailSlotsRef.current[i].active = false;
+      const el = trailElRefs.current[i];
+      if (el) {
+        el.style.opacity = '0';
+      }
+    }
+  }, []);
 
   const cancelFlightLoop = useCallback(() => {
     if (rafRef.current !== null) {
@@ -530,11 +581,7 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
     }
   }, []);
 
-  const clearTransientTimers = useCallback(() => {
-    for (const id of trailTimersRef.current) {
-      window.clearTimeout(id);
-    }
-    trailTimersRef.current = [];
+  const clearBurstTimers = useCallback(() => {
     for (const id of burstTimersRef.current) {
       window.clearTimeout(id);
     }
@@ -557,33 +604,14 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
     [clearSpawnTimer, isDisabled]
   );
 
-  const spawnTrailSpark = useCallback((x: number, y: number) => {
-    const id = nextId();
-    const spark: TrailSpark = {
-      id,
-      x: x + randBetween(-6, 6),
-      y: y + randBetween(-6, 6),
-      size: randBetween(2.5, 4.5),
-      color: TRAIL_COLORS[id % TRAIL_COLORS.length],
-      dx: randBetween(-8, 8),
-      dy: randBetween(-12, 4),
-    };
-
-    setTrails((prev) => [...prev.slice(-7), spark]);
-
-    const removeTimer = window.setTimeout(() => {
-      setTrails((prev) => prev.filter((item) => item.id !== id));
-    }, 850);
-    trailTimersRef.current.push(removeTimer);
-  }, []);
-
   useEffect(() => {
     if (isDisabled) {
       clearSpawnTimer();
       cancelFlightLoop();
-      clearTransientTimers();
+      clearBurstTimers();
+      resetTrailPool();
+      isVisibleRef.current = false;
       setIsVisible(false);
-      setTrails([]);
       setBursts([]);
       return;
     }
@@ -593,62 +621,109 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
     const startFlight = () => {
       if (unmounted || isDisabled || document.visibilityState === 'hidden') return;
       cancelFlightLoop();
+      resetTrailPool();
 
-      const path = buildWanderingPath();
-      const durationMs = randBetween(11500, 16500);
+      const path = buildSmoothFlightPath();
+      const lut = buildArcLengthLut(path, 180);
+      const speedPxPerSec = randBetween(92, 118);
+      const durationMs = clamp((lut.totalLen / speedPxPerSec) * 1000, 7500, 18000);
+
       const startTime = performance.now();
-      let lastTrailTime = startTime;
+      let prevNow = startTime;
+      let lastTrailSpawn = startTime;
 
-      const initialPos = sampleSpline(path, 0);
-      const lookAhead0 = sampleSpline(path, 0.01);
-      const initialAngle =
-        Math.atan2(lookAhead0.y - initialPos.y, lookAhead0.x - initialPos.x) * (180 / Math.PI) +
-        90;
+      const initSample = sampleByArcLength(lut, 0);
+      let curAngle = Math.atan2(initSample.ty, initSample.tx) * (180 / Math.PI) + 90;
 
-      let curAngle = initialAngle;
-      mvX.set(initialPos.x);
-      mvY.set(initialPos.y);
+      mvX.set(initSample.x);
+      mvY.set(initSample.y);
       mvRotate.set(curAngle);
+      mvOpacity.set(0);
+
+      isVisibleRef.current = true;
+      hasVisitedOnceRef.current = true;
       setIsVisible(true);
 
       const step = (now: number) => {
         if (unmounted || !isVisibleRef.current) return;
 
         const elapsed = now - startTime;
-        const t = Math.min(1, elapsed / durationMs);
+        const dt = Math.min(0.05, Math.max(0.001, (now - prevNow) / 1000));
+        prevNow = now;
 
-        const pos = sampleSpline(path, t);
-        const bobY = Math.sin(elapsed * 0.0065) * 9;
-        const flutterX = Math.cos(elapsed * 0.0048) * 4;
-        const liveX = pos.x + flutterX;
-        const liveY = pos.y + bobY;
+        const s = Math.min(1, elapsed / durationMs);
+        const sample = sampleByArcLength(lut, s);
 
-        // Instantaneous tangent with shortest-path angle unwrap to prevent 360° flip seams
-        const nextT = Math.min(1, t + 0.014);
-        const nextPos = sampleSpline(path, nextT);
-        const nextElapsed = nextT * durationMs;
-        const nextX = nextPos.x + Math.cos(nextElapsed * 0.0048) * 4;
-        const nextY = nextPos.y + Math.sin(nextElapsed * 0.0065) * 9;
-        const vx = nextX - liveX;
-        const vy = nextY - liveY;
+        // Gentle perpendicular air-current drift (zero abrupt jerks)
+        const sway = Math.sin(elapsed * 0.0034) * 10;
+        const liveX = sample.x + -sample.ty * sway;
+        const liveY = sample.y + sample.tx * sway;
 
-        if (Math.hypot(vx, vy) > 0.08) {
-          const targetDeg = Math.atan2(vy, vx) * (180 / Math.PI) + 90;
-          const deltaDeg = ((targetDeg - curAngle + 540) % 360) - 180;
-          curAngle += deltaDeg * 0.14;
-        }
+        const targetDeg =
+          Math.atan2(sample.ty, sample.tx) * (180 / Math.PI) +
+          90 +
+          Math.cos(elapsed * 0.0034) * 5;
+        const deltaDeg = ((targetDeg - curAngle + 540) % 360) - 180;
+        const alpha = 1 - Math.exp(-dt * 6);
+        curAngle += deltaDeg * alpha;
 
+        const fadeIn = Math.min(1, elapsed / 600);
+        const fadeOut = Math.min(1, Math.max(0, (durationMs - elapsed) / 600));
+        mvOpacity.set(Math.min(fadeIn, fadeOut));
         mvX.set(liveX);
         mvY.set(liveY);
         mvRotate.set(curAngle);
 
-        if (now - lastTrailTime >= 200 && t > 0.04 && t < 0.96) {
-          lastTrailTime = now;
-          spawnTrailSpark(liveX, liveY);
+        // Spawn trail mote directly into pooled DOM slots (0 React re-renders!)
+        if (now - lastTrailSpawn >= 170 && elapsed > 450 && durationMs - elapsed > 820) {
+          lastTrailSpawn = now;
+          const idx = trailCursorRef.current % TRAIL_POOL_SIZE;
+          trailCursorRef.current += 1;
+          const slot = trailSlotsRef.current[idx];
+          const color = TRAIL_COLORS[trailCursorRef.current % TRAIL_COLORS.length];
+
+          slot.active = true;
+          slot.birth = now;
+          slot.x = liveX - sample.tx * 10 + randBetween(-3, 3);
+          slot.y = liveY - sample.ty * 10 + randBetween(-3, 3);
+          slot.vx = -sample.tx * 14 + randBetween(-5, 5);
+          slot.vy = -sample.ty * 14 - randBetween(3, 8);
+          slot.size = randBetween(2.5, 4);
+          slot.color = color;
+
+          const el = trailElRefs.current[idx];
+          if (el) {
+            el.style.width = `${slot.size}px`;
+            el.style.height = `${slot.size}px`;
+            el.style.backgroundColor = slot.color;
+          }
         }
 
-        if (t >= 1) {
+        // Update pooled GPU trail motes inline
+        for (let i = 0; i < TRAIL_POOL_SIZE; i++) {
+          const slot = trailSlotsRef.current[i];
+          if (!slot.active) continue;
+
+          const age = now - slot.birth;
+          const el = trailElRefs.current[i];
+          if (age >= 750) {
+            slot.active = false;
+            if (el) el.style.opacity = '0';
+          } else if (el) {
+            const p = age / 750;
+            const px = slot.x + slot.vx * p;
+            const py = slot.y + slot.vy * p;
+            const scale = 1 - p * 0.72;
+            const opacity = (1 - p) * 0.85;
+            el.style.transform = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%) scale(${scale})`;
+            el.style.opacity = opacity.toFixed(3);
+          }
+        }
+
+        if (s >= 1) {
           rafRef.current = null;
+          resetTrailPool();
+          isVisibleRef.current = false;
           setIsVisible(false);
           scheduleVisit(false);
           return;
@@ -667,11 +742,13 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
       if (document.visibilityState === 'hidden') {
         clearSpawnTimer();
         cancelFlightLoop();
+        resetTrailPool();
         if (isVisibleRef.current) {
+          isVisibleRef.current = false;
           setIsVisible(false);
         }
       } else if (!unmounted && !isDisabled) {
-        scheduleVisit(false);
+        scheduleVisit(!hasVisitedOnceRef.current);
       }
     };
 
@@ -679,22 +756,25 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
 
     return () => {
       unmounted = true;
+      isVisibleRef.current = false;
       startFlightRef.current = null;
       document.removeEventListener('visibilitychange', handleVisibility);
       clearSpawnTimer();
       cancelFlightLoop();
-      clearTransientTimers();
+      clearBurstTimers();
+      resetTrailPool();
     };
   }, [
     cancelFlightLoop,
+    clearBurstTimers,
     clearSpawnTimer,
-    clearTransientTimers,
     isDisabled,
+    mvOpacity,
     mvRotate,
     mvX,
     mvY,
+    resetTrailPool,
     scheduleVisit,
-    spawnTrailSpark,
   ]);
 
   const handleButterflyClick = (e: React.MouseEvent) => {
@@ -706,6 +786,8 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
 
     cancelFlightLoop();
     clearSpawnTimer();
+    resetTrailPool();
+    isVisibleRef.current = false;
     setIsVisible(false);
 
     const burstId = nextId();
@@ -727,32 +809,23 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
     >
-      {/* Luminous stardust trail left behind the butterfly */}
-      <AnimatePresence>
-        {trails.map((spark) => (
-          <motion.span
-            key={`bf-trail-${spark.id}`}
-            initial={{ opacity: 0.9, scale: 1, x: 0, y: 0 }}
-            animate={{ opacity: 0, scale: 0.25, x: spark.dx, y: spark.dy }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            style={{
-              left: spark.x,
-              top: spark.y,
-              width: spark.size,
-              height: spark.size,
-              backgroundColor: spark.color,
-            }}
-            className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full drop-shadow-[0_0_5px_rgba(103,232,249,0.9)]"
-          />
-        ))}
-      </AnimatePresence>
+      {/* Pooled zero-re-render stardust trail specks */}
+      {Array.from({ length: TRAIL_POOL_SIZE }, (_, i) => (
+        <span
+          key={`bf-pool-${i}`}
+          ref={(el) => {
+            trailElRefs.current[i] = el;
+          }}
+          style={{ opacity: 0, width: 3, height: 3, backgroundColor: '#FFFFFF' }}
+          className="pointer-events-none fixed left-0 top-0 rounded-full drop-shadow-[0_0_4px_rgba(196,181,253,0.9)]"
+        />
+      ))}
 
       {/* Main wandering luminous origami butterfly */}
       {isVisible && (
         <motion.div
-          style={{ left: 0, top: 0, x: mvX, y: mvY, rotate: mvRotate }}
-          className="pointer-events-none absolute"
+          style={{ left: 0, top: 0, x: mvX, y: mvY, rotate: mvRotate, opacity: mvOpacity }}
+          className="pointer-events-none absolute will-change-transform"
         >
           <button
             type="button"
@@ -760,7 +833,7 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
             onClick={handleButterflyClick}
             aria-label="Chạm vào bướm ánh sáng"
             title="Chạm để làm vỡ cánh bướm ánh sáng"
-            className="pointer-events-auto flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
+            className="pointer-events-auto flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
           >
             <OrigamiButterflySvg prefersReducedMotion={prefersReducedMotion} />
           </button>
@@ -803,15 +876,15 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
             <motion.div
               key={`bf-mini-${burst.id}-${mini.id}`}
               initial={{
-                x: -12,
-                y: -12,
+                x: -10,
+                y: -10,
                 scale: mini.scale * 0.65,
                 rotate: mini.startRot,
                 opacity: 1,
               }}
               animate={{
-                x: [-12, mini.midX - 12, mini.tx - 12],
-                y: [-12, mini.midY - 12, mini.ty - 12],
+                x: [-10, mini.midX - 10, mini.tx - 10],
+                y: [-10, mini.midY - 10, mini.ty - 10],
                 scale: [mini.scale * 0.7, mini.scale, mini.scale * 0.45],
                 rotate: [mini.startRot, (mini.startRot + mini.endRot) / 2, mini.endRot],
                 opacity: [1, 1, 0],
@@ -826,7 +899,7 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
             >
               <MiniOrigamiButterflySvg
                 variant={mini.variant}
-                flapDuration={0.22 + (mini.id % 3) * 0.04}
+                flapDuration={0.26 + (mini.id % 3) * 0.04}
               />
             </motion.div>
           ))}
@@ -856,8 +929,8 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
                 points={shard.points}
                 fill={shard.color}
                 stroke={shard.strokeColor}
-                strokeOpacity="0.55"
-                strokeWidth="0.6"
+                strokeOpacity="0.45"
+                strokeWidth="0.55"
                 strokeLinejoin="round"
               />
             </motion.svg>
