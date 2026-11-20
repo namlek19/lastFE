@@ -94,6 +94,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
   const [isShaking, setIsShaking] = useState<boolean>(false);
 
   const explanationRef = useRef<HTMLDivElement>(null);
+  const mobileProgressRef = useRef<HTMLDivElement>(null);
   const shakeTimerRef = useRef<number | null>(null);
   const sakugaIdRef = useRef<number>(0);
   const prevSubjectRef = useRef<SubjectId>(subject);
@@ -120,11 +121,50 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
   };
 
   const scrollToExplanationOnMobile = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      window.setTimeout(() => {
-        explanationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 90);
-    }
+    if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
+    window.setTimeout(() => {
+      const el = explanationRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const viewportH = window.visualViewport?.height ?? window.innerHeight;
+      const bottomClearance = window.innerWidth < 768 ? 96 : 28;
+      const maxVisibleBottom = viewportH - bottomClearance;
+
+      if (rect.bottom > maxVisibleBottom) {
+        const needed = rect.bottom - maxVisibleBottom;
+        const headerEl = document.querySelector('header');
+        const isHeaderSticky =
+          headerEl && window.getComputedStyle(headerEl).position === 'sticky';
+        const headerBottom = isHeaderSticky
+          ? Math.max(0, headerEl.getBoundingClientRect().bottom)
+          : 0;
+        const maxSafeScroll = Math.max(0, rect.top - headerBottom - 16);
+        const delta = Math.min(needed, maxSafeScroll);
+        if (delta > 12) {
+          window.scrollBy({ top: delta, behavior: 'smooth' });
+        }
+      }
+    }, 150);
+  };
+
+  const scrollToProgressOnMobile = () => {
+    if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
+    window.requestAnimationFrame(() => {
+      const el = mobileProgressRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const headerEl = document.querySelector('header');
+      const isHeaderSticky =
+        headerEl && window.getComputedStyle(headerEl).position === 'sticky';
+      const stickyHeaderBottom = isHeaderSticky
+        ? Math.max(0, headerEl.getBoundingClientRect().bottom)
+        : 0;
+      const desiredTop = stickyHeaderBottom + 12;
+      const delta = rect.top - desiredTop;
+      if (delta < -6) {
+        window.scrollBy({ top: delta, behavior: 'smooth' });
+      }
+    });
   };
 
   // Reset cleanly on subject change; keep chapter and jump to first unmastered question on tier change
@@ -351,14 +391,17 @@ const handleToggleFlag = (questionId: string) => {
 
 const goToPrev = () => {
   setCurrentIndex((idx) => Math.max(0, idx - 1));
+  scrollToProgressOnMobile();
 };
 
 const goToNext = () => {
   setCurrentIndex((idx) => Math.min(filteredQuestions.length - 1, idx + 1));
+  scrollToProgressOnMobile();
 };
 
 const jumpToQuestion = (idx: number) => {
   setCurrentIndex(Math.max(0, Math.min(filteredQuestions.length - 1, idx)));
+  scrollToProgressOnMobile();
 };
 
 // PC keyboard shortcuts
@@ -659,7 +702,7 @@ return (
       {/* Main Content Area */}
       <div className="w-full min-w-0 flex-1">
         {/* Mobile & Tablet Unified Interactive Progress & Filter Card (< 1024px) */}
-        <div className="mb-3.5 px-1 pt-1 sm:mb-4 lg:hidden">
+        <div ref={mobileProgressRef} className="mb-3.5 px-1 pt-1 sm:mb-4 lg:hidden">
           <button
             type="button"
             onClick={() => setIsMobileSheetOpen(true)}

@@ -46,6 +46,7 @@ interface VisualUiState {
   pose: SpideyPose;
   facing: 1 | -1;
   showWebStrand: 'vertical' | 'swing' | 'none';
+  wallCling: 'none' | 'left' | 'right';
   swingDir: 1 | -1;
   swingDuration: number;
   swingSeq: number;
@@ -92,14 +93,17 @@ function getViewportSize(): { w: number; h: number } {
   };
 }
 
-function getHeaderSafeTop(vw: number): number {
+function getHeaderSafeTop(vw: number, vh: number): number {
   if (typeof document !== 'undefined') {
     const headerRect = document.querySelector('header')?.getBoundingClientRect();
-    if (headerRect && headerRect.bottom > 0 && headerRect.bottom < 240) {
-      return Math.round(headerRect.bottom + 6);
+    if (headerRect && headerRect.height > 0) {
+      if (headerRect.bottom <= 0) {
+        return 18;
+      }
+      return Math.min(Math.round(headerRect.bottom + 14), Math.round(vh * 0.48));
     }
   }
-  return vw >= 768 ? 78 : 22;
+  return vw >= 768 ? 78 : 176;
 }
 
 /**
@@ -109,7 +113,7 @@ function getHeaderSafeTop(vw: number): number {
  */
 function getPlayBounds(vw: number, vh: number): PlayBounds {
   const isMobile = vw < 768;
-  const headerSafeTop = getHeaderSafeTop(vw);
+  const headerSafeTop = getHeaderSafeTop(vw, vh);
 
   if (isMobile) {
     const minY = headerSafeTop;
@@ -219,7 +223,7 @@ function computeLivePerchCoords(
   if (rect.width < 110 || rect.height < 32) return null;
 
   const y = Math.round(rect.top - SPIDER_H + 4);
-  if (y < bounds.headerSafeTop - 6 || y > bounds.maxY + 8) return null;
+  if (y < bounds.headerSafeTop + 2 || y > bounds.maxY + 8) return null;
 
   const minX = Math.round(clamp(rect.left + 14, 8, vw - SPIDER_W - 8));
   const maxX = Math.round(clamp(rect.right - SPIDER_W - 14, 8, vw - SPIDER_W - 8));
@@ -476,7 +480,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
 
   const initBounds = getPlayBounds(viewport.w, viewport.h);
   const initX = initBounds.isMobile
-    ? Math.max(8, viewport.w - SPIDER_W - 4)
+    ? Math.max(8, viewport.w - SPIDER_W + 2)
     : Math.max(12, viewport.w - 58);
   const initY = initBounds.isMobile
     ? clamp(Math.round(viewport.h * 0.34), initBounds.minY + 12, initBounds.maxY)
@@ -489,6 +493,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
     pose: 'idle',
     facing: -1,
     showWebStrand: 'none',
+    wallCling: initBounds.isMobile ? 'right' : 'none',
     swingDir: 1,
     swingDuration: 1,
     swingSeq: 0,
@@ -565,9 +570,10 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       const goLeft = curX < vw * 0.5;
       return {
         zone: 'side' as const,
-        x: goLeft ? 4 : Math.max(8, vw - SPIDER_W - 4),
+        x: goLeft ? -2 : Math.max(8, vw - SPIDER_W + 2),
         y: clamp(curY, bounds.minY + 14, bounds.maxY),
         facing: (goLeft ? 1 : -1) as 1 | -1,
+        wallCling: (goLeft ? 'left' : 'right') as 'left' | 'right',
       };
     }
     return {
@@ -575,17 +581,31 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       x: clamp(curX, 16, Math.max(20, vw - SPIDER_W - 16)),
       y: bounds.bottomY,
       facing: (curX < vw * 0.5 ? 1 : -1) as 1 | -1,
+      wallCling: 'none' as const,
     };
   }, []);
 
   // Synchronous zero-lag scroll lockstep using MotionValues
   useEffect(() => {
     const onScroll = () => {
-      const perch = perchedRef.current;
-      if (!perch || isFallingRef.current || isPausedQuietly) return;
+      if (isFallingRef.current) return;
 
       const { w: vw, h: vh } = getViewportSize();
       const bounds = getPlayBounds(vw, vh);
+      const perch = perchedRef.current;
+
+      if (!perch) {
+        if (bounds.isMobile && zoneRef.current !== 'perch') {
+          const minSafeY = bounds.minY + 6;
+          if (mvY.get() < minSafeY) {
+            stopMotion();
+            mvY.set(Math.min(bounds.maxY, minSafeY));
+          }
+        }
+        return;
+      }
+      if (isPausedQuietly) return;
+
       const live = computeLivePerchCoords(perch, vw, bounds);
 
       if (live) {
@@ -609,7 +629,12 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       const glideDur = clamp(dist / 260, 0.42, 0.85);
 
       zoneRef.current = fallback.zone;
-      setPoseVisual({ pose: 'hop', facing: fallback.facing, showWebStrand: 'none' });
+      setPoseVisual({
+        pose: 'hop',
+        facing: fallback.facing,
+        showWebStrand: 'none',
+        wallCling: 'none',
+      });
       animXRef.current = animate(mvX, fallback.x, { duration: glideDur, ease: 'easeOut' });
       animYRef.current = animate(mvY, fallback.y, {
         duration: glideDur,
@@ -618,7 +643,11 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
 
       moveEndTimerRef.current = window.setTimeout(() => {
         if (isFallingRef.current) return;
-        setPoseVisual({ pose: 'idle', showWebStrand: 'none' });
+        setPoseVisual({
+          pose: 'idle',
+          showWebStrand: 'none',
+          wallCling: fallback.wallCling,
+        });
         scheduleNextFnRef.current?.(Math.round(randBetween(3500, 6500)));
       }, Math.round(glideDur * 1000) + 30);
     };
@@ -629,9 +658,23 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
     };
   }, [clearScheduledTimer, getSafeFallbackSpot, isPausedQuietly, mvX, mvY, setPoseVisual, stopMotion]);
 
-  // Keep viewport resize (including mobile visualViewport toolbar changes) aligned smoothly
+  // Keep viewport resize & initial post-paint header height aligned smoothly
   useEffect(() => {
     let rafId = 0;
+
+    // One-time post-paint clamp so measured 3-row mobile Header never hides initial Spidey
+    rafId = window.requestAnimationFrame(() => {
+      if (isFallingRef.current || perchedRef.current) return;
+      const vp = getViewportSize();
+      const bounds = getPlayBounds(vp.w, vp.h);
+      if (bounds.isMobile && zoneRef.current !== 'perch') {
+        const minSafeY = bounds.minY + 12;
+        if (mvY.get() < minSafeY) {
+          mvY.set(Math.min(bounds.maxY, minSafeY));
+        }
+      }
+    });
+
     const onResize = () => {
       window.cancelAnimationFrame(rafId);
       rafId = window.requestAnimationFrame(() => {
@@ -647,15 +690,25 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
           stopMotion();
           mvX.set(live.x);
           mvY.set(live.y);
+          setPoseVisual({ wallCling: 'none' });
         } else {
           perchedRef.current = null;
           stopMotion();
           if (bounds.isMobile) {
             const curZone = zoneRef.current;
-            zoneRef.current = curZone === 'web' ? 'web' : 'side';
-            const goLeft = mvX.get() < nextVp.w * 0.5;
-            mvX.set(goLeft ? 4 : Math.max(8, nextVp.w - SPIDER_W - 4));
-            mvY.set(clamp(mvY.get(), bounds.minY + 12, bounds.maxY));
+            if (curZone === 'web') {
+              mvY.set(clamp(mvY.get(), bounds.minY + 4, bounds.maxY));
+              setPoseVisual({ wallCling: 'none' });
+            } else {
+              zoneRef.current = 'side';
+              const goLeft = mvX.get() < nextVp.w * 0.5;
+              mvX.set(goLeft ? -2 : Math.max(8, nextVp.w - SPIDER_W + 2));
+              mvY.set(clamp(mvY.get(), bounds.minY + 12, bounds.maxY));
+              setPoseVisual({
+                facing: goLeft ? 1 : -1,
+                wallCling: goLeft ? 'left' : 'right',
+              });
+            }
           } else {
             const curX = clamp(mvX.get(), 8, Math.max(12, nextVp.w - SPIDER_W - 8));
             const curY =
@@ -664,6 +717,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
                 : bounds.bottomY;
             mvX.set(curX);
             mvY.set(curY);
+            setPoseVisual({ wallCling: 'none' });
           }
         }
       });
@@ -676,7 +730,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       window.removeEventListener('resize', onResize);
       window.visualViewport?.removeEventListener('resize', onResize);
     };
-  }, [mvX, mvY, stopMotion]);
+  }, [mvX, mvY, setPoseVisual, stopMotion]);
 
   // Main calm roaming controller
   useEffect(() => {
@@ -699,16 +753,30 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       let settleX: number;
       let settleY: number;
       let settleZone: ZoneTag;
+      let settleFacing: 1 | -1 = -1;
+      let settleWallCling: 'none' | 'left' | 'right' = 'none';
+
       if (keepLandingSpot) {
-        settleX = clamp(mvX.get(), 6, Math.max(12, w - SPIDER_W - 6));
+        const leftSide = bounds.isMobile && mvX.get() < w * 0.5;
+        settleX = bounds.isMobile
+          ? leftSide
+            ? -2
+            : Math.max(8, w - SPIDER_W + 2)
+          : clamp(mvX.get(), 6, Math.max(12, w - SPIDER_W - 6));
         settleY = bounds.isMobile
           ? clamp(mvY.get(), bounds.minY + 14, bounds.maxY)
           : bounds.bottomY;
         settleZone = bounds.isMobile ? 'side' : 'bottom';
+        if (bounds.isMobile) {
+          settleFacing = leftSide ? 1 : -1;
+          settleWallCling = leftSide ? 'left' : 'right';
+        }
       } else if (bounds.isMobile) {
-        settleX = Math.max(8, w - SPIDER_W - 4);
-        settleY = clamp(Math.round(h * 0.28), bounds.minY + 16, bounds.maxY);
+        settleX = Math.max(8, w - SPIDER_W + 2);
+        settleY = clamp(Math.round(h * 0.34), bounds.minY + 16, bounds.maxY);
         settleZone = 'side';
+        settleFacing = -1;
+        settleWallCling = 'right';
       } else {
         settleX = Math.max(8, w - 48);
         settleY = bounds.bottomY;
@@ -718,8 +786,9 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       zoneRef.current = settleZone;
       setPoseVisual({
         pose: isSleepingPref || isDoiSleeping || mode === 'exam' ? 'nap' : 'idle',
-        facing: -1,
+        facing: settleFacing,
         showWebStrand: 'none',
+        wallCling: settleWallCling,
       });
       animXRef.current = animate(mvX, settleX, {
         duration: keepLandingSpot ? 0.24 : 0.72,
@@ -770,6 +839,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
         pose: useWebSwing ? 'swing' : 'hop',
         facing: dir,
         showWebStrand: useWebSwing ? 'swing' : 'none',
+        wallCling: 'none',
         swingDir: dir,
         swingDuration: dur,
         swingSeq: prev.swingSeq + (useWebSwing ? 1 : 0),
@@ -801,7 +871,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
               animYRef.current = animate(mvY, live.y, { duration: settleDur, ease: 'easeOut' });
               moveEndTimerRef.current = window.setTimeout(() => {
                 if (cancelled || isFallingRef.current) return;
-                setPoseVisual({ pose: 'idle', showWebStrand: 'none' });
+                setPoseVisual({ pose: 'idle', showWebStrand: 'none', wallCling: 'none' });
                 scheduleNext(restAfterMs);
               }, Math.round(settleDur * 1000) + 20);
               return;
@@ -825,22 +895,29 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
             });
             moveEndTimerRef.current = window.setTimeout(() => {
               if (cancelled || isFallingRef.current) return;
-              setPoseVisual({ pose: 'idle', facing: fb.facing, showWebStrand: 'none' });
+              setPoseVisual({
+                pose: 'idle',
+                facing: fb.facing,
+                showWebStrand: 'none',
+                wallCling: fb.wallCling,
+              });
               scheduleNext(restAfterMs);
             }, Math.round(glideDur * 1000) + 20);
             return;
           }
         }
 
-        // After jumping to a side edge, look inward cleanly
+        // After jumping to a mobile outer edge, plant feet cleanly sideways onto the wall
         if (targetZone === 'side') {
+          const isLeftSide = toX < vp.w * 0.5;
           setPoseVisual({
             pose: 'idle',
-            facing: toX < vp.w * 0.5 ? 1 : -1,
+            facing: isLeftSide ? 1 : -1,
             showWebStrand: 'none',
+            wallCling: vp.w < 768 ? (isLeftSide ? 'left' : 'right') : 'none',
           });
         } else {
-          setPoseVisual({ pose: 'idle', showWebStrand: 'none' });
+          setPoseVisual({ pose: 'idle', showWebStrand: 'none', wallCling: 'none' });
         }
         scheduleNext(restAfterMs);
       }, Math.round(dur * 1000) + 20);
@@ -859,16 +936,19 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       const dist = Math.hypot(toX - fromX, toY - fromY);
       const dur = clamp(dist / 78, 0.85, 3.2);
       const dir: 1 | -1 = facingOverride ?? (toX >= fromX ? 1 : -1);
+      const vpW = getViewportSize().w;
+      const wallCling: 'none' | 'left' | 'right' =
+        targetZone === 'side' && vpW < 768 ? (toX < vpW * 0.5 ? 'left' : 'right') : 'none';
 
       zoneRef.current = targetZone;
-      setPoseVisual({ pose: 'crawl', facing: dir, showWebStrand: 'none' });
+      setPoseVisual({ pose: 'crawl', facing: dir, showWebStrand: 'none', wallCling });
 
       animXRef.current = animate(mvX, toX, { duration: dur, ease: 'easeInOut' });
       animYRef.current = animate(mvY, toY, { duration: dur, ease: 'easeInOut' });
 
       moveEndTimerRef.current = window.setTimeout(() => {
         if (cancelled || isFallingRef.current) return;
-        setPoseVisual({ pose: 'idle', showWebStrand: 'none' });
+        setPoseVisual({ pose: 'idle', showWebStrand: 'none', wallCling });
         scheduleNext(restAfterMs);
       }, Math.round(dur * 1000) + 20);
     };
@@ -923,7 +1003,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
         stopMotion();
         const useLeft = fromX < vw * 0.5;
         const webX = useLeft ? 16 : Math.max(24, vw - SPIDER_W - 16);
-        const topStartY = Math.max(16, curBounds.minY);
+        const topStartY = Math.max(16, curBounds.minY + 4);
         const dropEndY = clamp(
           Math.round(topStartY + randBetween(38, 86)),
           topStartY + 24,
@@ -936,6 +1016,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
           pose: 'rappel',
           facing: useLeft ? 1 : -1,
           showWebStrand: 'vertical',
+          wallCling: 'none',
         });
 
         animXRef.current = animate(mvX, [fromX, webX, webX], {
@@ -956,16 +1037,21 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
         return;
       }
 
-      // 4A. MOBILE FALLBACK ZONE: Only left/right outer edges (NO mobile bottom ground!)
+      // 4A. MOBILE FALLBACK ZONE: Left/right outer walls clinging sideways (NO mobile bottom ground!)
       if (curBounds.isMobile) {
         perchedRef.current = null;
-        const leftEdgeX = 4;
-        const rightEdgeX = Math.max(12, vw - SPIDER_W - 4);
+        const leftEdgeX = -2;
+        const rightEdgeX = Math.max(8, vw - SPIDER_W + 2);
         const targetY = Math.round(randBetween(curBounds.minY + 14, curBounds.maxY));
 
         if (curZone === 'side' && isNightTime() && Math.random() < 0.28) {
           stopMotion();
-          setPoseVisual({ pose: 'nap', showWebStrand: 'none' });
+          const onLeftWall = fromX < vw * 0.5;
+          setPoseVisual({
+            pose: 'nap',
+            showWebStrand: 'none',
+            wallCling: onLeftWall ? 'left' : 'right',
+          });
           scheduleNext(Math.round(randBetween(6000, 10000)));
           return;
         }
@@ -976,10 +1062,10 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
         const sideX = destLeft ? leftEdgeX : rightEdgeX;
 
         if (curZone === 'side' && !switchSides) {
-          // Walk smoothly up or down along the same outer side edge (upright, facing inward)
+          // Scuttle smoothly up or down along the same outer side wall, feet planted on edge
           runCrawl('side', sideX, targetY, destLeft ? 1 : -1, restAfterMs);
         } else {
-          // Hop / web-swing onto left or right outer side edge
+          // Hop / web-swing onto left or right outer side wall
           runParabolicJump(
             'side',
             sideX,
@@ -998,7 +1084,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       if (curZone === 'bottom' && isNightTime() && Math.random() < 0.3) {
         stopMotion();
         zoneRef.current = 'bottom';
-        setPoseVisual({ pose: 'nap', showWebStrand: 'none' });
+        setPoseVisual({ pose: 'nap', showWebStrand: 'none', wallCling: 'none' });
         scheduleNext(Math.round(randBetween(6500, 11000)));
       } else if (curZone === 'bottom') {
         if (Math.abs(targetX - fromX) > 200 && Math.random() < 0.42) {
@@ -1102,8 +1188,8 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
 
     const { w: vw, h: vh } = getViewportSize();
     const bounds = getPlayBounds(vw, vh);
-    const liveX = clamp(mvX.get(), 8, Math.max(12, vw - SPIDER_W - 8));
-    const liveY = clamp(mvY.get(), Math.min(bounds.minY, 64), bounds.maxY + 16);
+    const liveX = clamp(mvX.get(), -4, Math.max(12, vw - SPIDER_W + 4));
+    const liveY = clamp(mvY.get(), bounds.minY, bounds.maxY + 16);
 
     const curPose = visualRef.current.pose;
     const isRestingZone = bounds.isMobile
@@ -1133,9 +1219,9 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       let landY: number;
       let landZone: ZoneTag;
       if (bounds.isMobile) {
-        // On mobile, tumble cleanly to nearest safe outer side edge inside upper/middle band
+        // On mobile, tumble cleanly to nearest safe outer side edge below Header
         const goLeft = liveX < vw * 0.5;
-        landX = goLeft ? 6 : Math.max(10, vw - SPIDER_W - 6);
+        landX = goLeft ? 4 : Math.max(10, vw - SPIDER_W - 4);
         landY = clamp(Math.max(liveY + 56, bounds.minY + 36), bounds.minY + 24, bounds.maxY);
         landZone = 'side';
       } else {
@@ -1152,12 +1238,13 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       setBubbleText(null);
       setSparkSeq((s) => s + 1);
 
-      // Phase 1: Drop smoothly to safe landing spot (desktop bottom or mobile side edge)
+      // Phase 1: Drop upright smoothly to safe landing spot (desktop bottom or mobile side edge)
       zoneRef.current = landZone;
       setPoseVisual({
         pose: 'fall',
         facing: bounds.isMobile ? (landX < vw * 0.5 ? 1 : -1) : visualRef.current.facing,
         showWebStrand: 'none',
+        wallCling: 'none',
       });
       animXRef.current = animate(mvX, landX, { duration: dropDur, ease: 'easeOut' });
       animYRef.current = animate(mvY, landY, {
@@ -1252,7 +1339,9 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
         ? 'right-0'
         : 'left-1/2 -translate-x-1/2';
   const bubbleVerticalClass =
-    bubbleAnchor.y < 130 ? 'top-[calc(100%+6px)]' : 'bottom-[calc(100%+6px)]';
+    bubbleAnchor.y < (viewport.w < 768 ? 215 : 130)
+      ? 'top-[calc(100%+6px)]'
+      : 'bottom-[calc(100%+6px)]';
   const sleepBtnHorizontalClass = bubbleAnchor.x > viewport.w - 80 ? '-left-5' : '-right-5';
 
   const isAnySleep = isSleepingPref || isDoiSleeping;
@@ -1322,16 +1411,29 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
 
         {/* Cozy floating Zzz pixels while napping */}
         {isSleepingVisual && (
-          <div aria-hidden="true" className="pointer-events-none absolute -top-4 right-0 z-20">
+          <div
+            aria-hidden="true"
+            className={`pointer-events-none absolute -top-4 z-20 ${
+              visual.wallCling === 'right' ? 'left-0' : 'right-0'
+            }`}
+          >
             <motion.span
-              animate={{ y: [0, -8], x: [0, 3], opacity: [0.85, 0] }}
+              animate={{
+                y: [0, -8],
+                x: visual.wallCling === 'right' ? [0, -3] : [0, 3],
+                opacity: [0.85, 0],
+              }}
               transition={{ duration: 2.1, repeat: Infinity, ease: 'easeOut' }}
               className="block font-mono text-[9px] font-black text-[#4338CA] dark:text-[#A5B4FC]"
             >
               z
             </motion.span>
             <motion.span
-              animate={{ y: [0, -10], x: [2, 6], opacity: [0, 0.8, 0] }}
+              animate={{
+                y: [0, -10],
+                x: visual.wallCling === 'right' ? [-2, -6] : [2, 6],
+                opacity: [0, 0.8, 0],
+              }}
               transition={{ duration: 2.1, delay: 0.9, repeat: Infinity, ease: 'easeOut' }}
               className="block font-mono text-[10px] font-black text-[#0284C7] dark:text-[#7DD3FC]"
             >
@@ -1383,7 +1485,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
           )}
         </AnimatePresence>
 
-        {/* Upright Spidey-Clawd Tap Target */}
+        {/* Spidey-Clawd Tap Target (rotates ±90° sideways ONLY while wall-clinging on mobile edges) */}
         <button
           type="button"
           onClick={handleSpiderClick}
@@ -1395,11 +1497,24 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
           }
           className="flex h-full w-full cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
         >
-          <SpideyClawdSprite
-            pose={visual.pose}
-            facing={visual.facing}
-            sparkSeq={sparkSeq}
-          />
+          <motion.div
+            animate={{
+              rotate:
+                visual.wallCling === 'left'
+                  ? 90
+                  : visual.wallCling === 'right'
+                    ? -90
+                    : 0,
+            }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="flex h-full w-full items-center justify-center"
+          >
+            <SpideyClawdSprite
+              pose={visual.pose}
+              facing={visual.facing}
+              sparkSeq={sparkSeq}
+            />
+          </motion.div>
         </button>
       </motion.div>
     </div>

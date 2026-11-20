@@ -104,10 +104,31 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const [justMasteredId, setJustMasteredId] = useState<string | null>(null);
   const [masteredBurstSeq, setMasteredBurstSeq] = useState<number>(0);
 
+  const mobileProgressRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(progress);
   progressRef.current = progress;
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const didSwipeRef = useRef<boolean>(false);
+
+  const scrollToProgressOnMobile = useCallback(() => {
+    if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
+    window.requestAnimationFrame(() => {
+      const el = mobileProgressRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const headerEl = document.querySelector('header');
+      const isHeaderSticky =
+        headerEl && window.getComputedStyle(headerEl).position === 'sticky';
+      const stickyHeaderBottom = isHeaderSticky
+        ? Math.max(0, headerEl.getBoundingClientRect().bottom)
+        : 0;
+      const desiredTop = stickyHeaderBottom + 12;
+      const delta = rect.top - desiredTop;
+      if (delta < -6) {
+        window.scrollBy({ top: delta, behavior: 'smooth' });
+      }
+    });
+  }, []);
 
   // Jump to earliest non-mastered card when switching subject or study tier
   useEffect(() => {
@@ -326,7 +347,8 @@ const goToPrev = useCallback(() => {
   setShowExplanation(false);
   setJustMasteredId(null);
   setCurrentIndex((idx) => Math.max(0, idx - 1));
-}, [safeIndex]);
+  scrollToProgressOnMobile();
+}, [safeIndex, scrollToProgressOnMobile]);
 
 const goToNext = useCallback(() => {
   if (safeIndex >= deck.length - 1) return;
@@ -334,13 +356,15 @@ const goToNext = useCallback(() => {
   setShowExplanation(false);
   setJustMasteredId(null);
   setCurrentIndex((idx) => Math.min(deck.length - 1, idx + 1));
-}, [safeIndex, deck.length]);
+  scrollToProgressOnMobile();
+}, [safeIndex, deck.length, scrollToProgressOnMobile]);
 
 const jumpToCard = (idx: number) => {
   setIsFlipped(false);
   setShowExplanation(false);
   setJustMasteredId(null);
   setCurrentIndex(idx);
+  scrollToProgressOnMobile();
 };
 
 // Desktop keyboard shortcuts: ArrowLeft, ArrowRight, Space/Enter, G (Mastered), F (Flagged)
@@ -729,7 +753,7 @@ return (
       {/* Main Flashcard Area */}
       <div className="w-full min-w-0 flex-1">
         {/* Mobile & Tablet Unified Interactive Progress & Filter Card (< 1024px) */}
-        <div className="mb-3.5 px-1 pt-1 lg:hidden">
+        <div ref={mobileProgressRef} className="mb-3.5 px-1 pt-1 lg:hidden">
           <button
             type="button"
             onClick={() => setIsMobileSheetOpen(true)}

@@ -141,6 +141,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
   const [isShaking, setIsShaking] = useState<boolean>(false);
 
   const explanationRef = useRef<HTMLDivElement>(null);
+  const mobileProgressRef = useRef<HTMLDivElement>(null);
   const shakeTimerRef = useRef<number | null>(null);
   const prevSubjectRef = useRef<SubjectId>(subject);
 
@@ -172,11 +173,49 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
   }, []);
 
   const scrollToExplanationOnMobile = useCallback(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      window.setTimeout(() => {
-        explanationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 90);
-    }
+    if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
+    window.setTimeout(() => {
+      const el = explanationRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const viewportH = window.visualViewport?.height ?? window.innerHeight;
+      const maxVisibleBottom = viewportH - 96;
+
+      if (rect.bottom > maxVisibleBottom) {
+        const needed = rect.bottom - maxVisibleBottom;
+        const headerEl = document.querySelector('header');
+        const isHeaderSticky =
+          headerEl && window.getComputedStyle(headerEl).position === 'sticky';
+        const headerBottom = isHeaderSticky
+          ? Math.max(0, headerEl.getBoundingClientRect().bottom)
+          : 0;
+        const maxSafeScroll = Math.max(0, rect.top - headerBottom - 16);
+        const delta = Math.min(needed, maxSafeScroll);
+        if (delta > 12) {
+          window.scrollBy({ top: delta, behavior: 'smooth' });
+        }
+      }
+    }, 150);
+  }, []);
+
+  const scrollToProgressOnMobile = useCallback(() => {
+    if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
+    window.requestAnimationFrame(() => {
+      const el = mobileProgressRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const headerEl = document.querySelector('header');
+      const isHeaderSticky =
+        headerEl && window.getComputedStyle(headerEl).position === 'sticky';
+      const stickyHeaderBottom = isHeaderSticky
+        ? Math.max(0, headerEl.getBoundingClientRect().bottom)
+        : 0;
+      const desiredTop = stickyHeaderBottom + 12;
+      const delta = rect.top - desiredTop;
+      if (delta < -6) {
+        window.scrollBy({ top: delta, behavior: 'smooth' });
+      }
+    });
   }, []);
 
   // Reset chapter on subject change; keep chapter and exit stage session on tier change
@@ -359,7 +398,8 @@ const handleNext = useCallback(() => {
   setSakugaEvent(null);
   clearShake();
   setTurnCounter(c => c + 1);
-}, [currentQuestion, gradedState, queue, turnFlagged, clearShake]);
+  scrollToProgressOnMobile();
+}, [currentQuestion, gradedState, queue, turnFlagged, clearShake, scrollToProgressOnMobile]);
 
 // PC Keyboard Shortcuts: 1-5 / A-E, F, Enter / Space
 useEffect(() => {
@@ -551,7 +591,7 @@ if (activeStage !== null) {
         {/* Main Practice Area */}
         <div className="w-full min-w-0 flex-1 space-y-3 sm:space-y-5">
           {/* Mobile & Tablet Unified Interactive Progress Card (< 1024px) */}
-          <div className="px-1 pt-1 lg:hidden">
+          <div ref={mobileProgressRef} className="px-1 pt-1 lg:hidden">
             <button
               type="button"
               onClick={() => setIsStageSheetOpen(true)}
