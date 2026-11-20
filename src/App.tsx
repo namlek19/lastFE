@@ -7,6 +7,7 @@ import { FlashcardView } from './components/FlashcardView';
 import { MockExamView } from './components/MockExamView';
 import { ProgressSyncModal } from './components/ProgressSyncModal';
 import { SakugaLuminousButterfly } from './components/SakugaLuminousButterfly';
+import { SakugaOrigamiPetals } from './components/SakugaOrigamiPetals';
 import { SakugaSpideyRoamer } from './components/SakugaSpideyRoamer';
 import { WelcomeNoteModal } from './components/WelcomeNoteModal';
 import { ExamHistoryItem, StudyMode, StudyTier, SubjectId, UserProgressStore } from './types/quiz';
@@ -184,6 +185,7 @@ export const App: React.FC = () => {
 
         <SakugaSpideyRoamer mode={mode} />
         <SakugaLuminousButterfly mode={mode} />
+        <SakugaOrigamiPetals mode={mode} />
       </div>
     </MotionConfig>
   );
