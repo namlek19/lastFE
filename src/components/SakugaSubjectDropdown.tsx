@@ -58,28 +58,11 @@ export const SUBJECT_DROPDOWN_ITEMS: readonly SubjectThemeSpec[] = [
     countPillClass:
       'border-[#7DD3FC] bg-[#E0F2FE] text-[#075985] dark:border-[#38BDF8]/50 dark:bg-[#075985]/50 dark:text-[#BAE6FD]',
   },
-  {
-    id: 'wdu203c',
-    shortCode: 'WDU',
-    fullCode: 'WDU203c',
-    subtitle: 'UI/UX Design',
-    accentHex: '#DB2777',
-    triggerClass:
-      'border-[#831843] bg-[#DB2777] text-white shadow-[2px_2px_0_0_#F9A8D4] hover:bg-[#BE185D] dark:border-[#F9A8D4] dark:bg-[#DB2777] dark:text-white dark:shadow-[2px_2px_0_0_#9D174D] dark:hover:bg-[#BE185D]',
-    badgeClass:
-      'border-[#831843] bg-[#DB2777] text-white shadow-[2px_2px_0_0_#F9A8D4] dark:border-[#F9A8D4] dark:bg-[#DB2777] dark:text-white dark:shadow-[2px_2px_0_0_#9D174D]',
-    activeRowClass:
-      'border-[#DB2777] bg-[#FCE7F3] text-[#831843] dark:border-[#F472B6] dark:bg-[#831843]/40 dark:text-[#FBCFE8]',
-    reticleClass: 'border-[#DB2777] dark:border-[#F472B6]',
-    countPillClass:
-      'border-[#F9A8D4] bg-[#FCE7F3] text-[#9D174D] dark:border-[#F472B6]/50 dark:bg-[#9D174D]/50 dark:text-[#FBCFE8]',
-  },
 ];
 
-const SUBJECT_SPEC_MAP: Record<SubjectId, SubjectThemeSpec> = {
+const SUBJECT_SPEC_MAP: Partial<Record<SubjectId, SubjectThemeSpec>> = {
   vnr202: SUBJECT_DROPDOWN_ITEMS[0],
   mln131: SUBJECT_DROPDOWN_ITEMS[1],
-  wdu203c: SUBJECT_DROPDOWN_ITEMS[2],
 };
 
 /** Compact red-and-blue blocky spider icon inside the trigger button */
@@ -258,7 +241,7 @@ export const SakugaSubjectDropdown: React.FC<SakugaSubjectDropdownProps> = ({
   const prevFocusedRef = useRef<SubjectId>(subject);
   const swingControls = useAnimationControls();
 
-  const activeSpec = SUBJECT_SPEC_MAP[subject];
+  const activeSpec = SUBJECT_SPEC_MAP[subject] ?? SUBJECT_DROPDOWN_ITEMS[0];
 
   const statsBySubject = useMemo(() => {
     const map = {} as Record<SubjectId, { mastered: number; total: number }>;
@@ -458,15 +441,14 @@ export const SakugaSubjectDropdown: React.FC<SakugaSubjectDropdownProps> = ({
                 </span>
               </div>
 
-              {/* Flat 3-color Anime Speed-Hash Accent (ZERO gradient) */}
+              {/* Flat 2-color Anime Speed-Hash Accent (ZERO gradient) */}
               <svg
-                viewBox="0 0 36 10"
+                viewBox="0 0 24 10"
                 aria-hidden="true"
-                className="h-2.5 w-9 shrink-0"
+                className="h-2.5 w-6 shrink-0"
               >
                 <polygon points="0,10 6,0 11,0 5,10" fill="#EA580C" />
                 <polygon points="12,10 18,0 23,0 17,10" fill="#0284C7" />
-                <polygon points="24,10 30,0 35,0 29,10" fill="#DB2777" />
               </svg>
             </div>
 

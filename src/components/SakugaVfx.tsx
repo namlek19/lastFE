@@ -710,13 +710,14 @@ export const SakugaTierPicker: React.FC<SakugaTierPickerProps> = ({
 }) => {
   const [burst, setBurst] = useState<{ tier: StudyTier; seq: number } | null>(null);
   const [isTierInfoOpen, setIsTierInfoOpen] = useState(false);
-  const [previewSubject, setPreviewSubject] = useState<SubjectId>(subject);
+  const safeSubject: SubjectId = subject === 'mln131' ? 'mln131' : 'vnr202';
+  const [previewSubject, setPreviewSubject] = useState<SubjectId>(safeSubject);
 
   useEffect(() => {
     if (isTierInfoOpen) {
-      setPreviewSubject(subject);
+      setPreviewSubject(safeSubject);
     }
-  }, [isTierInfoOpen, subject]);
+  }, [isTierInfoOpen, safeSubject]);
 
   useEffect(() => {
     if (!burst) return;
@@ -980,7 +981,7 @@ export const SakugaTierPicker: React.FC<SakugaTierPickerProps> = ({
                       </div>
                     </div>
 
-                    {/* Bottom Section: Compact Score Prediction Breakdown (VNR202, MLN131, WDU203c) */}
+                    {/* Bottom Section: Compact Score Prediction Breakdown (VNR202 & MLN131) */}
                     {(() => {
                       const activePred = TIER_SCORE_PREDICTIONS[previewSubject];
                       return (
@@ -1030,19 +1031,6 @@ export const SakugaTierPicker: React.FC<SakugaTierPickerProps> = ({
                                 }`}
                               >
                                 <span className="skew-x-12">MLN</span>
-                              </button>
-                              <button
-                                type="button"
-                                role="tab"
-                                aria-selected={previewSubject === 'wdu203c'}
-                                onClick={() => setPreviewSubject('wdu203c')}
-                                className={`inline-flex -skew-x-12 cursor-pointer items-center rounded-md border-2 px-2.5 py-0.5 text-[11px] font-black italic tracking-wider transition ${
-                                  previewSubject === 'wdu203c'
-                                    ? 'border-[#831843] bg-[#DB2777] text-white shadow-[2px_2px_0_0_#F9A8D4] dark:border-[#F9A8D4]'
-                                    : 'border-transparent text-[#9D174D] hover:bg-[#FCE7F3] dark:text-[#F9A8D4]/85 dark:hover:bg-[#831843]/40'
-                                }`}
-                              >
-                                <span className="skew-x-12">WDU</span>
                               </button>
                             </div>
                           </div>

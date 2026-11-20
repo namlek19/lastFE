@@ -64,7 +64,7 @@ function normalizeTier(raw: unknown): StudyTier {
 }
 
 function normalizeSubject(raw: unknown): SubjectId {
-  return raw === 'mln131' || raw === 'wdu203c' ? raw : 'vnr202';
+  return raw === 'mln131' ? 'mln131' : 'vnr202';
 }
 
 export function loadStore(): UserProgressStore {

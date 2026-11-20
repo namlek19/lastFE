@@ -44,7 +44,6 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
     () => [
       ...getQuestionsBySubject('mln131'),
       ...getQuestionsBySubject('vnr202'),
-      ...getQuestionsBySubject('wdu203c'),
     ],
     []
   );
