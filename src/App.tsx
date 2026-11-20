@@ -6,6 +6,7 @@ import { RollingStudyView } from './components/RollingStudyView';
 import { FlashcardView } from './components/FlashcardView';
 import { MockExamView } from './components/MockExamView';
 import { ProgressSyncModal } from './components/ProgressSyncModal';
+import { SakugaLuminousButterfly } from './components/SakugaLuminousButterfly';
 import { SakugaSpideyRoamer } from './components/SakugaSpideyRoamer';
 import { ExamHistoryItem, StudyMode, StudyTier, SubjectId, UserProgressStore } from './types/quiz';
 import {
@@ -179,6 +180,7 @@ export const App: React.FC = () => {
         />
 
         <SakugaSpideyRoamer mode={mode} />
+        <SakugaLuminousButterfly mode={mode} />
       </div>
     </MotionConfig>
   );
