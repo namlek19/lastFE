@@ -79,6 +79,11 @@ function clamp(val: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, val));
 }
 
+function isNightTime(): boolean {
+  const hour = new Date().getHours();
+  return hour >= 22 || hour < 6;
+}
+
 function getViewportSize(): { w: number; h: number } {
   if (typeof window === 'undefined') return { w: 1280, h: 720 };
   return {
@@ -547,6 +552,8 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
 
   const isPausedQuietly =
     isSleepingPref || isDoiSleeping || mode === 'exam' || Boolean(prefersReducedMotion);
+  const isPausedQuietlyRef = useRef(isPausedQuietly);
+  isPausedQuietlyRef.current = isPausedQuietly;
 
   useEffect(() => {
     perchedRef.current = null;
@@ -723,6 +730,11 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
         ease: [0.22, 1, 0.36, 1],
       });
       return;
+    }
+
+    // Ensure exiting exam/sleep clears any leftover nap pose immediately
+    if (visualRef.current.pose === 'nap') {
+      setPoseVisual({ pose: 'idle', showWebStrand: 'none' });
     }
 
     let cancelled = false;
@@ -951,7 +963,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
         const rightEdgeX = Math.max(12, vw - SPIDER_W - 4);
         const targetY = Math.round(randBetween(curBounds.minY + 14, curBounds.maxY));
 
-        if (curZone === 'side' && Math.random() < 0.3) {
+        if (curZone === 'side' && isNightTime() && Math.random() < 0.28) {
           stopMotion();
           setPoseVisual({ pose: 'nap', showWebStrand: 'none' });
           scheduleNext(Math.round(randBetween(6000, 10000)));
@@ -983,7 +995,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       perchedRef.current = null;
       const targetX = Math.round(randBetween(24, vw - SPIDER_W - 24));
 
-      if (curZone === 'bottom' && Math.random() < 0.35) {
+      if (curZone === 'bottom' && isNightTime() && Math.random() < 0.3) {
         stopMotion();
         zoneRef.current = 'bottom';
         setPoseVisual({ pose: 'nap', showWebStrand: 'none' });
@@ -1053,15 +1065,19 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
   );
 
   const handleSpiderClick = () => {
-    // 1. Sleeping -> wake up happily!
-    if (isSleepingPref || isDoiSleeping) {
+    // 1. Sleeping (manual, "Dỗi", or spontaneous night nap) -> wake up happily!
+    if (isSleepingPref || isDoiSleeping || visualRef.current.pose === 'nap') {
       const wasDoi = isDoiSleeping;
+      const wasSpontaneousNightNap = !isSleepingPref && !isDoiSleeping;
       if (isSleepingPref) {
         setIsSleepingPref(false);
         saveSleepPreference(false);
       }
       if (wasDoi) {
         setIsDoiSleeping(false);
+      }
+      if (wasSpontaneousNightNap) {
+        clearScheduledTimer();
       }
       updateBubbleAnchorFromLive();
       setSparkSeq((s) => s + 1);
@@ -1073,7 +1089,10 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       }
       bubbleTimerRef.current = window.setTimeout(() => {
         setBubbleText(null);
-        setPoseVisual({ pose: 'idle' });
+        setPoseVisual({ pose: isPausedQuietlyRef.current ? 'nap' : 'idle' });
+        if (wasSpontaneousNightNap && !isPausedQuietlyRef.current) {
+          scheduleNextFnRef.current?.(Math.round(randBetween(3000, 5500)));
+        }
       }, 1450);
       return;
     }
@@ -1196,7 +1215,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
     }
     bubbleTimerRef.current = window.setTimeout(() => {
       setBubbleText(null);
-      setPoseVisual({ pose: isPausedQuietly ? 'nap' : 'idle' });
+      setPoseVisual({ pose: isPausedQuietlyRef.current ? 'nap' : 'idle' });
     }, 1450);
   };
 
@@ -1211,10 +1230,14 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       updateBubbleAnchorFromLive();
       setBubbleText('THWIP!');
       setSparkSeq((s) => s + 1);
+      setPoseVisual({ pose: 'cheer', showWebStrand: 'none' });
       if (bubbleTimerRef.current !== null) {
         window.clearTimeout(bubbleTimerRef.current);
       }
-      bubbleTimerRef.current = window.setTimeout(() => setBubbleText(null), 1100);
+      bubbleTimerRef.current = window.setTimeout(() => {
+        setBubbleText(null);
+        setPoseVisual({ pose: isPausedQuietlyRef.current ? 'nap' : 'idle' });
+      }, 1100);
     } else {
       setIsSleepingPref(true);
       saveSleepPreference(true);
