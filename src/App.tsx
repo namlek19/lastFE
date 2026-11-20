@@ -6,6 +6,7 @@ import { RollingStudyView } from './components/RollingStudyView';
 import { FlashcardView } from './components/FlashcardView';
 import { MockExamView } from './components/MockExamView';
 import { ProgressSyncModal } from './components/ProgressSyncModal';
+import { SakugaSpideyRoamer } from './components/SakugaSpideyRoamer';
 import { ExamHistoryItem, StudyMode, StudyTier, SubjectId, UserProgressStore } from './types/quiz';
 import {
   addExamHistory,
@@ -176,6 +177,8 @@ export const App: React.FC = () => {
           onImportProgress={handleImportProgress}
           onResetAllProgress={handleResetAllProgress}
         />
+
+        <SakugaSpideyRoamer mode={mode} />
       </div>
     </MotionConfig>
   );
