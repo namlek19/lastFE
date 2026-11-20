@@ -830,71 +830,72 @@ const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
                     scheduleVisit,
                     ]);
 
-  const handleButterflyClick = (e: React.MouseEvent) => {
-                      e.stopPropagation();
-                    if (!isVisibleRef.current) return;
+  const handleButterflyClick = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+    if (!isVisibleRef.current) return;
 
-                    const cx = mvX.get();
-                    const cy = mvY.get();
+    const cx = mvX.get();
+    const cy = mvY.get();
 
-                    cancelFlightLoop();
-                    clearSpawnTimer();
-                    resetTrailPool();
-                    isVisibleRef.current = false;
-                    setIsVisible(false);
+    cancelFlightLoop();
+    clearSpawnTimer();
+    resetTrailPool();
+    isVisibleRef.current = false;
+    setIsVisible(false);
 
-                    const burstId = nextId();
-                    const burst = createShatterBurst(burstId, cx, cy);
+    const burstId = nextId();
+    const burst = createShatterBurst(burstId, cx, cy);
     setBursts((prev) => [...prev, burst]);
 
     const cleanupTimer = window.setTimeout(() => {
-                      setBursts((prev) => prev.filter((item) => item.id !== burstId));
+      setBursts((prev) => prev.filter((item) => item.id !== burstId));
     }, 1850);
-                    burstTimersRef.current.push(cleanupTimer);
+    burstTimersRef.current.push(cleanupTimer);
 
-                    scheduleVisit(false);
+    scheduleVisit(false);
   };
 
-                    if (isDisabled) return null;
+  if (isDisabled) return null;
 
-                    return (
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
-                    >
-                      {/* Pooled zero-re-render stardust trail specks */}
-                      {Array.from({ length: TRAIL_POOL_SIZE }, (_, i) => (
-                        <span
-                          key={`bf-pool-${i}`}
-                          ref={(el) => {
-                            trailElRefs.current[i] = el;
-                          }}
-                          style={{ opacity: 0, width: 3, height: 3, backgroundColor: '#FFFFFF' }}
-                          className="pointer-events-none fixed left-0 top-0 rounded-full drop-shadow-[0_0_4px_rgba(79,70,229,0.75)] dark:drop-shadow-[0_0_4px_rgba(196,181,253,0.9)]"
-                        />
-                      ))}
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
+    >
+      {/* Pooled zero-re-render stardust trail specks */}
+      {Array.from({ length: TRAIL_POOL_SIZE }, (_, i) => (
+        <span
+          key={`bf-pool-${i}`}
+          ref={(el) => {
+            trailElRefs.current[i] = el;
+          }}
+          style={{ opacity: 0, width: 3, height: 3, backgroundColor: '#FFFFFF' }}
+          className="pointer-events-none fixed left-0 top-0 rounded-full drop-shadow-[0_0_4px_rgba(79,70,229,0.75)] dark:drop-shadow-[0_0_4px_rgba(196,181,253,0.9)]"
+        />
+      ))}
 
-                      {/* Main wandering luminous origami butterfly */}
-                      {isVisible && (
-                        <motion.div
-                          style={{
-                            left: -28,
-                            top: -28,
-                            x: mvX,
-                            y: mvY,
-                            rotate: mvRotate,
-                            opacity: mvOpacity,
-                          }}
-                          className="pointer-events-none absolute h-14 w-14 will-change-transform"
-                        >
-                          <button
-                            type="button"
-                            tabIndex={-1}
-                            onClick={handleButterflyClick}
-                            aria-label="Chạm vào bướm ánh sáng"
-                            title="Chạm để làm vỡ cánh bướm ánh sáng"
-                            className="pointer-events-auto flex h-full w-full cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
-                          >
+      {/* Main wandering luminous origami butterfly */}
+      {isVisible && (
+        <motion.div
+          style={{
+            left: -28,
+            top: -28,
+            x: mvX,
+            y: mvY,
+            rotate: mvRotate,
+            opacity: mvOpacity,
+          }}
+          className="pointer-events-none absolute h-14 w-14 will-change-transform"
+        >
+          <button
+            type="button"
+            tabIndex={-1}
+            onPointerDown={handleButterflyClick}
+            onClick={handleButterflyClick}
+            aria-label="Chạm vào bướm ánh sáng"
+            title="Chạm để làm vỡ cánh bướm ánh sáng"
+            className="pointer-events-auto flex h-full w-full touch-manipulation cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
+          >
                             <OrigamiButterflySvg
                               leftWingRef={leftWingRef}
                               rightWingRef={rightWingRef}

@@ -59,7 +59,7 @@ export const WelcomeNoteModal: React.FC = () => {
             exit={{ opacity: 0, scale: 0.95, y: 12 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-sm rounded-3xl border-2 border-[#27272A] bg-white p-5 shadow-[6px_6px_0_0_#C7D2FE,0_20px_40px_-12px_rgba(24,24,27,0.22)] dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#312E81,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:p-6"
+            className="relative max-h-[90dvh] w-full max-w-sm overflow-y-auto rounded-3xl border-2 border-[#27272A] bg-white p-5 shadow-[6px_6px_0_0_#C7D2FE,0_20px_40px_-12px_rgba(24,24,27,0.22)] dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#312E81,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:p-6"
           >
             <div className="flex flex-col items-center text-center">
               <div className="w-full rounded-2xl border-2 border-[#27272A] bg-white p-3 shadow-[3px_3px_0_0_#C7D2FE] dark:border-[#52525B] dark:bg-[#FAF9F5] dark:shadow-[3px_3px_0_0_#312E81]">

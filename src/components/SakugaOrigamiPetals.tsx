@@ -98,8 +98,8 @@ function buildPetalShower(showerId: number): PetalShowerState {
       startX,
       startY: -28,
       endY: vh + 36,
-      driftX: windDir * randBetween(55, 145),
-      swayAmp: randBetween(16, 42),
+      driftX: windDir * (isMobile ? randBetween(35, 85) : randBetween(55, 145)),
+      swayAmp: isMobile ? randBetween(12, 26) : randBetween(16, 42),
       swayFreq: randBetween(0.9, 1.7),
       phase: randBetween(0, Math.PI * 2),
       rotXSpeed: randBetween(1.4, 2.8) * (Math.random() < 0.5 ? 1 : -1),
@@ -192,6 +192,7 @@ export const SakugaOrigamiPetals: React.FC<SakugaOrigamiPetalsProps> = ({ mode }
   const blessingTimersRef = useRef<number[]>([]);
   const rafRef = useRef<number | null>(null);
   const petalElRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const blessingWrapRef = useRef<HTMLDivElement>(null);
   const startShowerRef = useRef<(() => void) | null>(null);
 
   const clearSpawnTimer = useCallback(() => {
@@ -351,6 +352,22 @@ export const SakugaOrigamiPetals: React.FC<SakugaOrigamiPetalsProps> = ({ mode }
     };
   }, [cancelShowerLoop, clearBlessingTimers, clearSpawnTimer, isDisabled, scheduleVisit]);
 
+  useEffect(() => {
+    if (!shower) return;
+
+    const syncBlessingTop = () => {
+      const el = blessingWrapRef.current;
+      if (!el) return;
+      const { w: vw, h: vh } = getViewportSize();
+      el.style.top = `${getHeaderSafeTop(vw, vh) + 4}px`;
+    };
+
+    window.addEventListener('scroll', syncBlessingTop, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', syncBlessingTop);
+    };
+  }, [shower]);
+
   if (isDisabled) return null;
 
   return (
@@ -376,6 +393,7 @@ export const SakugaOrigamiPetals: React.FC<SakugaOrigamiPetalsProps> = ({ mode }
       <AnimatePresence>
         {showBlessing && shower && (
           <motion.div
+            ref={blessingWrapRef}
             key={`sakura-blessing-${shower.id}`}
             style={{ top: shower.headerSafeTop + 4 }}
             initial={{ opacity: 0, y: -8, scale: 0.94 }}
