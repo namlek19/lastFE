@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X } from 'lucide-react';
 import namFlorkImg from '../assets/nam-flork-thumbsup.png';
 
 const WELCOME_SEEN_KEY = 'fpt_exam_nam_note_seen_v1';
@@ -62,16 +61,7 @@ export const WelcomeNoteModal: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-sm rounded-3xl border-2 border-[#27272A] bg-white p-5 shadow-[6px_6px_0_0_#C7D2FE,0_20px_40px_-12px_rgba(24,24,27,0.22)] dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[6px_6px_0_0_#312E81,0_22px_44px_-12px_rgba(0,0,0,0.8)] sm:p-6"
           >
-            <button
-              type="button"
-              onClick={handleClose}
-              aria-label="Đóng lời nhắn"
-              className="absolute right-3.5 top-3.5 cursor-pointer rounded-xl p-1.5 text-[#656058] transition hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="mt-2 flex flex-col items-center text-center">
+            <div className="flex flex-col items-center text-center">
               <div className="w-full rounded-2xl border-2 border-[#27272A] bg-white p-3 shadow-[3px_3px_0_0_#C7D2FE] dark:border-[#52525B] dark:bg-[#FAF9F5] dark:shadow-[3px_3px_0_0_#312E81]">
                 <img
                   src={namFlorkImg}
