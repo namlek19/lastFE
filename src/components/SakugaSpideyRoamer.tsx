@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, Easing, motion, useReducedMotion } from 'framer-motion';
+import {
+  animate,
+  AnimatePresence,
+  AnimationPlaybackControls,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+} from 'framer-motion';
 import { Moon, Sun } from 'lucide-react';
 import { StudyMode } from '../types/quiz';
 
@@ -35,19 +42,13 @@ interface PerchedTarget {
   offsetX: number;
 }
 
-interface RoamStep {
-  zone: ZoneTag;
+interface VisualUiState {
   pose: SpideyPose;
-  x: number | number[];
-  y: number | number[];
   facing: 1 | -1;
-  durationSec: number;
-  times?: number[];
-  ease?: Easing | Easing[];
-  showWebStrand?: 'vertical' | 'swing' | 'none';
-  swingDir?: 1 | -1;
-  anchorX: number;
-  anchorY: number;
+  showWebStrand: 'vertical' | 'swing' | 'none';
+  swingDir: 1 | -1;
+  swingDuration: number;
+  swingSeq: number;
 }
 
 const SLEEP_STORAGE_KEY = 'fpt_exam_spidey_sleep_v1';
@@ -68,6 +69,13 @@ function randBetween(min: number, max: number): number {
 
 function clamp(val: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, val));
+}
+
+function getBottomLedgeY(vw: number, vh: number, compact = false): number {
+  if (vw >= 768) {
+    return Math.max(compact ? 120 : 140, vh - 34);
+  }
+  return Math.max(compact ? 160 : 170, vh - (compact ? 102 : 110));
 }
 
 function loadSleepPreference(): boolean {
@@ -94,7 +102,7 @@ function saveSleepPreference(sleeping: boolean): void {
  * Finds visible top edges of study cards, sidebars, toolbars, and footer
  * so Spidey-Clawd can hop onto them without obstructing central card text.
  */
-function scanComponentLedges(vw: number, _vh: number, bottomY: number): ComponentLedge[] {
+function scanComponentLedges(vw: number, bottomY: number): ComponentLedge[] {
   if (typeof document === 'undefined') return [];
   const headerSafeTop = vw >= 768 ? 78 : 146;
   const maxLedgeY = bottomY - 16;
@@ -131,7 +139,6 @@ function scanComponentLedges(vw: number, _vh: number, bottomY: number): Componen
     });
   }
 
-  // Deduplicate nested surfaces within 20px vertically and overlapping horizontally (prefer outer/wider surface)
   raw.sort((a, b) => a.ledgeY - b.ledgeY || b.width - a.width);
   const deduped: ComponentLedge[] = [];
   for (const cand of raw) {
@@ -148,7 +155,6 @@ function scanComponentLedges(vw: number, _vh: number, bottomY: number): Componen
   return deduped;
 }
 
-/** Prefer outer shoulders of cards so Spidey feels cozy at card edges rather than center titles */
 function pickPerchX(ledge: ComponentLedge): number {
   const roll = Math.random();
   if (roll < 0.36) {
@@ -209,7 +215,6 @@ const SpideyClawdSprite: React.FC<SpideyClawdSpriteProps> = ({
 
   return (
     <div className="relative flex h-7 w-8 items-center justify-center">
-      {/* Click / landing / web-cut pixel sparks */}
       {sparkSeq > 0 && (
         <motion.svg
           key={`roam-sparks-${sparkSeq}`}
@@ -227,7 +232,6 @@ const SpideyClawdSprite: React.FC<SpideyClawdSpriteProps> = ({
         </motion.svg>
       )}
 
-      {/* Main upright animated body (no spin rotations — lively platformer hops & squash/stretch!) */}
       <div style={{ transform: facing < 0 ? 'scaleX(-1)' : undefined }}>
         <motion.div
           key={isCheer ? `cheer-hop-${sparkSeq}` : isPopping ? `pop-hop-${sparkSeq}` : 'roam-body'}
@@ -280,143 +284,143 @@ const SpideyClawdSprite: React.FC<SpideyClawdSpriteProps> = ({
                           }
           }
         >
-        <svg
-          viewBox="0 0 28 24"
-          aria-hidden="true"
-          className="h-7 w-8 overflow-visible drop-shadow-[1px_2px_0_rgba(24,24,27,0.38)]"
-        >
-          {/* Side Clawd-spider arms */}
-          <motion.g
-            animate={
-              isCrawling || isHopping
-                ? { y: [0, -2.2, 0] }
-                : isFalling
-                  ? { y: -3.5 }
-                  : isCheer
-                    ? { y: [0, -3, 0] }
-                    : isPouting
-                      ? { y: 1.5 }
-                      : { y: [0, -1, 0] }
-            }
-            transition={{
-              duration: isCrawling || isHopping ? 0.2 : isCheer ? 0.26 : 1.35,
-              repeat: isFalling || isPouting ? 0 : Infinity,
-              ease: 'easeInOut',
-            }}
+          <svg
+            viewBox="0 0 28 24"
+            aria-hidden="true"
+            className="h-7 w-8 overflow-visible drop-shadow-[1px_2px_0_rgba(24,24,27,0.38)]"
           >
-            <rect x="0" y="9" width="3" height="2" fill="#18181B" />
-            <rect x="1" y="11" width="3" height="3" fill="#2563EB" />
-            <rect x="25" y="9" width="3" height="2" fill="#18181B" />
-            <rect x="24" y="11" width="3" height="3" fill="#2563EB" />
-          </motion.g>
-
-          {/* Chunky pixel shell border */}
-          <rect x="4" y="2" width="20" height="15" rx="2" fill="#18181B" />
-
-          {/* Spider-Man Crimson Red head */}
-          <rect x="6" y="4" width="16" height="8" fill="#EF4444" />
-          <rect x="20" y="4" width="2" height="8" fill="#DC2626" />
-          {/* Forehead web ticks */}
-          <rect x="13" y="4" width="2" height="2" fill="#991B1B" />
-          <rect x="9" y="4" width="1.5" height="1.5" fill="#B91C1C" />
-          <rect x="17.5" y="4" width="1.5" height="1.5" fill="#B91C1C" />
-
-          {/* Cobalt Blue lower suit + pixel chest spider badge */}
-          <rect x="6" y="12" width="16" height="3" fill="#2563EB" />
-          <rect x="20" y="12" width="2" height="3" fill="#1D4ED8" />
-          <rect x="12" y="11" width="4" height="2" fill="#18181B" />
-          <rect x="13" y="11.5" width="2" height="1.2" fill="#EF4444" />
-
-          {/* Eyes driven by current mood / action */}
-          {isSleeping ? (
-            <>
-              <rect x="7.5" y="8" width="4.5" height="1.5" fill="#18181B" />
-              <rect x="16" y="8" width="4.5" height="1.5" fill="#18181B" />
-            </>
-          ) : isFalling ? (
-            <>
-              <rect x="7" y="5.5" width="5" height="5" fill="#18181B" />
-              <rect x="8" y="6.5" width="3" height="3" fill="#FFFFFF" />
-              <rect x="16" y="5.5" width="5" height="5" fill="#18181B" />
-              <rect x="17" y="6.5" width="3" height="3" fill="#FFFFFF" />
-            </>
-          ) : isConfused ? (
-            <>
-              <rect x="7" y="7" width="5" height="3" fill="#18181B" />
-              <rect x="8" y="7.8" width="3" height="1.4" fill="#FFFFFF" />
-              <rect x="16" y="5.5" width="5" height="4.8" fill="#18181B" />
-              <rect x="16.8" y="6.3" width="3.4" height="3.2" fill="#FFFFFF" />
-            </>
-          ) : isPouting ? (
-            <>
-              <rect x="7" y="7.5" width="5" height="2.6" fill="#18181B" />
-              <rect x="8" y="8.2" width="3.2" height="1.2" fill="#FFFFFF" />
-              <rect x="16" y="7.5" width="5" height="2.6" fill="#18181B" />
-              <rect x="16.8" y="8.2" width="3.2" height="1.2" fill="#FFFFFF" />
-              <rect x="21" y="1" width="1.5" height="4" fill="#FDE047" />
-              <rect x="19.8" y="2.2" width="4" height="1.5" fill="#FDE047" />
-            </>
-          ) : (
+            {/* Side Clawd-spider arms */}
             <motion.g
-              animate={{ scaleY: [1, 1, 0.14, 1] }}
+              animate={
+                isCrawling || isHopping
+                  ? { y: [0, -2.2, 0] }
+                  : isFalling
+                    ? { y: -3.5 }
+                    : isCheer
+                      ? { y: [0, -3, 0] }
+                      : isPouting
+                        ? { y: 1.5 }
+                        : { y: [0, -1, 0] }
+              }
               transition={{
-                duration: 0.22,
-                repeat: Infinity,
-                repeatDelay: 3.4,
-                times: [0, 0.4, 0.7, 1],
+                duration: isCrawling || isHopping ? 0.2 : isCheer ? 0.26 : 1.35,
+                repeat: isFalling || isPouting ? 0 : Infinity,
+                ease: 'easeInOut',
               }}
-              style={{ transformOrigin: '14px 8.5px' }}
             >
-              <rect x="7" y="6" width="5" height="4" fill="#18181B" />
-              <rect x="7.8" y="6.8" width="3.4" height="2.4" fill="#FFFFFF" />
-              <rect x="10" y="7" width="1.2" height="2.2" fill="#FFFFFF" />
-              <rect x="16" y="6" width="5" height="4" fill="#18181B" />
-              <rect x="16.8" y="6.8" width="3.4" height="2.4" fill="#FFFFFF" />
-              <rect x="16.8" y="7" width="1.2" height="2.2" fill="#FFFFFF" />
+              <rect x="0" y="9" width="3" height="2" fill="#18181B" />
+              <rect x="1" y="11" width="3" height="3" fill="#2563EB" />
+              <rect x="25" y="9" width="3" height="2" fill="#18181B" />
+              <rect x="24" y="11" width="3" height="3" fill="#2563EB" />
             </motion.g>
-          )}
 
-          {/* 4 stubby Clawd bottom legs scuttling/kicking cleanly */}
-          <motion.g
-            animate={
-              isCrawling || isHopping || isRappel
-                ? { y: [0, -2, 0] }
-                : isSleeping || isPouting
-                  ? { y: 0 }
-                  : { y: [0, 1.2, 0] }
-            }
-            transition={{
-              duration: isCrawling || isHopping ? 0.2 : 0.65,
-              repeat: isSleeping || isPouting ? 0 : Infinity,
-              ease: 'easeInOut',
-            }}
-          >
-            <rect x="5" y="17" width="3" height="4" fill="#18181B" />
-            <rect x="5.5" y="17" width="2" height="3.2" fill="#EF4444" />
-            <rect x="15" y="17" width="3" height="4" fill="#18181B" />
-            <rect x="15.5" y="17" width="2" height="3.2" fill="#2563EB" />
-          </motion.g>
-          <motion.g
-            animate={
-              isCrawling || isHopping || isRappel
-                ? { y: [-2, 0, -2] }
-                : isSleeping || isPouting
-                  ? { y: 0 }
-                  : { y: [1.2, 0, 1.2] }
-            }
-            transition={{
-              duration: isCrawling || isHopping ? 0.2 : 0.65,
-              repeat: isSleeping || isPouting ? 0 : Infinity,
-              ease: 'easeInOut',
-            }}
-          >
-            <rect x="10" y="17" width="3" height="4" fill="#18181B" />
-            <rect x="10.5" y="17" width="2" height="3.2" fill="#2563EB" />
-            <rect x="20" y="17" width="3" height="4" fill="#18181B" />
-            <rect x="20.5" y="17" width="2" height="3.2" fill="#EF4444" />
-          </motion.g>
-        </svg>
-      </motion.div>
+            {/* Chunky pixel shell border */}
+            <rect x="4" y="2" width="20" height="15" rx="2" fill="#18181B" />
+
+            {/* Spider-Man Crimson Red head */}
+            <rect x="6" y="4" width="16" height="8" fill="#EF4444" />
+            <rect x="20" y="4" width="2" height="8" fill="#DC2626" />
+            {/* Forehead web ticks */}
+            <rect x="13" y="4" width="2" height="2" fill="#991B1B" />
+            <rect x="9" y="4" width="1.5" height="1.5" fill="#B91C1C" />
+            <rect x="17.5" y="4" width="1.5" height="1.5" fill="#B91C1C" />
+
+            {/* Cobalt Blue lower suit + pixel chest spider badge */}
+            <rect x="6" y="12" width="16" height="3" fill="#2563EB" />
+            <rect x="20" y="12" width="2" height="3" fill="#1D4ED8" />
+            <rect x="12" y="11" width="4" height="2" fill="#18181B" />
+            <rect x="13" y="11.5" width="2" height="1.2" fill="#EF4444" />
+
+            {/* Eyes driven by current mood / action */}
+            {isSleeping ? (
+              <>
+                <rect x="7.5" y="8" width="4.5" height="1.5" fill="#18181B" />
+                <rect x="16" y="8" width="4.5" height="1.5" fill="#18181B" />
+              </>
+            ) : isFalling ? (
+              <>
+                <rect x="7" y="5.5" width="5" height="5" fill="#18181B" />
+                <rect x="8" y="6.5" width="3" height="3" fill="#FFFFFF" />
+                <rect x="16" y="5.5" width="5" height="5" fill="#18181B" />
+                <rect x="17" y="6.5" width="3" height="3" fill="#FFFFFF" />
+              </>
+            ) : isConfused ? (
+              <>
+                <rect x="7" y="7" width="5" height="3" fill="#18181B" />
+                <rect x="8" y="7.8" width="3" height="1.4" fill="#FFFFFF" />
+                <rect x="16" y="5.5" width="5" height="4.8" fill="#18181B" />
+                <rect x="16.8" y="6.3" width="3.4" height="3.2" fill="#FFFFFF" />
+              </>
+            ) : isPouting ? (
+              <>
+                <rect x="7" y="7.5" width="5" height="2.6" fill="#18181B" />
+                <rect x="8" y="8.2" width="3.2" height="1.2" fill="#FFFFFF" />
+                <rect x="16" y="7.5" width="5" height="2.6" fill="#18181B" />
+                <rect x="16.8" y="8.2" width="3.2" height="1.2" fill="#FFFFFF" />
+                <rect x="21" y="1" width="1.5" height="4" fill="#FDE047" />
+                <rect x="19.8" y="2.2" width="4" height="1.5" fill="#FDE047" />
+              </>
+            ) : (
+              <motion.g
+                animate={{ scaleY: [1, 1, 0.14, 1] }}
+                transition={{
+                  duration: 0.22,
+                  repeat: Infinity,
+                  repeatDelay: 3.4,
+                  times: [0, 0.4, 0.7, 1],
+                }}
+                style={{ transformOrigin: '14px 8.5px' }}
+              >
+                <rect x="7" y="6" width="5" height="4" fill="#18181B" />
+                <rect x="7.8" y="6.8" width="3.4" height="2.4" fill="#FFFFFF" />
+                <rect x="10" y="7" width="1.2" height="2.2" fill="#FFFFFF" />
+                <rect x="16" y="6" width="5" height="4" fill="#18181B" />
+                <rect x="16.8" y="6.8" width="3.4" height="2.4" fill="#FFFFFF" />
+                <rect x="16.8" y="7" width="1.2" height="2.2" fill="#FFFFFF" />
+              </motion.g>
+            )}
+
+            {/* 4 stubby Clawd bottom legs scuttling/kicking cleanly */}
+            <motion.g
+              animate={
+                isCrawling || isHopping || isRappel
+                  ? { y: [0, -2, 0] }
+                  : isSleeping || isPouting
+                    ? { y: 0 }
+                    : { y: [0, 1.2, 0] }
+              }
+              transition={{
+                duration: isCrawling || isHopping ? 0.2 : 0.65,
+                repeat: isSleeping || isPouting ? 0 : Infinity,
+                ease: 'easeInOut',
+              }}
+            >
+              <rect x="5" y="17" width="3" height="4" fill="#18181B" />
+              <rect x="5.5" y="17" width="2" height="3.2" fill="#EF4444" />
+              <rect x="15" y="17" width="3" height="4" fill="#18181B" />
+              <rect x="15.5" y="17" width="2" height="3.2" fill="#2563EB" />
+            </motion.g>
+            <motion.g
+              animate={
+                isCrawling || isHopping || isRappel
+                  ? { y: [-2, 0, -2] }
+                  : isSleeping || isPouting
+                    ? { y: 0 }
+                    : { y: [1.2, 0, 1.2] }
+              }
+              transition={{
+                duration: isCrawling || isHopping ? 0.2 : 0.65,
+                repeat: isSleeping || isPouting ? 0 : Infinity,
+                ease: 'easeInOut',
+              }}
+            >
+              <rect x="10" y="17" width="3" height="4" fill="#18181B" />
+              <rect x="10.5" y="17" width="2" height="3.2" fill="#2563EB" />
+              <rect x="20" y="17" width="3" height="4" fill="#18181B" />
+              <rect x="20.5" y="17" width="2" height="3.2" fill="#EF4444" />
+            </motion.g>
+          </svg>
+        </motion.div>
       </div>
     </div>
   );
@@ -431,47 +435,62 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
     h: typeof window !== 'undefined' ? window.innerHeight : 720,
   }));
 
-  const [stepSeq, setStepSeq] = useState(0);
-  const [currentStep, setCurrentStep] = useState<RoamStep>(() => {
-    const w = typeof window !== 'undefined' ? window.innerWidth : 1280;
-    const h = typeof window !== 'undefined' ? window.innerHeight : 720;
-    const initX = Math.max(12, w - 58);
-    const initY = Math.max(120, h - 34);
-    return {
-      zone: 'bottom',
-      pose: 'idle',
-      x: initX,
-      y: initY,
-      facing: -1,
-      durationSec: 0.6,
-      showWebStrand: 'none',
-      anchorX: initX,
-      anchorY: initY,
-    };
+  // Imperative MotionValues for 1:1 scroll lockstep & smooth parabolic trajectories (zero React re-render lag)
+  const initW = typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const initH = typeof window !== 'undefined' ? window.innerHeight : 720;
+  const mvX = useMotionValue(Math.max(12, initW - 58));
+  const mvY = useMotionValue(getBottomLedgeY(initW, initH));
+
+  const [visual, setVisual] = useState<VisualUiState>({
+    pose: 'idle',
+    facing: -1,
+    showWebStrand: 'none',
+    swingDir: 1,
+    swingDuration: 1,
+    swingSeq: 0,
   });
 
   const [isHovered, setIsHovered] = useState(false);
   const [bubbleText, setBubbleText] = useState<string | null>(null);
+  const [bubbleAnchor, setBubbleAnchor] = useState<{ x: number; y: number }>({
+    x: Math.max(12, initW - 58),
+    y: getBottomLedgeY(initW, initH),
+  });
   const [sparkSeq, setSparkSeq] = useState(0);
 
-  const roamerRef = useRef<HTMLDivElement>(null);
-  const stepRef = useRef(currentStep);
-  stepRef.current = currentStep;
+  const zoneRef = useRef<ZoneTag>('bottom');
+  const visualRef = useRef(visual);
+  visualRef.current = visual;
 
   const viewportRef = useRef(viewport);
   viewportRef.current = viewport;
 
   const perchedRef = useRef<PerchedTarget | null>(null);
+  const animXRef = useRef<AnimationPlaybackControls | null>(null);
+  const animYRef = useRef<AnimationPlaybackControls | null>(null);
   const timerRef = useRef<number | null>(null);
+  const moveEndTimerRef = useRef<number | null>(null);
   const bubbleTimerRef = useRef<number | null>(null);
   const fallTimersRef = useRef<number[]>([]);
   const isFallingRef = useRef(false);
   const cheerLineIdxRef = useRef(0);
+  const scheduleNextFnRef = useRef<((delayMs: number) => void) | null>(null);
+
+  const stopMotion = useCallback(() => {
+    animXRef.current?.stop();
+    animYRef.current?.stop();
+    animXRef.current = null;
+    animYRef.current = null;
+  }, []);
 
   const clearScheduledTimer = useCallback(() => {
     if (timerRef.current !== null) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
+    }
+    if (moveEndTimerRef.current !== null) {
+      window.clearTimeout(moveEndTimerRef.current);
+      moveEndTimerRef.current = null;
     }
   }, []);
 
@@ -483,66 +502,74 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
     isFallingRef.current = false;
   }, []);
 
+  const setPoseVisual = useCallback(
+    (patch: Partial<VisualUiState>) => {
+      setVisual((prev) => ({ ...prev, ...patch }));
+    },
+    []
+  );
+
   const isPausedQuietly =
     isSleepingPref || isDoiSleeping || mode === 'exam' || Boolean(prefersReducedMotion);
 
-  // Release component perch cleanly whenever study mode switches
+  // Release component perch cleanly whenever study mode changes
   useEffect(() => {
     perchedRef.current = null;
   }, [mode]);
 
-  // Keep Spidey attached smoothly to the top edge of its perched card while scrolling
+  // Synchronous zero-lag scroll lockstep using MotionValues (0ms catch-up delay!)
   useEffect(() => {
-    let scrollRaf = 0;
     const onScroll = () => {
-      if (scrollRaf) return;
-      scrollRaf = window.requestAnimationFrame(() => {
-        scrollRaf = 0;
-        const perch = perchedRef.current;
-        if (!perch || isFallingRef.current || isPausedQuietly) return;
+      const perch = perchedRef.current;
+      if (!perch || isFallingRef.current || isPausedQuietly) return;
 
-        const { w: vw, h: vh } = viewportRef.current;
-        const bottomY = vw >= 768 ? Math.max(140, vh - 34) : Math.max(170, vh - 110);
-        const liveCoords = computeLivePerchCoords(perch, vw, bottomY);
+      const { w: vw, h: vh } = viewportRef.current;
+      const bottomY = getBottomLedgeY(vw, vh);
+      const live = computeLivePerchCoords(perch, vw, bottomY);
 
-        if (!liveCoords) {
-          perchedRef.current = null;
-          setCurrentStep((prev) => ({
-            ...prev,
-            zone: 'bottom',
-            pose: 'hop',
-            showWebStrand: 'none',
-            x: prev.anchorX,
-            y: bottomY,
-            anchorX: prev.anchorX,
-            anchorY: bottomY,
-            durationSec: 0.45,
-          }));
-          return;
+      if (live) {
+        const curPose = visualRef.current.pose;
+        if (curPose === 'idle' || curPose === 'cheer') {
+          mvX.set(live.x);
+          mvY.set(live.y);
+        } else if (curPose === 'crawl') {
+          mvY.set(live.y);
         }
+        return;
+      }
 
-        const cur = stepRef.current;
-        if (cur.pose === 'idle' || cur.pose === 'crawl' || cur.pose === 'cheer') {
-          setCurrentStep((prev) => ({
-            ...prev,
-            x: liveCoords.x,
-            y: liveCoords.y,
-            anchorX: liveCoords.x,
-            anchorY: liveCoords.y,
-            durationSec: 0.08,
-          }));
-        }
+      // Card scrolled out of visible zone -> release perch and gently glide down to bottom ground
+      perchedRef.current = null;
+      clearScheduledTimer();
+      stopMotion();
+
+      const fromX = clamp(mvX.get(), 16, Math.max(20, vw - SPIDER_W - 16));
+      const fromY = mvY.get();
+      const distY = Math.abs(bottomY - fromY);
+      const glideDur = clamp(distY / 280, 0.45, 0.9);
+
+      zoneRef.current = 'bottom';
+      setPoseVisual({ pose: 'hop', showWebStrand: 'none' });
+      animXRef.current = animate(mvX, fromX, { duration: glideDur, ease: 'easeOut' });
+      animYRef.current = animate(mvY, bottomY, {
+        duration: glideDur,
+        ease: [0.22, 1, 0.36, 1],
       });
+
+      moveEndTimerRef.current = window.setTimeout(() => {
+        if (isFallingRef.current) return;
+        setPoseVisual({ pose: 'idle', showWebStrand: 'none' });
+        scheduleNextFnRef.current?.(Math.round(randBetween(3500, 6500)));
+      }, Math.round(glideDur * 1000) + 30);
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
-      window.cancelAnimationFrame(scrollRaf);
       window.removeEventListener('scroll', onScroll);
     };
-  }, [isPausedQuietly]);
+  }, [clearScheduledTimer, isPausedQuietly, mvX, mvY, setPoseVisual, stopMotion]);
 
-  // Sync viewport resize cleanly
+  // Keep viewport resize aligned without sudden jumps
   useEffect(() => {
     let rafId = 0;
     const onResize = () => {
@@ -553,24 +580,22 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
         setViewport({ w, h });
         if (isFallingRef.current) return;
 
-        const bottomY = w >= 768 ? Math.max(140, h - 34) : Math.max(170, h - 110);
+        const bottomY = getBottomLedgeY(w, h);
         const perch = perchedRef.current;
-        const liveCoords = perch ? computeLivePerchCoords(perch, w, bottomY) : null;
-        if (!liveCoords) perchedRef.current = null;
+        const live = perch ? computeLivePerchCoords(perch, w, bottomY) : null;
 
-        setCurrentStep((prev) => ({
-          ...prev,
-          zone: liveCoords ? 'perch' : 'bottom',
-          pose: prev.pose === 'nap' ? 'nap' : 'idle',
-          showWebStrand: 'none',
-          x: liveCoords ? liveCoords.x : clamp(prev.anchorX, 6, Math.max(12, w - SPIDER_W - 6)),
-          y: liveCoords ? liveCoords.y : bottomY,
-          anchorX: liveCoords
-            ? liveCoords.x
-            : clamp(prev.anchorX, 6, Math.max(12, w - SPIDER_W - 6)),
-          anchorY: liveCoords ? liveCoords.y : bottomY,
-          durationSec: 0.35,
-        }));
+        if (live) {
+          stopMotion();
+          mvX.set(live.x);
+          mvY.set(live.y);
+        } else {
+          perchedRef.current = null;
+          stopMotion();
+          const curX = clamp(mvX.get(), 8, Math.max(12, w - SPIDER_W - 8));
+          const curY = zoneRef.current === 'web' ? clamp(mvY.get(), 72, bottomY) : bottomY;
+          mvX.set(curX);
+          mvY.set(curY);
+        }
       });
     };
 
@@ -579,16 +604,18 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       window.cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
     };
-  }, []);
+  }, [mvX, mvY, stopMotion]);
 
-  // Main calm free-roaming state machine across UI cards + bottom ground + upright web hangs
+  // Main calm roaming controller
   useEffect(() => {
     clearScheduledTimer();
+    stopMotion();
+
     const { w, h } = viewportRef.current;
-    const isDesktop = w >= 768;
-    const bottomY = isDesktop ? Math.max(140, h - 34) : Math.max(170, h - 106);
+    const bottomY = getBottomLedgeY(w, h);
 
     if (isPausedQuietly) {
+      scheduleNextFnRef.current = null;
       perchedRef.current = null;
       if (isSleepingPref || mode === 'exam' || prefersReducedMotion) {
         clearFallSequence();
@@ -597,260 +624,237 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       const keepLandingSpot =
         isDoiSleeping && !isSleepingPref && mode !== 'exam' && !prefersReducedMotion;
       const settleX = keepLandingSpot
-        ? clamp(stepRef.current.anchorX, 8, Math.max(12, w - SPIDER_W - 8))
+        ? clamp(mvX.get(), 8, Math.max(12, w - SPIDER_W - 8))
         : Math.max(8, w - 48);
-      const settleY = keepLandingSpot
-        ? bottomY
-        : h >= 768
-          ? Math.max(120, h - 34)
-          : Math.max(160, h - 102);
+      const settleY = keepLandingSpot ? bottomY : getBottomLedgeY(w, h, true);
 
-      setCurrentStep({
-        zone: 'bottom',
+      zoneRef.current = 'bottom';
+      setPoseVisual({
         pose: isSleepingPref || isDoiSleeping || mode === 'exam' ? 'nap' : 'idle',
-        x: settleX,
-        y: settleY,
         facing: -1,
-        durationSec: keepLandingSpot ? 0.28 : 0.8,
         showWebStrand: 'none',
-        anchorX: settleX,
-        anchorY: settleY,
       });
-      setStepSeq((s) => s + 1);
+      animXRef.current = animate(mvX, settleX, {
+        duration: keepLandingSpot ? 0.25 : 0.75,
+        ease: [0.22, 1, 0.36, 1],
+      });
+      animYRef.current = animate(mvY, settleY, {
+        duration: keepLandingSpot ? 0.25 : 0.75,
+        ease: [0.22, 1, 0.36, 1],
+      });
       return;
     }
 
     let cancelled = false;
 
     const scheduleNext = (delayMs: number) => {
-      clearScheduledTimer();
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+      }
       if (cancelled || isFallingRef.current || document.visibilityState === 'hidden') return;
       timerRef.current = window.setTimeout(runNextStep, delayMs);
     };
+    scheduleNextFnRef.current = scheduleNext;
 
-    const makeJumpStep = (
-      zone: ZoneTag,
-      fromX: number,
-      fromY: number,
+    const runParabolicJump = (
+      targetZone: ZoneTag,
       toX: number,
       toY: number,
-      useWebSwing: boolean
-    ): RoamStep => {
+      useWebSwing: boolean,
+      restAfterMs: number
+    ) => {
+      stopMotion();
+      const fromX = mvX.get();
+      const fromY = mvY.get();
       const dir: 1 | -1 = toX >= fromX ? 1 : -1;
-      const midX = Math.round((fromX + toX) / 2);
       const dist = Math.hypot(toX - fromX, toY - fromY);
-      const lift = clamp(Math.round(dist * 0.22), 34, 88);
+      const dur = clamp(dist / 215, 0.78, 1.5);
+      const lift = clamp(Math.round(dist * 0.23), 34, 88);
       const peakY = Math.max(70, Math.round(Math.min(fromY, toY) - lift));
-      const dur = clamp(dist / 260, 0.72, 1.55);
 
-      return {
-        zone,
+      zoneRef.current = targetZone;
+      setVisual((prev) => ({
         pose: useWebSwing ? 'swing' : 'hop',
-        x: [fromX, midX, toX],
-        y: [fromY, peakY, toY],
         facing: dir,
-        durationSec: dur,
-        times: [0, 0.48, 1],
         showWebStrand: useWebSwing ? 'swing' : 'none',
         swingDir: dir,
-        anchorX: toX,
-        anchorY: toY,
-      };
+        swingDuration: dur,
+        swingSeq: prev.swingSeq + (useWebSwing ? 1 : 0),
+      }));
+
+      animXRef.current = animate(mvX, toX, {
+        duration: dur,
+        ease: 'easeInOut',
+      });
+      animYRef.current = animate(mvY, [fromY, peakY, toY], {
+        duration: dur,
+        times: [0, 0.46, 1],
+        ease: ['easeOut', 'easeIn'],
+      });
+
+      moveEndTimerRef.current = window.setTimeout(() => {
+        if (cancelled || isFallingRef.current) return;
+        const { w: vw, h: vh } = viewportRef.current;
+        const curBottomY = getBottomLedgeY(vw, vh);
+
+        if (targetZone === 'perch' && perchedRef.current) {
+          const live = computeLivePerchCoords(perchedRef.current, vw, curBottomY);
+          if (live) {
+            const diffX = Math.abs(live.x - mvX.get());
+            const diffY = Math.abs(live.y - mvY.get());
+            if (diffX > 6 || diffY > 6) {
+              // Smooth settle if the user scrolled moderately while Spidey was mid-air
+              const settleDur = clamp(Math.hypot(diffX, diffY) / 220, 0.25, 0.55);
+              animXRef.current = animate(mvX, live.x, { duration: settleDur, ease: 'easeOut' });
+              animYRef.current = animate(mvY, live.y, { duration: settleDur, ease: 'easeOut' });
+              moveEndTimerRef.current = window.setTimeout(() => {
+                if (cancelled || isFallingRef.current) return;
+                setPoseVisual({ pose: 'idle', showWebStrand: 'none' });
+                scheduleNext(restAfterMs);
+              }, Math.round(settleDur * 1000) + 20);
+              return;
+            }
+            mvX.set(live.x);
+            mvY.set(live.y);
+          } else {
+            // Card left viewport mid-jump -> glide gently to bottom ground instead of snapping
+            perchedRef.current = null;
+            zoneRef.current = 'bottom';
+            const glideDur = clamp(Math.abs(curBottomY - mvY.get()) / 240, 0.45, 0.85);
+            animYRef.current = animate(mvY, curBottomY, {
+              duration: glideDur,
+              ease: [0.22, 1, 0.36, 1],
+            });
+            moveEndTimerRef.current = window.setTimeout(() => {
+              if (cancelled || isFallingRef.current) return;
+              setPoseVisual({ pose: 'idle', showWebStrand: 'none' });
+              scheduleNext(restAfterMs);
+            }, Math.round(glideDur * 1000) + 20);
+            return;
+          }
+        }
+
+        setPoseVisual({ pose: 'idle', showWebStrand: 'none' });
+        scheduleNext(restAfterMs);
+      }, Math.round(dur * 1000) + 20);
+    };
+
+    const runCrawl = (targetZone: ZoneTag, toX: number, toY: number, restAfterMs: number) => {
+      stopMotion();
+      const fromX = mvX.get();
+      const dir: 1 | -1 = toX >= fromX ? 1 : -1;
+      const dist = Math.abs(toX - fromX);
+      const dur = clamp(dist / 78, 0.85, 3.4);
+
+      zoneRef.current = targetZone;
+      setPoseVisual({ pose: 'crawl', facing: dir, showWebStrand: 'none' });
+
+      animXRef.current = animate(mvX, toX, { duration: dur, ease: 'easeInOut' });
+      animYRef.current = animate(mvY, toY, { duration: Math.min(0.45, dur), ease: 'easeOut' });
+
+      moveEndTimerRef.current = window.setTimeout(() => {
+        if (cancelled || isFallingRef.current) return;
+        setPoseVisual({ pose: 'idle', showWebStrand: 'none' });
+        scheduleNext(restAfterMs);
+      }, Math.round(dur * 1000) + 20);
     };
 
     const runNextStep = () => {
       if (cancelled || isFallingRef.current) return;
       const { w: vw, h: vh } = viewportRef.current;
       const desktop = vw >= 768;
-      const prev = stepRef.current;
-      const ledgeYBottom = desktop ? Math.max(140, vh - 34) : Math.max(170, vh - 110);
-      const ledges = scanComponentLedges(vw, vh, ledgeYBottom);
+      const bottomY = getBottomLedgeY(vw, vh);
+      const ledges = scanComponentLedges(vw, bottomY);
 
-      // Re-sync anchor coordinates if currently perched on a scrolled card
-      let startX = prev.anchorX;
-      let startY = prev.anchorY;
-      if (prev.zone === 'perch' && perchedRef.current) {
-        const synced = computeLivePerchCoords(perchedRef.current, vw, ledgeYBottom);
-        if (synced) {
-          startX = synced.x;
-          startY = synced.y;
-        } else {
-          perchedRef.current = null;
-        }
-      }
+      const fromX = mvX.get();
+      const fromY = mvY.get();
+      const curZone = zoneRef.current;
 
-      let nextStep: RoamStep;
-      let restAfterMs = Math.round(randBetween(5000, 9500));
-
+      const restAfterMs = Math.round(randBetween(5000, 9500));
       const roll = Math.random();
 
-      // 1. Stroll left/right along the top border of the currently perched UI component
-      if (
-        prev.zone === 'perch' &&
-        perchedRef.current &&
-        roll < 0.34
-      ) {
-        const matchingLedge = ledges.find((l) => l.el === perchedRef.current?.el);
-        if (matchingLedge) {
-          const targetX = pickPerchX(matchingLedge);
-          const rect = matchingLedge.el.getBoundingClientRect();
-          perchedRef.current = {
-            el: matchingLedge.el,
-            offsetX: targetX - rect.left,
-          };
-          nextStep = {
-            zone: 'perch',
-            pose: 'crawl',
-            x: targetX,
-            y: matchingLedge.ledgeY,
-            facing: targetX >= startX ? 1 : -1,
-            durationSec: clamp(Math.abs(targetX - startX) / 88, 0.75, 2.6),
-            showWebStrand: 'none',
-            anchorX: targetX,
-            anchorY: matchingLedge.ledgeY,
-          };
-        } else {
-          perchedRef.current = null;
-          nextStep = makeJumpStep(
-            'bottom',
-            startX,
-            startY,
-            clamp(startX, 24, vw - SPIDER_W - 24),
-            ledgeYBottom,
-            false
-          );
+      // 1. Stroll along top border of currently perched component
+      if (curZone === 'perch' && perchedRef.current && roll < 0.34) {
+        const matching = ledges.find((l) => l.el === perchedRef.current?.el);
+        if (matching) {
+          const targetX = pickPerchX(matching);
+          const rect = matching.el.getBoundingClientRect();
+          perchedRef.current = { el: matching.el, offsetX: targetX - rect.left };
+          runCrawl('perch', targetX, matching.ledgeY, restAfterMs);
+          return;
         }
+        perchedRef.current = null;
       }
-      // 2. Hop or web-swing onto a visible card / sidebar / toolbar / footer component
-      else if (ledges.length > 0 && roll < 0.74) {
+
+      // 2. Parabolic hop / web-swing onto a visible UI card / sidebar / toolbar / footer
+      if (ledges.length > 0 && roll < 0.74) {
         const otherLedges =
           perchedRef.current && ledges.length > 1
             ? ledges.filter((l) => l.el !== perchedRef.current?.el)
             : ledges;
-        const targetLedge = otherLedges[Math.floor(Math.random() * otherLedges.length)];
-        const targetX = pickPerchX(targetLedge);
-        const rect = targetLedge.el.getBoundingClientRect();
-        perchedRef.current = {
-          el: targetLedge.el,
-          offsetX: targetX - rect.left,
-        };
-        const useSwing = Math.hypot(targetX - startX, targetLedge.ledgeY - startY) > 170 && Math.random() < 0.55;
-        nextStep = makeJumpStep('perch', startX, startY, targetX, targetLedge.ledgeY, useSwing);
-        restAfterMs = Math.round(randBetween(5500, 10500));
+        const target = otherLedges[Math.floor(Math.random() * otherLedges.length)];
+        const targetX = pickPerchX(target);
+        const rect = target.el.getBoundingClientRect();
+        perchedRef.current = { el: target.el, offsetX: targetX - rect.left };
+
+        const useSwing =
+          Math.hypot(targetX - fromX, target.ledgeY - fromY) > 170 && Math.random() < 0.52;
+        runParabolicJump('perch', targetX, target.ledgeY, useSwing, restAfterMs);
+        return;
       }
-      // 3. Hang upright gently on a top-corner silk web (below Header, never blocking center text)
-      else if (roll < 0.85 && prev.zone !== 'web') {
+
+      // 3. Hang upright gently from a corner silk web below Header
+      if (roll < 0.85 && curZone !== 'web') {
         perchedRef.current = null;
-        const useLeft = startX < vw * 0.5;
+        stopMotion();
+        const useLeft = fromX < vw * 0.5;
         const webX = useLeft ? 18 : Math.max(24, vw - SPIDER_W - 18);
         const topStartY = desktop ? 74 : 146;
         const dropEndY = Math.round(randBetween(topStartY + 42, topStartY + 98));
-        nextStep = {
-          zone: 'web',
+        const dur = 1.55;
+
+        zoneRef.current = 'web';
+        setPoseVisual({
           pose: 'rappel',
-          x: [startX, webX, webX],
-          y: [startY, topStartY, dropEndY],
           facing: useLeft ? 1 : -1,
-          durationSec: 1.55,
-          times: [0, 0.48, 1],
           showWebStrand: 'vertical',
-          anchorX: webX,
-          anchorY: dropEndY,
-        };
-        restAfterMs = Math.round(randBetween(4500, 7500));
-      }
-      // 4. Bottom ledge: jump down, crawl across bottom edge, or take a cozy nap
-      else {
-        perchedRef.current = null;
-        const targetX = Math.round(randBetween(24, vw - SPIDER_W - 24));
-        if (prev.zone === 'bottom' && Math.random() < 0.35) {
-          nextStep = {
-            zone: 'bottom',
-            pose: 'nap',
-            x: startX,
-            y: ledgeYBottom,
-            facing: prev.facing,
-            durationSec: 0.35,
-            showWebStrand: 'none',
-            anchorX: startX,
-            anchorY: ledgeYBottom,
-          };
-          restAfterMs = Math.round(randBetween(6500, 11000));
-        } else if (prev.zone === 'bottom') {
-          const useSwing = Math.abs(targetX - startX) > 200 && Math.random() < 0.45;
-          if (useSwing) {
-            nextStep = makeJumpStep('bottom', startX, startY, targetX, ledgeYBottom, true);
-          } else {
-            nextStep = {
-              zone: 'bottom',
-              pose: 'crawl',
-              x: targetX,
-              y: ledgeYBottom,
-              facing: targetX >= startX ? 1 : -1,
-              durationSec: clamp(Math.abs(targetX - startX) / 96, 1.0, 3.4),
-              showWebStrand: 'none',
-              anchorX: targetX,
-              anchorY: ledgeYBottom,
-            };
-          }
-        } else {
-          nextStep = makeJumpStep(
-            'bottom',
-            startX,
-            startY,
-            targetX,
-            ledgeYBottom,
-            Math.random() < 0.4
-          );
-        }
-      }
+        });
 
-      setCurrentStep(nextStep);
-      setStepSeq((s) => s + 1);
+        animXRef.current = animate(mvX, [fromX, webX, webX], {
+          duration: dur,
+          times: [0, 0.48, 1],
+          ease: [0.22, 1, 0.36, 1],
+        });
+        animYRef.current = animate(mvY, [fromY, topStartY, dropEndY], {
+          duration: dur,
+          times: [0, 0.48, 1],
+          ease: [0.22, 1, 0.36, 1],
+        });
 
-      const moveMs = Math.round(nextStep.durationSec * 1000);
-      const isTravelPose =
-        nextStep.pose === 'crawl' || nextStep.pose === 'hop' || nextStep.pose === 'swing';
-      if (isTravelPose) {
-        timerRef.current = window.setTimeout(() => {
+        moveEndTimerRef.current = window.setTimeout(() => {
           if (cancelled || isFallingRef.current) return;
-          // Finalize landing coordinates against live DOM element in case user scrolled mid-hop
-          let finalX = nextStep.anchorX;
-          let finalY = nextStep.anchorY;
-          let finalZone = nextStep.zone;
-          if (nextStep.zone === 'perch' && perchedRef.current) {
-            const liveAfterHop = computeLivePerchCoords(
-              perchedRef.current,
-              viewportRef.current.w,
-              desktop ? Math.max(140, viewportRef.current.h - 34) : Math.max(170, viewportRef.current.h - 110)
-            );
-            if (liveAfterHop) {
-              finalX = liveAfterHop.x;
-              finalY = liveAfterHop.y;
-            } else {
-              perchedRef.current = null;
-              finalZone = 'bottom';
-              finalY = desktop
-                ? Math.max(140, viewportRef.current.h - 34)
-                : Math.max(170, viewportRef.current.h - 110);
-            }
-          }
+          scheduleNext(Math.round(randBetween(4500, 7500)));
+        }, Math.round(dur * 1000));
+        return;
+      }
 
-          setCurrentStep((cur) => ({
-            ...cur,
-            zone: finalZone,
-            pose: 'idle',
-            showWebStrand: 'none',
-            x: finalX,
-            y: finalY,
-            anchorX: finalX,
-            anchorY: finalY,
-            durationSec: 0.16,
-          }));
-          scheduleNext(restAfterMs);
-        }, moveMs + 35);
+      // 4. Bottom ledge: nap, stroll, or hop down smoothly
+      perchedRef.current = null;
+      const targetX = Math.round(randBetween(24, vw - SPIDER_W - 24));
+
+      if (curZone === 'bottom' && Math.random() < 0.35) {
+        stopMotion();
+        zoneRef.current = 'bottom';
+        setPoseVisual({ pose: 'nap', showWebStrand: 'none' });
+        scheduleNext(Math.round(randBetween(6500, 11000)));
+      } else if (curZone === 'bottom') {
+        if (Math.abs(targetX - fromX) > 200 && Math.random() < 0.42) {
+          runParabolicJump('bottom', targetX, bottomY, true, restAfterMs);
+        } else {
+          runCrawl('bottom', targetX, bottomY, restAfterMs);
+        }
       } else {
-        scheduleNext(moveMs + restAfterMs);
+        runParabolicJump('bottom', targetX, bottomY, Math.random() < 0.38, restAfterMs);
       }
     };
 
@@ -859,6 +863,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
     const handleVisibility = () => {
       if (document.visibilityState === 'hidden') {
         clearScheduledTimer();
+        stopMotion();
       } else if (!cancelled && !isFallingRef.current) {
         scheduleNext(2200);
       }
@@ -867,10 +872,24 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
     document.addEventListener('visibilitychange', handleVisibility);
     return () => {
       cancelled = true;
+      scheduleNextFnRef.current = null;
       clearScheduledTimer();
+      stopMotion();
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [clearFallSequence, clearScheduledTimer, isDoiSleeping, isPausedQuietly, isSleepingPref, mode, prefersReducedMotion]);
+  }, [
+    clearFallSequence,
+    clearScheduledTimer,
+    isDoiSleeping,
+    isPausedQuietly,
+    isSleepingPref,
+    mode,
+    mvX,
+    mvY,
+    prefersReducedMotion,
+    setPoseVisual,
+    stopMotion,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -880,6 +899,16 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       }
     };
   }, [clearFallSequence]);
+
+  const updateBubbleAnchorFromLive = useCallback(
+    (x?: number, y?: number) => {
+      setBubbleAnchor({
+        x: x ?? mvX.get(),
+        y: y ?? mvY.get(),
+      });
+    },
+    [mvX, mvY]
+  );
 
   const handleSpiderClick = () => {
     // 1. Sleeping -> wake up happily!
@@ -892,16 +921,17 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       if (wasDoi) {
         setIsDoiSleeping(false);
       }
+      updateBubbleAnchorFromLive();
       setSparkSeq((s) => s + 1);
       setBubbleText(wasDoi ? 'Hết dỗi rồi!' : 'Dậy rồi nè!');
-      setCurrentStep((prev) => ({ ...prev, pose: 'cheer' }));
+      setPoseVisual({ pose: 'cheer' });
 
       if (bubbleTimerRef.current !== null) {
         window.clearTimeout(bubbleTimerRef.current);
       }
       bubbleTimerRef.current = window.setTimeout(() => {
         setBubbleText(null);
-        setCurrentStep((prev) => ({ ...prev, pose: 'idle' }));
+        setPoseVisual({ pose: 'idle' });
       }, 1450);
       return;
     }
@@ -910,25 +940,23 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
     if (isFallingRef.current) return;
 
     const { w: vw, h: vh } = viewportRef.current;
-    const isDesktop = vw >= 768;
-    const bottomY = isDesktop ? Math.max(140, vh - 34) : Math.max(170, vh - 110);
-    const rect = roamerRef.current?.getBoundingClientRect();
-    const liveX = rect
-      ? clamp(rect.left, 8, Math.max(12, vw - SPIDER_W - 8))
-      : stepRef.current.anchorX;
-    const liveY = rect ? clamp(rect.top, 64, bottomY) : stepRef.current.anchorY;
+    const bottomY = getBottomLedgeY(vw, vh);
+    const liveX = clamp(mvX.get(), 8, Math.max(12, vw - SPIDER_W - 8));
+    const liveY = clamp(mvY.get(), 64, bottomY);
 
+    const curPose = visualRef.current.pose;
     const isOffGround =
-      stepRef.current.zone !== 'bottom' ||
-      stepRef.current.pose === 'hop' ||
-      stepRef.current.pose === 'swing' ||
-      stepRef.current.pose === 'rappel' ||
+      zoneRef.current !== 'bottom' ||
+      curPose === 'hop' ||
+      curPose === 'swing' ||
+      curPose === 'rappel' ||
       liveY < bottomY - 12;
 
-    // 3. Off Bottom Ground Click: Fall upright -> Pop bounce -> "Huh?" -> "Dỗi" -> Auto-Sleep
+    // 3. Off Bottom Ground Click: Upright fall -> Bounce pop -> "Huh?" -> "Dỗi" -> Auto-Sleep
     if (isOffGround) {
       perchedRef.current = null;
       clearScheduledTimer();
+      stopMotion();
       clearFallSequence();
       if (bubbleTimerRef.current !== null) {
         window.clearTimeout(bubbleTimerRef.current);
@@ -937,97 +965,73 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
 
       isFallingRef.current = true;
       const landX = clamp(liveX, 16, Math.max(20, vw - SPIDER_W - 16));
+      const dropDur = clamp((bottomY - liveY) / 700, 0.36, 0.62);
+      const dropMs = Math.round(dropDur * 1000);
 
+      updateBubbleAnchorFromLive(landX, bottomY);
       setBubbleText(null);
       setSparkSeq((s) => s + 1);
 
-      // Phase 1 (0 -> 540ms): Upright startled fall straight to bottom ground
-      setCurrentStep({
-        zone: 'bottom',
-        pose: 'fall',
-        x: landX,
-        y: [liveY, bottomY],
-        facing: stepRef.current.facing,
-        durationSec: 0.54,
+      // Phase 1: Drop straight down with gravity acceleration
+      zoneRef.current = 'bottom';
+      mvX.set(landX);
+      setPoseVisual({ pose: 'fall', showWebStrand: 'none' });
+      animYRef.current = animate(mvY, bottomY, {
+        duration: dropDur,
         ease: [0.55, 0.06, 0.88, 0.28],
-        showWebStrand: 'none',
-        anchorX: landX,
-        anchorY: bottomY,
       });
 
-      // Phase 2 (540ms): Cartoon squash & bounce pop upright
+      // Phase 2: Cartoon landing bounce upright
       const tPop = window.setTimeout(() => {
         setSparkSeq((s) => s + 1);
-        setCurrentStep({
-          zone: 'bottom',
-          pose: 'pop',
-          x: landX,
-          y: [bottomY, bottomY - 14, bottomY],
-          facing: stepRef.current.facing,
-          durationSec: 0.36,
+        setPoseVisual({ pose: 'pop' });
+        animYRef.current = animate(mvY, [bottomY, bottomY - 14, bottomY], {
+          duration: 0.34,
           times: [0, 0.45, 1],
-          ease: [0.22, 1, 0.36, 1],
-          showWebStrand: 'none',
-          anchorX: landX,
-          anchorY: bottomY,
+          ease: ['easeOut', 'easeIn'],
         });
-      }, 540);
+      }, dropMs);
 
-      // Phase 3 (900ms): Puzzled bounce + "Huh?"
+      // Phase 3: Puzzled bounce + "Huh?"
       const tHuh = window.setTimeout(() => {
+        mvY.set(bottomY);
+        updateBubbleAnchorFromLive(landX, bottomY);
         setBubbleText('Huh?');
-        setCurrentStep((prev) => ({
-          ...prev,
-          pose: 'confused',
-          x: landX,
-          y: bottomY,
-          durationSec: 0.2,
-          anchorX: landX,
-          anchorY: bottomY,
-        }));
-      }, 900);
+        setPoseVisual({ pose: 'confused' });
+      }, dropMs + 340);
 
-      // Phase 4 (2250ms): Switches to "Dỗi" pout!
+      // Phase 4: Grumpy pout + "Dỗi"
       const tDoi = window.setTimeout(() => {
+        updateBubbleAnchorFromLive(landX, bottomY);
         setBubbleText('Dỗi');
-        setCurrentStep((prev) => ({
-          ...prev,
-          pose: 'pout',
-          x: landX,
-          y: bottomY,
-          durationSec: 0.2,
-          anchorX: landX,
-          anchorY: bottomY,
-        }));
-      }, 2250);
+        setPoseVisual({ pose: 'pout' });
+      }, dropMs + 1680);
 
-      // Phase 5 (3800ms): Hides text & sleeps peacefully where he landed
+      // Phase 5: Hide bubble & curl into nap right at landing spot
       const tSleep = window.setTimeout(() => {
         setBubbleText(null);
         isFallingRef.current = false;
         setIsDoiSleeping(true);
-      }, 3800);
+      }, dropMs + 3200);
 
       fallTimersRef.current = [tPop, tHuh, tDoi, tSleep];
       return;
     }
 
-    // 4. On bottom ground: joyful upright double-hop + encouraging bubble
+    // 4. Already on ground: joyful upright double-hop + encouraging bubble
     const nextLine = CHEER_LINES[cheerLineIdxRef.current % CHEER_LINES.length];
     cheerLineIdxRef.current += 1;
+    updateBubbleAnchorFromLive();
     setBubbleText(nextLine);
     setSparkSeq((s) => s + 1);
-    setCurrentStep((prev) => ({ ...prev, pose: 'cheer' }));
+    setPoseVisual({ pose: 'cheer' });
 
     if (bubbleTimerRef.current !== null) {
       window.clearTimeout(bubbleTimerRef.current);
     }
     bubbleTimerRef.current = window.setTimeout(() => {
       setBubbleText(null);
-      setCurrentStep((prev) => ({
-        ...prev,
-        pose: isPausedQuietly ? 'nap' : 'idle',
-      }));
+      setPoseVisual({ pose: isPausedQuietly ? 'nap' : 'idle' });
     }, 1450);
   };
 
@@ -1039,6 +1043,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       setIsSleepingPref(false);
       saveSleepPreference(false);
       setIsDoiSleeping(false);
+      updateBubbleAnchorFromLive();
       setBubbleText('THWIP!');
       setSparkSeq((s) => s + 1);
       if (bubbleTimerRef.current !== null) {
@@ -1053,17 +1058,17 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
   };
 
   const bubbleHorizontalClass =
-    currentStep.anchorX < 105
+    bubbleAnchor.x < 105
       ? 'left-0'
-      : currentStep.anchorX > viewport.w - 115
+      : bubbleAnchor.x > viewport.w - 115
         ? 'right-0'
         : 'left-1/2 -translate-x-1/2';
   const bubbleVerticalClass =
-    currentStep.anchorY < 130 ? 'top-[calc(100%+6px)]' : 'bottom-[calc(100%+6px)]';
-  const sleepBtnHorizontalClass = currentStep.anchorX > viewport.w - 80 ? '-left-5' : '-right-5';
+    bubbleAnchor.y < 130 ? 'top-[calc(100%+6px)]' : 'bottom-[calc(100%+6px)]';
+  const sleepBtnHorizontalClass = bubbleAnchor.x > viewport.w - 80 ? '-left-5' : '-right-5';
 
   const isAnySleep = isSleepingPref || isDoiSleeping;
-  const isSleepingVisual = currentStep.pose === 'nap';
+  const isSleepingVisual = visual.pose === 'nap';
 
   return (
     <div
@@ -1071,25 +1076,18 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
     >
       <motion.div
-        ref={roamerRef}
-        style={{ left: 0, top: 0 }}
-        initial={false}
-        animate={{
-          x: currentStep.x,
-          y: currentStep.y,
-          scale: viewport.w < 768 ? 0.84 : 1,
+        style={{ left: 0, top: 0, x: mvX, y: mvY }}
+        animate={{ scale: viewport.w < 768 ? 0.84 : 1 }}
+        transition={{ duration: 0.2 }}
+        onMouseEnter={() => {
+          updateBubbleAnchorFromLive();
+          setIsHovered(true);
         }}
-        transition={{
-          duration: currentStep.durationSec,
-          times: currentStep.times,
-          ease: currentStep.ease ?? 'easeInOut',
-        }}
-        onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className="pointer-events-auto absolute h-7 w-8 select-none"
       >
         {/* Vertical silk web strand rising straight UP to Header seam */}
-        {currentStep.showWebStrand === 'vertical' && (
+        {visual.showWebStrand === 'vertical' && (
           <>
             <span
               aria-hidden="true"
@@ -1103,19 +1101,18 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
         )}
 
         {/* Angled sweeping silk line during web-swing jump */}
-        {currentStep.showWebStrand === 'swing' && (
+        {visual.showWebStrand === 'swing' && (
           <motion.svg
-            key={`web-swing-${stepSeq}`}
+            key={`web-swing-${visual.swingSeq}`}
             viewBox="0 0 80 120"
             aria-hidden="true"
-            initial={{ rotate: (currentStep.swingDir ?? 1) > 0 ? 34 : -34, opacity: 0 }}
+            initial={{ rotate: visual.swingDir > 0 ? 34 : -34, opacity: 0 }}
             animate={{
-              rotate:
-                (currentStep.swingDir ?? 1) > 0 ? [34, 0, -34] : [-34, 0, 34],
+              rotate: visual.swingDir > 0 ? [34, 0, -34] : [-34, 0, 34],
               opacity: [0, 0.85, 0.85, 0],
             }}
             transition={{
-              duration: currentStep.durationSec,
+              duration: visual.swingDuration,
               times: [0, 0.5, 1],
               ease: 'easeInOut',
             }}
@@ -1211,8 +1208,8 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
           className="flex h-full w-full cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
         >
           <SpideyClawdSprite
-            pose={currentStep.pose}
-            facing={currentStep.facing}
+            pose={visual.pose}
+            facing={visual.facing}
             sparkSeq={sparkSeq}
           />
         </button>
