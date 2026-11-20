@@ -155,10 +155,62 @@ const vnr202ByTier: Record<StudyTier, QuestionItem[]> = {
   hardcore: vnr202Questions,
 };
 
-// WDU203c tạm dùng full source (274 câu) cho cả 3 mức cho tới khi tách LAZY / LAZY MAX
+const WDU203C_LAZY_MAX_IDS = new Set<string>([
+  // Course 1 (22 câu trụ cột)
+  'wdu-001', 'wdu-006', 'wdu-008', 'wdu-013', 'wdu-014', 'wdu-016', 'wdu-021', 'wdu-022',
+  'wdu-023', 'wdu-024', 'wdu-025', 'wdu-026', 'wdu-027', 'wdu-028', 'wdu-031', 'wdu-032',
+  'wdu-034', 'wdu-035', 'wdu-037', 'wdu-038', 'wdu-041', 'wdu-045',
+  // Course 2 (17 câu trụ cột)
+  'wdu-050', 'wdu-053', 'wdu-055', 'wdu-059', 'wdu-061', 'wdu-062', 'wdu-065', 'wdu-067',
+  'wdu-068', 'wdu-070', 'wdu-075', 'wdu-078', 'wdu-083', 'wdu-084', 'wdu-092', 'wdu-093',
+  'wdu-094',
+  // Course 3 (14 câu trụ cột)
+  'wdu-099', 'wdu-100', 'wdu-102', 'wdu-106', 'wdu-109', 'wdu-111', 'wdu-113', 'wdu-121',
+  'wdu-123', 'wdu-126', 'wdu-127', 'wdu-132', 'wdu-133', 'wdu-134',
+  // Course 4 (16 câu trụ cột)
+  'wdu-144', 'wdu-152', 'wdu-155', 'wdu-160', 'wdu-162', 'wdu-164', 'wdu-168', 'wdu-170',
+  'wdu-173', 'wdu-176', 'wdu-177', 'wdu-182', 'wdu-185', 'wdu-188', 'wdu-194', 'wdu-195',
+  // Course 5 (7 câu trụ cột)
+  'wdu-202', 'wdu-203', 'wdu-204', 'wdu-208', 'wdu-209', 'wdu-211', 'wdu-212',
+  // Course 6 (26 câu trụ cột)
+  'wdu-214', 'wdu-216', 'wdu-217', 'wdu-219', 'wdu-221', 'wdu-223', 'wdu-225', 'wdu-229',
+  'wdu-231', 'wdu-232', 'wdu-236', 'wdu-238', 'wdu-244', 'wdu-245', 'wdu-246', 'wdu-249',
+  'wdu-250', 'wdu-254', 'wdu-256', 'wdu-257', 'wdu-258', 'wdu-262', 'wdu-264', 'wdu-266',
+  'wdu-272', 'wdu-274',
+]);
+
+const WDU203C_LAZY_EXTRA_IDS = [
+  // Course 1 (+19 câu = 41 câu)
+  'wdu-003', 'wdu-004', 'wdu-005', 'wdu-007', 'wdu-009', 'wdu-011', 'wdu-012', 'wdu-015',
+  'wdu-018', 'wdu-020', 'wdu-029', 'wdu-030', 'wdu-039', 'wdu-040', 'wdu-042', 'wdu-044',
+  'wdu-046', 'wdu-047', 'wdu-048',
+  // Course 2 (+20 câu = 37 câu)
+  'wdu-049', 'wdu-052', 'wdu-054', 'wdu-060', 'wdu-063', 'wdu-064', 'wdu-069', 'wdu-071',
+  'wdu-073', 'wdu-074', 'wdu-076', 'wdu-077', 'wdu-079', 'wdu-080', 'wdu-081', 'wdu-085',
+  'wdu-086', 'wdu-087', 'wdu-088', 'wdu-091',
+  // Course 3 (+22 câu = 36 câu)
+  'wdu-101', 'wdu-103', 'wdu-104', 'wdu-105', 'wdu-107', 'wdu-108', 'wdu-110', 'wdu-112',
+  'wdu-114', 'wdu-115', 'wdu-116', 'wdu-118', 'wdu-119', 'wdu-120', 'wdu-122', 'wdu-124',
+  'wdu-125', 'wdu-128', 'wdu-130', 'wdu-131', 'wdu-135', 'wdu-136',
+  // Course 4 (+32 câu = 48 câu)
+  'wdu-139', 'wdu-141', 'wdu-142', 'wdu-143', 'wdu-145', 'wdu-146', 'wdu-147', 'wdu-148',
+  'wdu-150', 'wdu-151', 'wdu-153', 'wdu-154', 'wdu-157', 'wdu-158', 'wdu-159', 'wdu-161',
+  'wdu-165', 'wdu-167', 'wdu-171', 'wdu-172', 'wdu-174', 'wdu-175', 'wdu-178', 'wdu-180',
+  'wdu-181', 'wdu-183', 'wdu-184', 'wdu-186', 'wdu-187', 'wdu-190', 'wdu-197', 'wdu-198',
+  // Course 5 (+5 câu = 12 câu)
+  'wdu-199', 'wdu-205', 'wdu-207', 'wdu-210', 'wdu-213',
+  // Course 6 (+29 câu = 55 câu)
+  'wdu-215', 'wdu-218', 'wdu-220', 'wdu-224', 'wdu-226', 'wdu-227', 'wdu-228', 'wdu-230',
+  'wdu-234', 'wdu-235', 'wdu-237', 'wdu-240', 'wdu-241', 'wdu-242', 'wdu-243', 'wdu-247',
+  'wdu-248', 'wdu-251', 'wdu-252', 'wdu-259', 'wdu-260', 'wdu-261', 'wdu-263', 'wdu-265',
+  'wdu-267', 'wdu-269', 'wdu-270', 'wdu-271', 'wdu-273',
+];
+
+const WDU203C_LAZY_IDS = new Set<string>([...WDU203C_LAZY_MAX_IDS, ...WDU203C_LAZY_EXTRA_IDS]);
+
 const wdu203cByTier: Record<StudyTier, QuestionItem[]> = {
-  lazymax: wdu203cQuestions,
-  lazy: wdu203cQuestions,
+  lazymax: wdu203cQuestions.filter((q) => WDU203C_LAZY_MAX_IDS.has(q.id)),
+  lazy: wdu203cQuestions.filter((q) => WDU203C_LAZY_IDS.has(q.id)),
   hardcore: wdu203cQuestions,
 };
 

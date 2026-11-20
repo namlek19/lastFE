@@ -570,7 +570,7 @@ interface SubjectPredictionSpec {
   tiers: readonly TierPredictionSpec[];
 }
 
-const TIER_SCORE_PREDICTIONS: Partial<Record<SubjectId, SubjectPredictionSpec>> = {
+const TIER_SCORE_PREDICTIONS: Record<SubjectId, SubjectPredictionSpec> = {
   vnr202: {
     code: 'VNR202',
     examRule: '20-20-20',
@@ -625,6 +625,35 @@ const TIER_SCORE_PREDICTIONS: Partial<Record<SubjectId, SubjectPredictionSpec>> 
           { method: 'Học vẹt', avg: '8.20', range: '7.50–8.83', p5: '100%', p7: '99.3%', p8: '72.4%', p9: '6.3%' },
           { method: 'Kỹ giải thích', avg: '9.51', range: '9.17–9.83', p5: '100%', p7: '100%', p8: '100%', p9: '97.2%', featured: true },
           { method: 'Hiểu sâu', avg: '9.75', range: '9.50–10.0', p5: '100%', p7: '100%', p8: '100%', p9: '99.9%' },
+        ],
+      },
+    ],
+  },
+  wdu203c: {
+    code: 'WDU203c',
+    examRule: '10-11-9-13-4-13',
+    totalQuestions: 274,
+    tiers: [
+      {
+        tier: 'lazymax',
+        label: 'LAZY MAX',
+        tone: 'emerald',
+        countText: '102 / 274 câu',
+        rows: [
+          { method: 'Học vẹt', avg: '6.17', range: '5.33–7.00', p5: '97.7%', p7: '10.8%', p8: '0.2%', p9: '0%' },
+          { method: 'Kỹ giải thích', avg: '8.32', range: '7.67–8.83', p5: '100%', p7: '99.7%', p8: '80.5%', p9: '10.0%', featured: true },
+          { method: 'Hiểu sâu', avg: '9.00', range: '8.50–9.50', p5: '100%', p7: '100%', p8: '99.6%', p9: '60.0%' },
+        ],
+      },
+      {
+        tier: 'lazy',
+        label: 'LAZY',
+        tone: 'amber',
+        countText: '229 / 274 câu',
+        rows: [
+          { method: 'Học vẹt', avg: '8.42', range: '7.83–9.00', p5: '100%', p7: '99.8%', p8: '86.0%', p9: '14.2%' },
+          { method: 'Kỹ giải thích', avg: '9.54', range: '9.17–9.83', p5: '100%', p7: '100%', p8: '100%', p9: '97.9%', featured: true },
+          { method: 'Hiểu sâu', avg: '9.77', range: '9.50–10.0', p5: '100%', p7: '100%', p8: '100%', p9: '100%' },
         ],
       },
     ],
@@ -959,22 +988,14 @@ export const SakugaTierPicker: React.FC<SakugaTierPickerProps> = ({
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="min-w-0">
                               <h3 className="text-xs font-extrabold tracking-tight text-[#18181B] dark:text-[#F5F5F4] sm:text-sm">
-                                {activePred
-                                  ? `Dự đoán điểm thi (đề 60 câu · ${activePred.examRule})`
-                                  : 'Môn WDU203c (274 câu · 6 Course Coursera)'}
+                                Dự đoán điểm thi (đề 60 câu · {activePred.examRule})
                               </h3>
                               <p className="text-[11px] text-[#656058] dark:text-[#9CA39B]">
-                                {activePred ? (
-                                  <>
-                                    Đọc{' '}
-                                    <span className="font-bold text-[#047857] dark:text-[#34D399]">
-                                      kỹ giải thích
-                                    </span>{' '}
-                                    (mức 2) kéo điểm từ ~6.2 lên ~8.5–9.5
-                                  </>
-                                ) : (
-                                  'Hiện cả 3 mức đều dùng trọn bộ 274 câu; bảng rút gọn LAZY / LAZY MAX sẽ sớm cập nhật.'
-                                )}
+                                Đọc{' '}
+                                <span className="font-bold text-[#047857] dark:text-[#34D399]">
+                                  kỹ giải thích
+                                </span>{' '}
+                                (mức 2) kéo điểm từ ~6.2 lên ~8.5–9.5
                               </p>
                             </div>
 
@@ -1026,16 +1047,6 @@ export const SakugaTierPicker: React.FC<SakugaTierPickerProps> = ({
                             </div>
                           </div>
 
-                          {!activePred ? (
-                            <div className="rounded-xl border-2 border-[#F9A8D4] bg-[#FCE7F3]/70 p-3.5 text-xs text-[#831843] dark:border-[#F472B6]/50 dark:bg-[#831843]/25 dark:text-[#FBCFE8]">
-                              <p className="font-bold">
-                                WDU203c — UI/UX Design &amp; User Research (274 câu Full đề)
-                              </p>
-                              <p className="mt-1 leading-relaxed text-[#292524] dark:text-[#E7E5E4]">
-                                Dữ liệu 274 câu của 6 Course đã được sắp xếp kèm giải thích tiếng Việt để bạn rà soát và phân loại mức <span className="font-bold">LAZY</span> / <span className="font-bold">LAZY MAX</span> ở bước tiếp theo.
-                              </p>
-                            </div>
-                          ) : (
                           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                             {activePred.tiers.map((tierSpec) => {
                               const isLazyMax = tierSpec.tier === 'lazymax';
@@ -1158,7 +1169,6 @@ export const SakugaTierPicker: React.FC<SakugaTierPickerProps> = ({
                               );
                             })}
                           </div>
-                          )}
                         </div>
                       );
                     })()}
