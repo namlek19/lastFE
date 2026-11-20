@@ -378,8 +378,8 @@ useEffect(() => {
 
     const keyLower = e.key.toLowerCase();
 
-    // 1-5 or a-e: select/toggle option
-    const numberIndex = ['1', '2', '3', '4', '5'].indexOf(keyLower);
+    // 1-6 or a-e: select/toggle option (letter F stays bound to Flag)
+    const numberIndex = ['1', '2', '3', '4', '5', '6'].indexOf(keyLower);
     const letterIndex = ['a', 'b', 'c', 'd', 'e'].indexOf(keyLower);
     const optionIdx = numberIndex !== -1 ? numberIndex : letterIndex;
 

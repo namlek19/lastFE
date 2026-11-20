@@ -12,13 +12,16 @@ import {
 
 const STORAGE_KEY = 'fpt_exam_prep_v1';
 const THEME_STORAGE_KEY = 'fpt_exam_theme_v1';
-const CODE_PREFIX_V2 = 'OT2-';
+const CODE_PREFIX_V3 = 'OT3-';
 
-const MAX_SYNC_SLOTS = 1000; // 0..499 = vnr-001..vnr-500, 500..999 = mln-001..mln-500
+const MAX_SYNC_SLOTS_V2 = 1000; // Legacy V2: 0..499 = vnr, 500..999 = mln
+const MAX_SYNC_SLOTS_V3 = 1500; // V3: 0..499 = vnr, 500..999 = mln, 1000..1499 = wdu
 const VNR_SLOT_OFFSET = 0;
 const MLN_SLOT_OFFSET = 500;
+const WDU_SLOT_OFFSET = 1000;
 const EPOCH_SEC_2025 = Math.floor(Date.UTC(2025, 0, 1) / 1000);
 
+const SUBJECT_LIST: readonly SubjectId[] = ['vnr202', 'mln131', 'wdu203c'];
 const MODE_LIST: readonly StudyMode[] = ['chapter', 'rolling', 'flashcard', 'exam'];
 const TIER_LIST: readonly StudyTier[] = ['hardcore', 'lazy', 'lazymax'];
 
@@ -60,6 +63,10 @@ function normalizeTier(raw: unknown): StudyTier {
   return raw === 'lazymax' || raw === 'lazy' ? raw : 'hardcore';
 }
 
+function normalizeSubject(raw: unknown): SubjectId {
+  return raw === 'mln131' || raw === 'wdu203c' ? raw : 'vnr202';
+}
+
 export function loadStore(): UserProgressStore {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -71,9 +78,7 @@ export function loadStore(): UserProgressStore {
     const migratedVnr = parsed.subjectMigratedVnr === true;
     const lastSubject: SubjectId = !migratedVnr
       ? 'vnr202'
-      : parsed.lastSubject === 'mln131'
-        ? 'mln131'
-        : 'vnr202';
+      : normalizeSubject(parsed.lastSubject);
     const migratedHardcore = parsed.tierMigratedHardcore === true;
     const lastTier: StudyTier = !migratedHardcore ? 'hardcore' : normalizeTier(parsed.lastTier);
 
@@ -312,20 +317,25 @@ interface CompactSyncPayload {
 type SyncQuestionStateCode = 0 | 1 | 2 | 3 | 4 | 5;
 
 function questionIdToSlot(id: string): number {
-  const match = /^(vnr|mln)-(\d+)$/i.exec(id);
+  const match = /^(vnr|mln|wdu)-(\d+)$/i.exec(id);
   if (!match) return -1;
   const num = Number.parseInt(match[2], 10);
   if (!Number.isFinite(num) || num < 1 || num > 500) return -1;
-  const base = match[1].toLowerCase() === 'vnr' ? VNR_SLOT_OFFSET : MLN_SLOT_OFFSET;
+  const prefix = match[1].toLowerCase();
+  const base =
+    prefix === 'vnr' ? VNR_SLOT_OFFSET : prefix === 'mln' ? MLN_SLOT_OFFSET : WDU_SLOT_OFFSET;
   return base + (num - 1);
 }
 
-function slotToQuestionId(slot: number): string | null {
-  if (slot < 0 || slot >= MAX_SYNC_SLOTS) return null;
+function slotToQuestionId(slot: number, maxSlots = MAX_SYNC_SLOTS_V3): string | null {
+  if (slot < 0 || slot >= maxSlots) return null;
   if (slot < MLN_SLOT_OFFSET) {
     return `vnr-${String(slot + 1).padStart(3, '0')}`;
   }
-  return `mln-${String(slot - MLN_SLOT_OFFSET + 1).padStart(3, '0')}`;
+  if (slot < WDU_SLOT_OFFSET) {
+    return `mln-${String(slot - MLN_SLOT_OFFSET + 1).padStart(3, '0')}`;
+  }
+  return `wdu-${String(slot - WDU_SLOT_OFFSET + 1).padStart(3, '0')}`;
 }
 
 function progressToStateCode(p?: QuestionProgress): SyncQuestionStateCode {
@@ -502,7 +512,7 @@ function encodeDenseBitstream(slots: Uint8Array): number[] {
   return out;
 }
 
-function encodeExamHistoryBytes(history: ExamHistoryItem[]): number[] {
+function encodeExamHistoryBytesV3(history: ExamHistoryItem[]): number[] {
   const capped = history.slice(0, 30);
   const out: number[] = [capped.length];
 
@@ -512,9 +522,9 @@ function encodeExamHistoryBytes(history: ExamHistoryItem[]): number[] {
       .filter(([ch]) => Number.isFinite(ch) && ch >= 0 && ch <= 15)
       .slice(0, 15);
 
-    const subjBit = item.subject === 'mln131' ? 1 : 0;
+    const subjIdx = Math.max(0, SUBJECT_LIST.indexOf(item.subject));
     const typeBit = item.examType === 'mastered' ? 1 : 0;
-    const metaByte = subjBit | (typeBit << 1) | ((entries.length & 0x0f) << 2);
+    const metaByte = (subjIdx & 0x03) | (typeBit << 2) | ((entries.length & 0x0f) << 3);
     out.push(metaByte);
 
     const tsSec = Math.max(0, Math.round(item.timestamp / 1000) - EPOCH_SEC_2025);
@@ -534,7 +544,7 @@ function encodeExamHistoryBytes(history: ExamHistoryItem[]): number[] {
 }
 
 export function exportProgressCode(store: UserProgressStore): string {
-  const slots = new Uint8Array(MAX_SYNC_SLOTS);
+  const slots = new Uint8Array(MAX_SYNC_SLOTS_V3);
   for (const [id, p] of Object.entries(store.questions)) {
     const slot = questionIdToSlot(id);
     if (slot >= 0) {
@@ -549,49 +559,36 @@ export function exportProgressCode(store: UserProgressStore): string {
 
   const history = Array.isArray(store.examHistory) ? store.examHistory : [];
   const hasHistory = history.length > 0;
-  const historyBytes = hasHistory ? encodeExamHistoryBytes(history) : [];
+  const historyBytes = hasHistory ? encodeExamHistoryBytesV3(history) : [];
 
-  const subjBit = store.lastSubject === 'mln131' ? 1 : 0;
+  const subjIdx = Math.max(0, SUBJECT_LIST.indexOf(store.lastSubject));
   const modeIdx = Math.max(0, MODE_LIST.indexOf(store.lastMode));
   const tierIdx = Math.max(0, TIER_LIST.indexOf(normalizeTier(store.lastTier)));
   const header =
-    subjBit |
-    ((modeIdx & 0x03) << 1) |
-    ((tierIdx & 0x03) << 3) |
-    ((useDense ? 1 : 0) << 5) |
-    ((hasHistory ? 1 : 0) << 6);
+    (subjIdx & 0x03) |
+    ((modeIdx & 0x03) << 2) |
+    ((tierIdx & 0x03) << 4) |
+    ((useDense ? 1 : 0) << 6) |
+    ((hasHistory ? 1 : 0) << 7);
 
   const payload: number[] = [header, ...questionBytes, ...historyBytes];
   const crc = computeCrc8(payload, payload.length);
   payload.push(crc);
 
-  return `${CODE_PREFIX_V2}${encodeBase64Url(payload)}`;
+  return `${CODE_PREFIX_V3}${encodeBase64Url(payload)}`;
 }
 
-function importV2Code(encodedPart: string): UserProgressStore | null {
-  const bytes = decodeBase64Url(encodedPart);
-  if (!bytes || bytes.length < 2) return null;
-
-  const dataLen = bytes.length - 1;
-  const expectedCrc = computeCrc8(bytes, dataLen);
-  if (bytes[dataLen] !== expectedCrc) return null;
-
-  const body = bytes.subarray(0, dataLen);
-  const header = body[0];
-  if ((header & 0x80) !== 0) return null;
-
-  const lastSubject: SubjectId = (header & 1) === 1 ? 'mln131' : 'vnr202';
-  const lastMode: StudyMode = MODE_LIST[(header >> 1) & 0x03] ?? 'chapter';
-  const lastTier: StudyTier = TIER_LIST[(header >> 3) & 0x03] ?? 'hardcore';
-  const useDense = ((header >> 5) & 1) === 1;
-  const hasHistory = ((header >> 6) & 1) === 1;
-
-  const cursor = { pos: 1 };
+function decodeSlotsBlock(
+  body: Uint8Array,
+  cursor: { pos: number },
+  useDense: boolean,
+  maxSlots: number
+): Record<string, QuestionProgress> | null {
   const questions: Record<string, QuestionProgress> = {};
 
   if (!useDense) {
     const runCount = readVarint(body, cursor);
-    if (runCount === null || runCount > MAX_SYNC_SLOTS) return null;
+    if (runCount === null || runCount > maxSlots) return null;
 
     let prevEnd = 0;
     for (let r = 0; r < runCount; r++) {
@@ -606,12 +603,12 @@ function importV2Code(encodedPart: string): UserProgressStore | null {
       }
 
       const start = prevEnd + delta;
-      if (start + len > MAX_SYNC_SLOTS) return null;
+      if (start + len > maxSlots) return null;
       const prog = stateCodeToProgress(stateCode);
       if (!prog) return null;
 
       for (let s = start; s < start + len; s++) {
-        const qId = slotToQuestionId(s);
+        const qId = slotToQuestionId(s, maxSlots);
         if (qId) {
           questions[qId] = { ...prog };
         }
@@ -620,7 +617,7 @@ function importV2Code(encodedPart: string): UserProgressStore | null {
     }
   } else {
     const slotCount = readVarint(body, cursor);
-    if (slotCount === null || slotCount > MAX_SYNC_SLOTS) return null;
+    if (slotCount === null || slotCount > maxSlots) return null;
     const bitBytesLen = Math.ceil((slotCount * 3) / 8);
     if (cursor.pos + bitBytesLen > body.length) return null;
 
@@ -638,65 +635,163 @@ function importV2Code(encodedPart: string): UserProgressStore | null {
       if (val === 0) continue;
       const prog = stateCodeToProgress(val);
       if (!prog) return null;
-      const qId = slotToQuestionId(i);
+      const qId = slotToQuestionId(i, maxSlots);
       if (qId) {
         questions[qId] = prog;
       }
     }
   }
 
+  return questions;
+}
+
+function decodeExamHistoryBlock(
+  body: Uint8Array,
+  cursor: { pos: number },
+  parseMeta: (metaByte: number) => {
+    subject: SubjectId;
+    examType: 'standard' | 'mastered';
+    breakdownCount: number;
+  } | null
+): ExamHistoryItem[] | null {
+  if (cursor.pos >= body.length) return null;
+  const histCount = body[cursor.pos++];
+  if (histCount > 30) return null;
+
   const examHistory: ExamHistoryItem[] = [];
-  if (hasHistory) {
+  for (let i = 0; i < histCount; i++) {
     if (cursor.pos >= body.length) return null;
-    const histCount = body[cursor.pos++];
-    if (histCount > 30) return null;
+    const metaParsed = parseMeta(body[cursor.pos++]);
+    if (!metaParsed) return null;
 
-    for (let i = 0; i < histCount; i++) {
-      if (cursor.pos >= body.length) return null;
-      const metaByte = body[cursor.pos++];
-      const subj: SubjectId = (metaByte & 1) === 1 ? 'mln131' : 'vnr202';
-      const examType = (metaByte & 2) !== 0 ? ('mastered' as const) : ('standard' as const);
-      const breakdownCount = (metaByte >> 2) & 0x0f;
-
-      const tsSec = readVarint(body, cursor);
-      const totalQuestions = readVarint(body, cursor);
-      const correctCount = readVarint(body, cursor);
-      const durationSeconds = readVarint(body, cursor);
-      if (
-        tsSec === null ||
-        totalQuestions === null ||
-        correctCount === null ||
-        durationSeconds === null
-      ) {
-        return null;
-      }
-
-      const chapterBreakdown: Record<number, { correct: number; total: number }> = {};
-      for (let c = 0; c < breakdownCount; c++) {
-        if (cursor.pos >= body.length) return null;
-        const ch = body[cursor.pos++];
-        const chCorrect = readVarint(body, cursor);
-        const chTotal = readVarint(body, cursor);
-        if (chCorrect === null || chTotal === null) return null;
-        chapterBreakdown[ch] = { correct: chCorrect, total: chTotal };
-      }
-
-      const timestamp = (tsSec + EPOCH_SEC_2025) * 1000;
-      const scoreOn10 =
-        totalQuestions > 0 ? Number(((correctCount / totalQuestions) * 10).toFixed(2)) : 0;
-
-      examHistory.push({
-        id: `sync-${tsSec}-${i}-${correctCount}-${totalQuestions}`,
-        subject: subj,
-        examType,
-        timestamp,
-        totalQuestions,
-        correctCount,
-        scoreOn10,
-        durationSeconds,
-        chapterBreakdown,
-      });
+    const tsSec = readVarint(body, cursor);
+    const totalQuestions = readVarint(body, cursor);
+    const correctCount = readVarint(body, cursor);
+    const durationSeconds = readVarint(body, cursor);
+    if (
+      tsSec === null ||
+      totalQuestions === null ||
+      correctCount === null ||
+      durationSeconds === null
+    ) {
+      return null;
     }
+
+    const chapterBreakdown: Record<number, { correct: number; total: number }> = {};
+    for (let c = 0; c < metaParsed.breakdownCount; c++) {
+      if (cursor.pos >= body.length) return null;
+      const ch = body[cursor.pos++];
+      const chCorrect = readVarint(body, cursor);
+      const chTotal = readVarint(body, cursor);
+      if (chCorrect === null || chTotal === null) return null;
+      chapterBreakdown[ch] = { correct: chCorrect, total: chTotal };
+    }
+
+    const timestamp = (tsSec + EPOCH_SEC_2025) * 1000;
+    const scoreOn10 =
+      totalQuestions > 0 ? Number(((correctCount / totalQuestions) * 10).toFixed(2)) : 0;
+
+    examHistory.push({
+      id: `sync-${tsSec}-${i}-${correctCount}-${totalQuestions}`,
+      subject: metaParsed.subject,
+      examType: metaParsed.examType,
+      timestamp,
+      totalQuestions,
+      correctCount,
+      scoreOn10,
+      durationSeconds,
+      chapterBreakdown,
+    });
+  }
+
+  return examHistory;
+}
+
+function verifyBinaryEnvelope(encodedPart: string): Uint8Array | null {
+  const bytes = decodeBase64Url(encodedPart);
+  if (!bytes || bytes.length < 2) return null;
+
+  const dataLen = bytes.length - 1;
+  const expectedCrc = computeCrc8(bytes, dataLen);
+  if (bytes[dataLen] !== expectedCrc) return null;
+
+  return bytes.subarray(0, dataLen);
+}
+
+function importV3Code(encodedPart: string): UserProgressStore | null {
+  const body = verifyBinaryEnvelope(encodedPart);
+  if (!body) return null;
+
+  const header = body[0];
+  const subjIdx = header & 0x03;
+  const lastSubject = SUBJECT_LIST[subjIdx];
+  if (!lastSubject) return null;
+
+  const lastMode: StudyMode = MODE_LIST[(header >> 2) & 0x03] ?? 'chapter';
+  const lastTier: StudyTier = TIER_LIST[(header >> 4) & 0x03] ?? 'hardcore';
+  const useDense = ((header >> 6) & 1) === 1;
+  const hasHistory = ((header >> 7) & 1) === 1;
+
+  const cursor = { pos: 1 };
+  const questions = decodeSlotsBlock(body, cursor, useDense, MAX_SYNC_SLOTS_V3);
+  if (!questions) return null;
+
+  let examHistory: ExamHistoryItem[] = [];
+  if (hasHistory) {
+    const parsedHistory = decodeExamHistoryBlock(body, cursor, (metaByte) => {
+      const sIdx = metaByte & 0x03;
+      const subject = SUBJECT_LIST[sIdx];
+      if (!subject) return null;
+      return {
+        subject,
+        examType: (metaByte & 4) !== 0 ? 'mastered' : 'standard',
+        breakdownCount: (metaByte >> 3) & 0x0f,
+      };
+    });
+    if (!parsedHistory) return null;
+    examHistory = parsedHistory;
+  }
+
+  if (cursor.pos !== body.length) return null;
+
+  return {
+    version: 1,
+    questions,
+    examHistory,
+    lastSubject,
+    lastMode,
+    lastTier,
+    subjectMigratedVnr: true,
+    tierMigratedHardcore: true,
+  };
+}
+
+function importV2Code(encodedPart: string): UserProgressStore | null {
+  const body = verifyBinaryEnvelope(encodedPart);
+  if (!body) return null;
+
+  const header = body[0];
+  if ((header & 0x80) !== 0) return null;
+
+  const lastSubject: SubjectId = (header & 1) === 1 ? 'mln131' : 'vnr202';
+  const lastMode: StudyMode = MODE_LIST[(header >> 1) & 0x03] ?? 'chapter';
+  const lastTier: StudyTier = TIER_LIST[(header >> 3) & 0x03] ?? 'hardcore';
+  const useDense = ((header >> 5) & 1) === 1;
+  const hasHistory = ((header >> 6) & 1) === 1;
+
+  const cursor = { pos: 1 };
+  const questions = decodeSlotsBlock(body, cursor, useDense, MAX_SYNC_SLOTS_V2);
+  if (!questions) return null;
+
+  let examHistory: ExamHistoryItem[] = [];
+  if (hasHistory) {
+    const parsedHistory = decodeExamHistoryBlock(body, cursor, (metaByte) => ({
+      subject: (metaByte & 1) === 1 ? 'mln131' : 'vnr202',
+      examType: (metaByte & 2) !== 0 ? 'mastered' : 'standard',
+      breakdownCount: (metaByte >> 2) & 0x0f,
+    }));
+    if (!parsedHistory) return null;
+    examHistory = parsedHistory;
   }
 
   if (cursor.pos !== body.length) return null;
@@ -745,7 +840,7 @@ function importV1Code(rawCompressed: string): UserProgressStore | null {
       version: 1,
       questions,
       examHistory: Array.isArray(parsed.h) ? parsed.h : [],
-      lastSubject: parsed.s === 'mln131' ? 'mln131' : 'vnr202',
+      lastSubject: normalizeSubject(parsed.s),
       lastMode:
         parsed.m === 'rolling' || parsed.m === 'flashcard' || parsed.m === 'exam'
           ? parsed.m
@@ -765,7 +860,12 @@ export function importProgressCode(code: string): UserProgressStore | null {
     const cleaned = code.replace(/\s+/g, '');
     if (!cleaned) return null;
 
-    // Match OT2- or OT2: (case-insensitive to resist mobile auto-lowercase)
+    // Match OT3-, OT2-, or OT1: (case-insensitive to resist mobile auto-lowercase)
+    const v3Match = /^ot3[:\-](.+)$/i.exec(cleaned);
+    if (v3Match) {
+      return importV3Code(v3Match[1]);
+    }
+
     const v2Match = /^ot2[:\-](.+)$/i.exec(cleaned);
     if (v2Match) {
       return importV2Code(v2Match[1]);

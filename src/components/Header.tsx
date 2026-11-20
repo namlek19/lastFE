@@ -18,6 +18,7 @@ import {
   SaiyanTriggerEvent,
   SakugaSaiyanLogo,
 } from './SakugaSaiyanLogo';
+import { SakugaSubjectDropdown } from './SakugaSubjectDropdown';
 import { SakugaParticles, SakugaTierPicker } from './SakugaVfx';
 
 const LOGO_SAIYAN_LINES = ['SPIDEY SAIYAN!', 'THWIP! ⚡', 'POWER UP!', 'OVER 9000!'] as const;
@@ -94,39 +95,6 @@ const MODE_TABS: {
   },
 ];
 
-const SUBJECT_ITEMS: {
-  id: SubjectId;
-  shortCode: string;
-  activeClass: string;
-  inactiveClass: string;
-  accentFill: string;
-  smokeTint: string;
-  sparkleFill: string;
-}[] = [
-  {
-    id: 'vnr202',
-    shortCode: 'VNR',
-    activeClass:
-      'border-[#7C2D12] bg-[#EA580C] text-white shadow-[2px_2px_0_0_#FDBA74] hover:bg-[#C2410C] dark:border-[#FDBA74] dark:bg-[#EA580C] dark:text-white dark:shadow-[2px_2px_0_0_#9A3412] dark:hover:bg-[#C2410C]',
-    inactiveClass:
-      'border-transparent bg-transparent text-[#9A3412] hover:border-[#FB923C] hover:bg-[#FFF7ED] hover:text-[#C2410C] dark:text-[#FDBA74]/85 dark:hover:border-[#FB923C]/70 dark:hover:bg-[#7C2D12]/40 dark:hover:text-[#FED7AA]',
-    accentFill: '#EA580C',
-    smokeTint: '#FED7AA',
-    sparkleFill: '#F97316',
-  },
-  {
-    id: 'mln131',
-    shortCode: 'MLN',
-    activeClass:
-      'border-[#0C4A6E] bg-[#0284C7] text-white shadow-[2px_2px_0_0_#7DD3FC] hover:bg-[#0369A1] dark:border-[#7DD3FC] dark:bg-[#0284C7] dark:text-white dark:shadow-[2px_2px_0_0_#075985] dark:hover:bg-[#0369A1]',
-    inactiveClass:
-      'border-transparent bg-transparent text-[#075985] hover:border-[#38BDF8] hover:bg-[#E0F2FE] hover:text-[#0369A1] dark:text-[#7DD3FC]/85 dark:hover:border-[#38BDF8]/70 dark:hover:bg-[#0C4A6E]/45 dark:hover:text-[#BAE6FD]',
-    accentFill: '#0284C7',
-    smokeTint: '#BAE6FD',
-    sparkleFill: '#38BDF8',
-  },
-];
-
 const TIER_BADGE_STYLES: Record<StudyTier, { pill: string; icon: string }> = {
   lazymax: {
     pill: 'border-[#064E3B] bg-[#D1FAE5] text-[#065F46] shadow-[2px_2px_0_0_#10B981] dark:border-[#6EE7B7] dark:bg-[#065F46]/60 dark:text-[#ECFDF5] dark:shadow-[2px_2px_0_0_#059669]',
@@ -155,7 +123,6 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSyncModal,
 }) => {
   const [badgeBounceSeq, setBadgeBounceSeq] = useState(0);
-  const [subjectBurst, setSubjectBurst] = useState<{ id: SubjectId; seq: number } | null>(null);
   const [modeBurst, setModeBurst] = useState<{ id: StudyMode; seq: number } | null>(null);
   const [examBurstSeq, setExamBurstSeq] = useState(0);
   const [isExamBursting, setIsExamBursting] = useState(false);
@@ -179,12 +146,6 @@ export const Header: React.FC<HeaderProps> = ({
       setBadgeBounceSeq((seq) => seq + 1);
     }
   }, [tier, subject]);
-
-  useEffect(() => {
-    if (!subjectBurst) return;
-    const timer = window.setTimeout(() => setSubjectBurst(null), 640);
-    return () => window.clearTimeout(timer);
-  }, [subjectBurst]);
 
   useEffect(() => {
     if (!modeBurst) return;
@@ -220,11 +181,13 @@ export const Header: React.FC<HeaderProps> = ({
 
   const handleSubjectClick = (subjId: SubjectId) => {
     onSelectSubject(subjId);
-    setSubjectBurst((prev) => ({ id: subjId, seq: (prev?.seq ?? 0) + 1 }));
-    triggerSaiyan(
-      subjId === 'vnr202' ? 'VNR202!' : 'MLN131!',
-      subjId === 'vnr202' ? 'amber' : 'indigo'
-    );
+    if (subjId === 'vnr202') {
+      triggerSaiyan('VNR202!', 'amber');
+    } else if (subjId === 'mln131') {
+      triggerSaiyan('MLN131!', 'indigo');
+    } else {
+      triggerSaiyan('WDU203c!', 'pink');
+    }
   };
 
   const handleModeClick = (modeId: StudyMode) => {
@@ -296,65 +259,13 @@ export const Header: React.FC<HeaderProps> = ({
               className="hidden h-5 w-[2px] -skew-x-12 bg-[#C6BEB0] dark:bg-[#2C302B] sm:block"
             />
 
-            {/* Direct VNR / MLN Anime Stamp Switcher (Both visible, 3-letter codes) */}
-            <div
-              role="group"
-              aria-label="Chọn môn học"
-              className="inline-flex shrink-0 items-center gap-1 overflow-visible rounded-xl border-2 border-[#C6BEB0] bg-[#F4F2EC] p-0.5 dark:border-[#2C302B] dark:bg-[#0F100E] sm:p-1"
-            >
-              {SUBJECT_ITEMS.map(({ id, shortCode, activeClass, inactiveClass, accentFill, smokeTint, sparkleFill }) => {
-                const meta = SUBJECTS[id];
-                const isActive = subject === id;
-                const isBursting = subjectBurst?.id === id;
-                const questionTotal = getQuestionsBySubject(id, tier).length;
-
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => handleSubjectClick(id)}
-                    aria-pressed={isActive}
-                    title={`${meta.code} • ${meta.name} (${questionTotal} câu)`}
-                    className="sakuga-btn relative inline-flex cursor-pointer items-center justify-center overflow-visible focus-visible:outline-none"
-                  >
-                    {isBursting && subjectBurst && (
-                      <SakugaParticles
-                        key={`subj-particles-${id}-${subjectBurst.seq}`}
-                        isMiss={false}
-                        showShards={true}
-                        accentFill={accentFill}
-                        smokeTint={smokeTint}
-                        sparkleFill={sparkleFill}
-                        className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[58px] w-[112px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
-                      />
-                    )}
-                    <motion.span
-                      key={
-                        isBursting && subjectBurst
-                          ? `subj-stamp-${id}-${subjectBurst.seq}`
-                          : `subj-stamp-${id}`
-                      }
-                      initial={
-                        isBursting
-                          ? { y: -6, scaleX: 1.18, scaleY: 0.82, rotate: -4 }
-                          : false
-                      }
-                      animate={{ y: 0, scaleX: 1, scaleY: 1, rotate: 0 }}
-                      transition={{ type: 'spring', stiffness: 340, damping: 16 }}
-                      className="relative z-10 inline-flex"
-                    >
-                      <span
-                        className={`inline-flex -skew-x-12 items-center justify-center rounded-md border-2 px-2 py-0.5 text-[11px] font-black italic tracking-wider whitespace-nowrap transition-colors duration-150 sm:px-2.5 sm:py-1 sm:text-xs ${
-                          isActive ? activeClass : inactiveClass
-                        }`}
-                      >
-                        <span className="skew-x-12">{shortCode}</span>
-                      </span>
-                    </motion.span>
-                  </button>
-                );
-              })}
-            </div>
+            {/* 3-Subject Anime Deck Dropdown */}
+            <SakugaSubjectDropdown
+              subject={subject}
+              tier={tier}
+              progress={progress}
+              onSelectSubject={handleSubjectClick}
+            />
           </div>
 
           {/* Center Cluster: 3 Study Mode Tabs — Anime HUD Dock with Spring Highlight (Desktop >= 1024px) */}

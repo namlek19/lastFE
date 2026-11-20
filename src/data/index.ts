@@ -1,5 +1,6 @@
 import mln131Raw from './mln131.json';
 import vnr202Raw from './vnr202.json';
+import wdu203cRaw from './wdu203c.json';
 import { QuestionItem, StudyTier, SubjectId } from '../types/quiz';
 
 export interface ChapterMeta {
@@ -21,6 +22,7 @@ export interface SubjectMeta {
 
 const mln131Questions = mln131Raw as QuestionItem[];
 const vnr202Questions = vnr202Raw as QuestionItem[];
+const wdu203cQuestions = wdu203cRaw as QuestionItem[];
 
 const MLN131_LAZY_MAX_IDS = new Set<string>([
   // Chương 1 (22 câu trụ cột)
@@ -153,6 +155,13 @@ const vnr202ByTier: Record<StudyTier, QuestionItem[]> = {
   hardcore: vnr202Questions,
 };
 
+// WDU203c tạm dùng full source (274 câu) cho cả 3 mức cho tới khi tách LAZY / LAZY MAX
+const wdu203cByTier: Record<StudyTier, QuestionItem[]> = {
+  lazymax: wdu203cQuestions,
+  lazy: wdu203cQuestions,
+  hardcore: wdu203cQuestions,
+};
+
 function buildChapters(questions: QuestionItem[]): ChapterMeta[] {
   const map = new Map<number, ChapterMeta>();
   for (const q of questions) {
@@ -179,6 +188,23 @@ const vnr202ChaptersByTier: Record<StudyTier, ChapterMeta[]> = {
   lazymax: buildChapters(vnr202ByTier.lazymax),
   lazy: buildChapters(vnr202ByTier.lazy),
   hardcore: buildChapters(vnr202ByTier.hardcore),
+};
+const wdu203cChaptersByTier: Record<StudyTier, ChapterMeta[]> = {
+  lazymax: buildChapters(wdu203cByTier.lazymax),
+  lazy: buildChapters(wdu203cByTier.lazy),
+  hardcore: buildChapters(wdu203cByTier.hardcore),
+};
+
+const QUESTIONS_BY_SUBJECT: Record<SubjectId, Record<StudyTier, QuestionItem[]>> = {
+  mln131: mln131ByTier,
+  vnr202: vnr202ByTier,
+  wdu203c: wdu203cByTier,
+};
+
+const CHAPTERS_BY_SUBJECT: Record<SubjectId, Record<StudyTier, ChapterMeta[]>> = {
+  mln131: mln131ChaptersByTier,
+  vnr202: vnr202ChaptersByTier,
+  wdu203c: wdu203cChaptersByTier,
 };
 
 export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
@@ -214,25 +240,42 @@ export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
     },
     chapters: vnr202ChaptersByTier.hardcore,
   },
+  wdu203c: {
+    id: 'wdu203c',
+    code: 'WDU203c',
+    name: 'UI/UX Design & User Research',
+    shortName: 'UI/UX Design',
+    totalQuestions: wdu203cQuestions.length,
+    examTotal: 60,
+    examQuotas: {
+      1: 10,
+      2: 11,
+      3: 9,
+      4: 13,
+      5: 4,
+      6: 13,
+    },
+    chapters: wdu203cChaptersByTier.hardcore,
+  },
 };
 
-  export function getQuestionsBySubject(
-    subject: SubjectId,
-    tier: StudyTier = 'hardcore'
-  ): QuestionItem[] {
-    return subject === 'mln131' ? mln131ByTier[tier] : vnr202ByTier[tier];
-  }
+export function getQuestionsBySubject(
+  subject: SubjectId,
+  tier: StudyTier = 'hardcore'
+): QuestionItem[] {
+  return QUESTIONS_BY_SUBJECT[subject][tier];
+}
 
-    export function getChaptersBySubject(
-      subject: SubjectId,
-      tier: StudyTier = 'hardcore'
-    ): ChapterMeta[] {
-      return subject === 'mln131' ? mln131ChaptersByTier[tier] : vnr202ChaptersByTier[tier];
-    }
+export function getChaptersBySubject(
+  subject: SubjectId,
+  tier: StudyTier = 'hardcore'
+): ChapterMeta[] {
+  return CHAPTERS_BY_SUBJECT[subject][tier];
+}
 
-    export function isAnswerCorrect(selected: string[], correct: string[]): boolean {
-      const normSelected = Array.from(new Set(selected.map(s => s.toUpperCase()))).sort();
-      const normCorrect = Array.from(new Set(correct.map(c => c.toUpperCase()))).sort();
-      if (normSelected.length !== normCorrect.length) return false;
-      return normSelected.every((val, idx) => val === normCorrect[idx]);
-    }
+export function isAnswerCorrect(selected: string[], correct: string[]): boolean {
+  const normSelected = Array.from(new Set(selected.map((s) => s.toUpperCase()))).sort();
+  const normCorrect = Array.from(new Set(correct.map((c) => c.toUpperCase()))).sort();
+  if (normSelected.length !== normCorrect.length) return false;
+  return normSelected.every((val, idx) => val === normCorrect[idx]);
+}

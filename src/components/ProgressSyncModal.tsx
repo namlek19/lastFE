@@ -41,7 +41,11 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
   const copyTimerRef = useRef<number | null>(null);
 
   const allQuestions = useMemo(
-    () => [...getQuestionsBySubject('mln131'), ...getQuestionsBySubject('vnr202')],
+    () => [
+      ...getQuestionsBySubject('mln131'),
+      ...getQuestionsBySubject('vnr202'),
+      ...getQuestionsBySubject('wdu203c'),
+    ],
     []
   );
 
@@ -337,7 +341,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
                     if (importError) setImportError(null);
                     if (importSuccess) setImportSuccess(null);
                   }}
-                  placeholder="Dán mã đồng bộ (OT2-... hoặc OT1:...) vào đây"
+                  placeholder="Dán mã đồng bộ (OT3-..., OT2-... hoặc OT1:...) vào đây"
                   aria-label="Ô nhập mã tiến độ"
                   className="w-full resize-none rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2 font-mono text-xs leading-relaxed text-[#292524] placeholder:text-[#656058] focus:border-[#4338CA] focus:outline-none dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:placeholder:text-[#9CA39B] dark:focus:border-[#818CF8]"
                 />

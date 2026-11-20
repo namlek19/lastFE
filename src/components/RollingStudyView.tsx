@@ -399,7 +399,7 @@ useEffect(() => {
 
     if (gradedState === null) {
       let optionIndex = -1;
-      if (/^[1-5]$/.test(key)) {
+      if (/^[1-6]$/.test(key)) {
         optionIndex = Number(key) - 1;
       } else if (/^[a-eA-E]$/.test(key)) {
         const upper = key.toUpperCase();

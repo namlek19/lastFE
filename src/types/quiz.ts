@@ -1,11 +1,11 @@
-export type SubjectId = 'mln131' | 'vnr202';
+export type SubjectId = 'mln131' | 'vnr202' | 'wdu203c';
 
 export type StudyMode = 'chapter' | 'rolling' | 'flashcard' | 'exam';
 
 export type StudyTier = 'lazymax' | 'lazy' | 'hardcore';
 
 export interface QuestionOption {
-  key: string; // "A" | "B" | "C" | "D" | "E"
+  key: string; // "A" | "B" | "C" | "D" | "E" | "F"
   text: string;
 }
 

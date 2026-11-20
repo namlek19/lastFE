@@ -356,7 +356,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
       const key = e.key;
       const upper = key.toUpperCase();
 
-      if (['1', '2', '3', '4', '5'].includes(key)) {
+      if (['1', '2', '3', '4', '5', '6'].includes(key)) {
         const idx = Number(key) - 1;
         const opt = currentQuestion.options[idx];
         if (opt) {
