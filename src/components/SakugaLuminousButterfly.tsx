@@ -324,131 +324,123 @@ function createShatterBurst(id: number, x: number, y: number): ShatterBurst {
   return { id, x, y, minis, shards, motes };
 }
 
+interface OrigamiButterflySvgProps {
+  leftWingRef: React.RefObject<HTMLDivElement>;
+  rightWingRef: React.RefObject<HTMLDivElement>;
+  coreGlowRef: React.RefObject<HTMLSpanElement>;
+}
+
 /**
- * Sleek luminous origami swallowtail butterfly (30x28px) matching the crisp folded-dart
- * silhouette in the reference image (100% Zero-Gradient, memoized for zero flight jitter).
+ * Sleek luminous origami swallowtail butterfly (30x28px) with independent left/right
+ * 3D wing layers driven directly at 60fps from the flight loop (100% Zero-Gradient).
  */
-const OrigamiButterflySvg: React.FC<{ prefersReducedMotion: boolean }> = memo(
-  ({ prefersReducedMotion }) => (
-    <div className="relative flex h-7 w-[30px] scale-90 items-center justify-center md:scale-100">
-      {/* Pinpoint luminous core aura behind wing waist */}
-      <motion.span
-        aria-hidden="true"
-        animate={
-          prefersReducedMotion
-            ? { opacity: 0.55 }
-            : { opacity: [0.42, 0.72, 0.42], scale: [0.92, 1.08, 0.92] }
-        }
-        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-        className="pointer-events-none absolute h-3.5 w-3.5 rounded-full bg-[#FFFFFF]/70 blur-[4px] dark:bg-[#E0F2FE]/65"
-      />
+const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
+  ({ leftWingRef, rightWingRef, coreGlowRef }) => {
+    const wingGlowClass =
+      'h-full w-full overflow-visible drop-shadow-[0_0_3px_rgba(255,255,255,0.95)] drop-shadow-[0_0_8px_rgba(167,139,250,0.65)] drop-shadow-[0_0_14px_rgba(103,232,249,0.45)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_11px_rgba(196,181,253,0.9)] dark:drop-shadow-[0_0_22px_rgba(103,232,249,0.65)]';
 
-      <svg
-        viewBox="0 0 36 34"
-        aria-hidden="true"
-        className="relative h-7 w-[30px] overflow-visible drop-shadow-[0_0_3px_rgba(255,255,255,0.95)] drop-shadow-[0_0_8px_rgba(167,139,250,0.65)] drop-shadow-[0_0_14px_rgba(103,232,249,0.45)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_11px_rgba(196,181,253,0.9)] dark:drop-shadow-[0_0_22px_rgba(103,232,249,0.65)]"
-      >
-        {/* Left folded swallowtail wings */}
-        <motion.g
-          style={{ transformOrigin: '18px 16px' }}
-          animate={prefersReducedMotion ? undefined : { scaleX: [1, 0.26, 0.96, 1] }}
-          transition={
-            prefersReducedMotion
-              ? undefined
-              : {
-                  duration: 0.52,
-                  times: [0, 0.42, 0.82, 1],
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }
-          }
-        >
-          <polygon
-            points="18,14 1.5,5 12,18"
-            fill="#FFFFFF"
-            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-            strokeWidth="0.45"
-            strokeLinejoin="round"
-          />
-          <polygon
-            points="18,14 12,18 17.4,19"
-            fill="#DDD6FE"
-            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-            strokeWidth="0.45"
-            strokeLinejoin="round"
-          />
-          <polygon
-            points="17.6,18 8.5,20 12.2,31.5"
-            fill="#F5F3FF"
-            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-            strokeWidth="0.45"
-            strokeLinejoin="round"
-          />
-          <polygon
-            points="17.6,18 12.2,31.5 16.2,24.5"
-            fill="#F472B6"
-            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-            strokeWidth="0.45"
-            strokeLinejoin="round"
-          />
-        </motion.g>
+    return (
+      <div className="relative flex h-7 w-[30px] scale-90 items-center justify-center md:scale-100">
+        {/* Pinpoint luminous core aura pulsing smoothly in sync with wingbeat */}
+        <span
+          ref={coreGlowRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute h-3.5 w-3.5 rounded-full bg-[#FFFFFF]/75 blur-[4px] dark:bg-[#E0F2FE]/70"
+        />
 
-        {/* Right folded swallowtail wings */}
-        <motion.g
-          style={{ transformOrigin: '18px 16px' }}
-          animate={prefersReducedMotion ? undefined : { scaleX: [1, 0.26, 0.96, 1] }}
-          transition={
-            prefersReducedMotion
-              ? undefined
-              : {
-                  duration: 0.52,
-                  times: [0, 0.42, 0.82, 1],
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }
-          }
+        {/* Left 3D origami wing layer */}
+        <div
+          ref={leftWingRef}
+          style={{ transformOrigin: '50% 47%' }}
+          className="pointer-events-none absolute inset-0 will-change-transform"
         >
-          <polygon
-            points="18,14 34.5,5 24,18"
-            fill="#FFFFFF"
-            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-            strokeWidth="0.45"
-            strokeLinejoin="round"
-          />
-          <polygon
-            points="18,14 24,18 18.6,19"
-            fill="#E0E7FF"
-            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-            strokeWidth="0.45"
-            strokeLinejoin="round"
-          />
-          <polygon
-            points="18.4,18 27.5,20 23.8,31.5"
-            fill="#FFFFFF"
-            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-            strokeWidth="0.45"
-            strokeLinejoin="round"
-          />
-          <polygon
-            points="18.4,18 23.8,31.5 19.8,24.5"
-            fill="#C4B5FD"
-            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-            strokeWidth="0.45"
-            strokeLinejoin="round"
-          />
-        </motion.g>
+          <svg viewBox="0 0 36 34" aria-hidden="true" className={wingGlowClass}>
+            <polygon
+              points="18,14 1.5,5 12,18"
+              fill="#FFFFFF"
+              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="18,14 12,18 17.4,19"
+              fill="#DDD6FE"
+              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="17.6,18 8.5,20 12.2,31.5"
+              fill="#F5F3FF"
+              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="17.6,18 12.2,31.5 16.2,24.5"
+              fill="#F472B6"
+              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+
+        {/* Right 3D origami wing layer */}
+        <div
+          ref={rightWingRef}
+          style={{ transformOrigin: '50% 47%' }}
+          className="pointer-events-none absolute inset-0 will-change-transform"
+        >
+          <svg viewBox="0 0 36 34" aria-hidden="true" className={wingGlowClass}>
+            <polygon
+              points="18,14 34.5,5 24,18"
+              fill="#FFFFFF"
+              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="18,14 24,18 18.6,19"
+              fill="#E0E7FF"
+              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="18.4,18 27.5,20 23.8,31.5"
+              fill="#FFFFFF"
+              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="18.4,18 23.8,31.5 19.8,24.5"
+              fill="#C4B5FD"
+              className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
 
         {/* Pinpoint white origami spine */}
-        <polygon
-          points="18,11.5 18.8,17 18,22 17.2,17"
-          fill="#FFFFFF"
-          className="stroke-[#6D28D9]/25 dark:[stroke:none]"
-          strokeWidth="0.4"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </div>
-  )
+        <svg
+          viewBox="0 0 36 34"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+        >
+          <polygon
+            points="18,11.5 18.8,17 18,22 17.2,17"
+            fill="#FFFFFF"
+            className="stroke-[#6D28D9]/25 dark:[stroke:none]"
+            strokeWidth="0.4"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+    );
+  }
 );
 
 OrigamiButterflySvg.displayName = 'OrigamiButterflySvg';
@@ -464,17 +456,18 @@ const MiniOrigamiButterflySvg: React.FC<{ variant: 0 | 1 | 2; flapDuration: numb
   flapDuration,
 }) => {
   const palette = MINI_VARIANT_COLORS[variant];
+  const glowClass =
+    'pointer-events-none absolute inset-0 h-full w-full overflow-visible drop-shadow-[0_0_3px_rgba(255,255,255,0.92)] drop-shadow-[0_0_8px_rgba(196,181,253,0.75)] drop-shadow-[0_0_14px_rgba(103,232,249,0.5)]';
 
   return (
-    <svg
-      viewBox="0 0 28 26"
-      aria-hidden="true"
-      className="h-5 w-5 overflow-visible drop-shadow-[0_0_3px_rgba(255,255,255,0.92)] drop-shadow-[0_0_8px_rgba(196,181,253,0.75)] drop-shadow-[0_0_14px_rgba(103,232,249,0.5)]"
-    >
-      <motion.g
-        style={{ transformOrigin: '14px 13px' }}
-        animate={{ scaleX: [1, 0.22, 1] }}
+    <div className="relative h-5 w-5">
+      <motion.svg
+        viewBox="0 0 28 26"
+        aria-hidden="true"
+        style={{ transformOrigin: '50% 50%', transformPerspective: 75 }}
+        animate={{ rotateY: [-12, 72, -12] }}
         transition={{ duration: flapDuration, repeat: Infinity, ease: 'easeInOut' }}
+        className={glowClass}
       >
         <polygon
           points="14,11 1.5,4 9.5,14.5"
@@ -490,11 +483,14 @@ const MiniOrigamiButterflySvg: React.FC<{ variant: 0 | 1 | 2; flapDuration: numb
           strokeWidth="0.4"
           strokeLinejoin="round"
         />
-      </motion.g>
-      <motion.g
-        style={{ transformOrigin: '14px 13px' }}
-        animate={{ scaleX: [1, 0.22, 1] }}
+      </motion.svg>
+      <motion.svg
+        viewBox="0 0 28 26"
+        aria-hidden="true"
+        style={{ transformOrigin: '50% 50%', transformPerspective: 75 }}
+        animate={{ rotateY: [12, -72, 12] }}
         transition={{ duration: flapDuration, repeat: Infinity, ease: 'easeInOut' }}
+        className={glowClass}
       >
         <polygon
           points="14,11 26.5,4 18.5,14.5"
@@ -510,9 +506,15 @@ const MiniOrigamiButterflySvg: React.FC<{ variant: 0 | 1 | 2; flapDuration: numb
           strokeWidth="0.4"
           strokeLinejoin="round"
         />
-      </motion.g>
-      <polygon points="14,9 14.7,13.5 14,18 13.3,13.5" fill="#FFFFFF" />
-    </svg>
+      </motion.svg>
+      <svg
+        viewBox="0 0 28 26"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+      >
+        <polygon points="14,9 14.7,13.5 14,18 13.3,13.5" fill="#FFFFFF" />
+      </svg>
+    </div>
   );
 };
 
@@ -527,6 +529,10 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
   const mvY = useMotionValue(-100);
   const mvRotate = useMotionValue(0);
   const mvOpacity = useMotionValue(0);
+
+  const leftWingRef = useRef<HTMLDivElement>(null);
+  const rightWingRef = useRef<HTMLDivElement>(null);
+  const coreGlowRef = useRef<HTMLSpanElement>(null);
 
   const isVisibleRef = useRef(false);
   const hasVisitedOnceRef = useRef(false);
@@ -654,10 +660,32 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
         const s = Math.min(1, elapsed / durationMs);
         const sample = sampleByArcLength(lut, s);
 
-        // Gentle perpendicular air-current drift (zero abrupt jerks)
-        const sway = Math.sin(elapsed * 0.0034) * 10;
+        // Drive true 3D perspective wing-flapping & occasional open-wing glide at 60fps
+        const beatSec = elapsed * 0.001;
+        const glideMix = clamp((Math.sin(beatSec * 1.15) - 0.72) / 0.28, 0, 1);
+        const rawWave = 0.5 - 0.5 * Math.cos(beatSec * Math.PI * 6.2);
+        const flapCurve = Math.pow(rawWave, 0.82); // 0 = wide open, 1 = folded up
+        const activeFlapDeg = -14 + flapCurve * 88; // -14deg .. +74deg
+        const glideDeg = 10 + Math.sin(beatSec * 4.5) * 8;
+        const wingDeg = activeFlapDeg * (1 - glideMix) + glideDeg * glideMix;
+
+        if (leftWingRef.current) {
+          leftWingRef.current.style.transform = `perspective(95px) rotateY(${wingDeg.toFixed(1)}deg)`;
+        }
+        if (rightWingRef.current) {
+          rightWingRef.current.style.transform = `perspective(95px) rotateY(${(-wingDeg).toFixed(1)}deg)`;
+        }
+        if (coreGlowRef.current) {
+          const openAmt = 1 - clamp((wingDeg + 14) / 88, 0, 1);
+          coreGlowRef.current.style.transform = `scale(${(0.88 + openAmt * 0.34).toFixed(2)})`;
+          coreGlowRef.current.style.opacity = (0.42 + openAmt * 0.42).toFixed(2);
+        }
+
+        // Gentle perpendicular air-current drift + aerodynamic lift from wing downstroke
+        const sway = Math.sin(elapsed * 0.0034) * 9;
+        const wingLift = (1 - flapCurve) * (1 - glideMix) * 3.2;
         const liveX = sample.x + -sample.ty * sway;
-        const liveY = sample.y + sample.tx * sway;
+        const liveY = sample.y + sample.tx * sway - wingLift;
 
         const targetDeg =
           Math.atan2(sample.ty, sample.tx) * (180 / Math.PI) +
@@ -824,8 +852,15 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
       {/* Main wandering luminous origami butterfly */}
       {isVisible && (
         <motion.div
-          style={{ left: 0, top: 0, x: mvX, y: mvY, rotate: mvRotate, opacity: mvOpacity }}
-          className="pointer-events-none absolute will-change-transform"
+          style={{
+            left: -22,
+            top: -22,
+            x: mvX,
+            y: mvY,
+            rotate: mvRotate,
+            opacity: mvOpacity,
+          }}
+          className="pointer-events-none absolute h-11 w-11 will-change-transform"
         >
           <button
             type="button"
@@ -833,9 +868,13 @@ export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = (
             onClick={handleButterflyClick}
             aria-label="Chạm vào bướm ánh sáng"
             title="Chạm để làm vỡ cánh bướm ánh sáng"
-            className="pointer-events-auto flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
+            className="pointer-events-auto flex h-full w-full cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
           >
-            <OrigamiButterflySvg prefersReducedMotion={prefersReducedMotion} />
+            <OrigamiButterflySvg
+              leftWingRef={leftWingRef}
+              rightWingRef={rightWingRef}
+              coreGlowRef={coreGlowRef}
+            />
           </button>
         </motion.div>
       )}
