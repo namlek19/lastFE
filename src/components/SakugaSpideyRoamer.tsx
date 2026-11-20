@@ -156,25 +156,33 @@ function scanComponentLedges(vw: number, bounds: PlayBounds): ComponentLedge[] {
   if (bounds.maxY <= bounds.minY + 12) return [];
 
   const nodes = document.querySelectorAll(
-    'main .rounded-3xl, main .rounded-2xl, aside .rounded-2xl, footer'
+    'main .rounded-3xl, main .rounded-2xl, aside > .rounded-2xl, footer'
   );
-  const raw: ComponentLedge[] = [];
+  const raw: Array<ComponentLedge & { rect: DOMRect }> = [];
 
   for (const el of nodes) {
-    if (el.closest('header, [role="dialog"], [role="listbox"]')) continue;
+    if (el.closest('header, [role="dialog"], [role="listbox"], [aria-hidden="true"]')) continue;
+    // Skip nested inner boxes inside another card/container so Spidey only perches on outer rims
+    if (el.parentElement?.closest('.rounded-3xl, .rounded-2xl, .rounded-xl, footer')) continue;
+
     const style = window.getComputedStyle(el);
-    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+    if (
+      style.display === 'none' ||
+      style.visibility === 'hidden' ||
+      style.opacity === '0' ||
+      style.pointerEvents === 'none'
+    ) {
       continue;
     }
 
     const rect = el.getBoundingClientRect();
     if (rect.width < 130 || rect.height < 42) continue;
 
-    const ledgeY = Math.round(rect.top - SPIDER_H + 4);
+    const ledgeY = Math.round(rect.top - SPIDER_H + 3);
     if (ledgeY < bounds.minY || ledgeY > bounds.maxY) continue;
 
-    const minX = Math.round(clamp(rect.left + 16, 8, vw - SPIDER_W - 8));
-    const maxX = Math.round(clamp(rect.right - SPIDER_W - 16, 8, vw - SPIDER_W - 8));
+    const minX = Math.round(clamp(rect.left + 20, 8, vw - SPIDER_W - 8));
+    const maxX = Math.round(clamp(rect.right - SPIDER_W - 20, 8, vw - SPIDER_W - 8));
     if (maxX - minX < 48) continue;
 
     raw.push({
@@ -183,12 +191,26 @@ function scanComponentLedges(vw: number, bounds: PlayBounds): ComponentLedge[] {
       maxX,
       ledgeY,
       width: maxX - minX,
+      rect,
     });
   }
 
-  raw.sort((a, b) => a.ledgeY - b.ledgeY || b.width - a.width);
+  // Geometric guard: never perch on any container whose top rim sits inside another outer container
+  const outerOnly = raw.filter(
+    (cand) =>
+      !raw.some(
+        (other) =>
+          other !== cand &&
+          other.rect.top + 8 < cand.rect.top &&
+          cand.rect.top < other.rect.bottom - 8 &&
+          cand.rect.left >= other.rect.left - 8 &&
+          cand.rect.right <= other.rect.right + 8
+      )
+  );
+
+  outerOnly.sort((a, b) => a.ledgeY - b.ledgeY || b.width - a.width);
   const deduped: ComponentLedge[] = [];
-  for (const cand of raw) {
+  for (const cand of outerOnly) {
     const overlapsExisting = deduped.some(
       (kept) =>
         Math.abs(kept.ledgeY - cand.ledgeY) < 20 &&
@@ -196,7 +218,13 @@ function scanComponentLedges(vw: number, bounds: PlayBounds): ComponentLedge[] {
         cand.maxX > kept.minX
     );
     if (!overlapsExisting) {
-      deduped.push(cand);
+      deduped.push({
+        el: cand.el,
+        minX: cand.minX,
+        maxX: cand.maxX,
+        ledgeY: cand.ledgeY,
+        width: cand.width,
+      });
     }
   }
   return deduped;
@@ -219,14 +247,24 @@ function computeLivePerchCoords(
   bounds: PlayBounds
 ): { x: number; y: number } | null {
   if (!perch.el.isConnected) return null;
+  const style = window.getComputedStyle(perch.el);
+  if (
+    style.display === 'none' ||
+    style.visibility === 'hidden' ||
+    style.opacity === '0' ||
+    style.pointerEvents === 'none'
+  ) {
+    return null;
+  }
+
   const rect = perch.el.getBoundingClientRect();
   if (rect.width < 110 || rect.height < 32) return null;
 
-  const y = Math.round(rect.top - SPIDER_H + 4);
+  const y = Math.round(rect.top - SPIDER_H + 3);
   if (y < bounds.headerSafeTop + 2 || y > bounds.maxY + 8) return null;
 
-  const minX = Math.round(clamp(rect.left + 14, 8, vw - SPIDER_W - 8));
-  const maxX = Math.round(clamp(rect.right - SPIDER_W - 14, 8, vw - SPIDER_W - 8));
+  const minX = Math.round(clamp(rect.left + 20, 8, vw - SPIDER_W - 8));
+  const maxX = Math.round(clamp(rect.right - SPIDER_W - 20, 8, vw - SPIDER_W - 8));
   if (maxX < minX) return null;
 
   const x = Math.round(clamp(rect.left + perch.offsetX, minX, maxX));
