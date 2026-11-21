@@ -248,16 +248,8 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="block text-xs font-black tracking-tight text-[#18181B] dark:text-[#F5F5F4] sm:text-sm xl:text-[15px]">
                   Ôn FE
                 </span>
-                <span className="hidden text-[10px] font-bold tracking-wide text-[#4338CA] dark:text-[#A5B4FC] sm:block sm:text-[11px]">
-                  from Namblee
-                </span>
               </div>
             </div>
-
-            <span
-              aria-hidden="true"
-              className="hidden h-5 w-[2px] -skew-x-12 bg-[#C6BEB0] dark:bg-[#2C302B] sm:block"
-            />
 
             {/* 3-Subject Anime Deck Dropdown */}
             <SakugaSubjectDropdown

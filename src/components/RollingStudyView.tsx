@@ -22,6 +22,8 @@ import { QuestionItem, StudyTier, SubjectId, UserProgressStore } from '../types/
 import { getMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
 import {
+  getSakugaProgressBadgeClass,
+  getSakugaProgressTextClass,
   SakugaBorderFire,
   SakugaBurst,
   SakugaEvent,
@@ -521,7 +523,7 @@ if (activeStage !== null) {
             {/* Stage mastery progress bar */}
             <div
               className={`relative mt-4 rounded-xl border bg-[#FAF9F5] p-3.5 dark:bg-[#1C1F1C] ${stageStats.percent >= 100
-                  ? 'border-[#10B981] ring-2 ring-[#34D399]/35 dark:border-[#10B981]/80 dark:ring-[#34D399]/30'
+                  ? 'border-[#7C3AED] ring-2 ring-[#A78BFA]/45 dark:border-[#A78BFA]/85 dark:ring-[#C4B5FD]/35'
                   : stageStats.percent >= 50
                     ? 'border-[#F59E0B]/70 dark:border-[#F59E0B]/55'
                     : 'border-[#D5CFC2] dark:border-[#2C302B]'
@@ -530,7 +532,7 @@ if (activeStage !== null) {
               <SakugaBorderFire percent={stageStats.percent} radius={12} compact />
               <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="font-medium text-[#656058] dark:text-[#9CA39B]">Tiến độ chặng</span>
-                <span className="font-semibold text-[#047857] tabular-nums dark:text-[#34D399]">
+                <span className={`font-semibold tabular-nums transition-colors ${getSakugaProgressTextClass(stageStats.percent)}`}>
                   {stageStats.mastered}/{stageStats.total} ({stageStats.percent}%)
                 </span>
               </div>
@@ -567,7 +569,7 @@ if (activeStage !== null) {
                       className={`relative flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition ${isCurrentStage
                           ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] shadow-xs dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
                           : stats.percent >= 100
-                            ? 'border-[#10B981] bg-[#FAF9F5] ring-2 ring-[#34D399]/35 text-[#292524] hover:border-[#059669] hover:bg-[#ECFDF5] dark:border-[#10B981]/80 dark:bg-[#1C1F1C] dark:ring-[#34D399]/30 dark:text-[#E7E5E4] dark:hover:border-[#34D399] dark:hover:bg-[#059669]/20'
+                            ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 text-[#292524] hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35 dark:text-[#E7E5E4] dark:hover:border-[#C4B5FD] dark:hover:bg-[#5B21B6]/20'
                             : stats.percent >= 50
                               ? 'border-[#F59E0B]/70 bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                               : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
@@ -577,7 +579,9 @@ if (activeStage !== null) {
 
                       <span className="truncate text-xs font-bold">{stage.title}</span>
 
-                      <span className="shrink-0 rounded-full border border-[#10B981] bg-[#D1FAE5] px-2 py-0.5 text-[11px] font-bold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
+                      <span
+                        className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-bold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
+                      >
                         {stats.percent}%
                       </span>
                     </button>
@@ -596,7 +600,7 @@ if (activeStage !== null) {
               type="button"
               onClick={() => setIsStageSheetOpen(true)}
               className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border bg-[#EAE6DD] px-3.5 py-2.5 text-left shadow-xs transition active:scale-[0.99] dark:bg-[#161816] ${stageStats.percent >= 100
-                  ? 'border-[#10B981] ring-2 ring-[#34D399]/35 dark:border-[#10B981]/80 dark:ring-[#34D399]/30'
+                  ? 'border-[#7C3AED] ring-2 ring-[#A78BFA]/45 dark:border-[#A78BFA]/85 dark:ring-[#C4B5FD]/35'
                   : stageStats.percent >= 50
                     ? 'border-[#F59E0B]/70 dark:border-[#F59E0B]/55'
                     : 'border-[#D5CFC2] dark:border-[#262925]'
@@ -615,7 +619,7 @@ if (activeStage !== null) {
                       Còn {queue.length}
                     </span>
                   ) : (
-                    <span className="shrink-0 rounded-full border border-[#10B981] bg-[#D1FAE5] px-1.5 py-0.5 text-[10px] font-bold text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
+                    <span className="shrink-0 rounded-full border border-[#4C1D95] bg-[#6D28D9] px-1.5 py-0.5 text-[10px] font-bold text-white dark:border-[#DDD6FE] dark:bg-[#7C3AED]">
                       Xong
                     </span>
                   )}
@@ -623,10 +627,7 @@ if (activeStage !== null) {
 
                 <span className="flex shrink-0 items-center gap-1.5">
                   <span
-                    className={`tabular-nums rounded-full border px-2 py-0.5 text-[11px] font-bold ${stageStats.percent >= 50
-                        ? 'border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]'
-                        : 'border-[#F59E0B]/60 bg-[#FEF3C7] text-[#92400E] dark:border-[#F59E0B]/45 dark:bg-[#92400E]/25 dark:text-[#FDE68A]'
-                      }`}
+                    className={`tabular-nums rounded-full border px-2 py-0.5 text-[11px] font-bold transition-colors ${getSakugaProgressBadgeClass(stageStats.percent)}`}
                   >
                     {stageStats.mastered}/{stageStats.total} ({stageStats.percent}%)
                   </span>
@@ -1115,7 +1116,7 @@ if (activeStage !== null) {
                     <h3 className="text-sm font-bold text-[#18181B] dark:text-[#F5F5F4]">
                       Chương {selectedChapter} • Chọn chặng
                     </h3>
-                    <p className="text-xs text-[#047857] tabular-nums dark:text-[#34D399]">
+                    <p className={`text-xs font-medium tabular-nums transition-colors ${getSakugaProgressTextClass(chapterStats.percent)}`}>
                       {chapterStats.mastered}/{chapterStats.total} câu đã thuộc ({chapterStats.percent}%)
                     </p>
                   </div>
@@ -1145,7 +1146,7 @@ if (activeStage !== null) {
                       className={`relative flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left transition ${isCurrentStage
                           ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
                           : stats.percent >= 100
-                            ? 'border-[#10B981] bg-[#FAF9F5] ring-2 ring-[#34D399]/35 text-[#292524] dark:border-[#10B981]/80 dark:bg-[#1C1F1C] dark:ring-[#34D399]/30 dark:text-[#E7E5E4]'
+                            ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 text-[#292524] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35 dark:text-[#E7E5E4]'
                             : stats.percent >= 50
                               ? 'border-[#F59E0B]/70 bg-[#FAF9F5] text-[#292524] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
                               : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
@@ -1155,7 +1156,9 @@ if (activeStage !== null) {
 
                       <span className="truncate text-xs font-bold">{stage.title}</span>
 
-                      <span className="shrink-0 rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
+                      <span
+                        className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-bold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
+                      >
                         {stats.percent}%
                       </span>
                     </button>
@@ -1206,7 +1209,7 @@ return (
           <div className="hidden items-center gap-4 text-sm sm:flex">
             <div className="text-right">
               <div className="text-xs text-[#656058] dark:text-[#9CA39B]">Tiến độ chương đang chọn</div>
-              <div className="font-bold text-[#047857] tabular-nums dark:text-[#34D399]">
+              <div className={`font-bold tabular-nums transition-colors ${getSakugaProgressTextClass(chapterStats.percent)}`}>
                 {chapterStats.mastered}/{chapterStats.total} câu đã thuộc ({chapterStats.percent}%)
               </div>
             </div>
@@ -1227,7 +1230,9 @@ return (
               </span>
             </span>
             <span className="flex shrink-0 items-center gap-1.5">
-              <span className="rounded-full border border-[#10B981] bg-[#D1FAE5] px-2 py-0.5 text-[11px] font-bold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
+              <span
+                className={`rounded-full border px-2 py-0.5 text-[11px] font-bold tabular-nums transition-colors ${getSakugaProgressBadgeClass(chapterStats.percent)}`}
+              >
                 {chapterStats.percent}%
               </span>
               <ChevronDown className="h-4 w-4 text-[#656058] dark:text-[#9CA39B]" />
@@ -1253,7 +1258,9 @@ return (
                   }`}
               >
                 <span className="font-semibold">Chương {ch.chapter}</span>
-                <span className="rounded-full border border-[#10B981] bg-[#D1FAE5] px-2 py-0.5 text-xs font-semibold text-[#047857] tabular-nums dark:border-[#10B981]/60 dark:bg-[#0F100E]/85 dark:text-[#34D399]">
+                <span
+                  className={`rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
+                >
                   {stats.percent}%
                 </span>
               </button>
@@ -1265,7 +1272,7 @@ return (
         {currentChapterMeta && (
           <div
             className={`relative mt-3.5 rounded-xl border bg-[#FAF9F5] p-3.5 dark:bg-[#1C1F1C] sm:mt-5 sm:p-4 ${chapterStats.percent >= 100
-                ? 'border-[#10B981] ring-2 ring-[#34D399]/35 dark:border-[#10B981]/80 dark:ring-[#34D399]/30'
+                ? 'border-[#7C3AED] ring-2 ring-[#A78BFA]/45 dark:border-[#A78BFA]/85 dark:ring-[#C4B5FD]/35'
                 : chapterStats.percent >= 50
                   ? 'border-[#F59E0B]/70 dark:border-[#F59E0B]/55'
                   : 'border-[#D5CFC2] dark:border-[#2C302B]'
@@ -1313,7 +1320,7 @@ return (
               type="button"
               onClick={() => startStageSession(stage.index)}
               className={`group relative flex cursor-pointer flex-col justify-between rounded-2xl border bg-[#EAE6DD] p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:bg-[#161816] dark:shadow-none sm:p-6 ${isCompleted
-                  ? 'border-[#10B981] ring-2 ring-[#34D399]/35 shadow-[0_0_16px_rgba(16,185,129,0.22)] hover:border-[#059669] hover:bg-[#ECFDF5] dark:border-[#10B981]/80 dark:ring-[#34D399]/30 dark:shadow-[0_0_18px_rgba(52,211,153,0.22)] dark:hover:border-[#34D399] dark:hover:bg-[#059669]/20'
+                  ? 'border-[#7C3AED] ring-2 ring-[#A78BFA]/45 shadow-[0_0_16px_rgba(124,58,237,0.22)] hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:ring-[#C4B5FD]/35 dark:shadow-[0_0_18px_rgba(167,139,250,0.24)] dark:hover:border-[#C4B5FD] dark:hover:bg-[#5B21B6]/20'
                   : stats.percent >= 50
                     ? 'border-[#F59E0B]/70 hover:border-[#059669] hover:bg-[#ECFDF5]/60 dark:border-[#F59E0B]/55 dark:hover:border-[#34D399] dark:hover:bg-[#059669]/15'
                     : 'border-[#D5CFC2] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#262925] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
@@ -1325,7 +1332,7 @@ return (
                   <div className="flex items-center gap-2.5">
                     <span
                       className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-bold ${isCompleted
-                          ? 'border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]'
+                          ? 'border-[#4C1D95] bg-[#6D28D9] text-white dark:border-[#DDD6FE] dark:bg-[#7C3AED] dark:text-white'
                           : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
                         }`}
                     >
@@ -1339,7 +1346,9 @@ return (
                     </div>
                   </div>
 
-                  <span className="rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-bold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
+                  <span
+                    className={`rounded-full border px-2.5 py-0.5 text-xs font-bold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
+                  >
                     {stats.percent}%
                   </span>
                 </div>
@@ -1348,7 +1357,7 @@ return (
                 <div className="mt-4">
                   <div className="mb-1.5 flex items-center justify-between text-xs text-[#656058] dark:text-[#9CA39B]">
                     <span>Đã thuộc</span>
-                    <span className="font-semibold text-[#047857] tabular-nums dark:text-[#34D399]">
+                    <span className={`font-semibold tabular-nums transition-colors ${getSakugaProgressTextClass(stats.percent)}`}>
                       {stats.mastered}/{stats.total}
                     </span>
                   </div>

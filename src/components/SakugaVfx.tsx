@@ -360,7 +360,7 @@ const GREEN_PROGRESS_STOPS: readonly ColorStop[] = [
   { pct: 50, rgb: [134, 239, 172] }, // #86EFAC
   { pct: 67, rgb: [74, 222, 128] },  // #4ADE80
   { pct: 84, rgb: [16, 185, 129] },  // #10B981
-  { pct: 100, rgb: [5, 150, 105] },  // #059669
+  { pct: 99, rgb: [5, 150, 105] },   // #059669
 ];
 
 function toHexByte(n: number): string {
@@ -391,15 +391,46 @@ function interpolateStops(stops: readonly ColorStop[], value: number): string {
 }
 
 /**
- * Returns a flat solid hex color shifted incrementally with each 1% change:
- * Yellow range (#FDE68A -> #EAB308) below 50%, switching to Green (#86EFAC -> #059669) at >= 50%.
+ * Returns a flat solid hex color matching the progress bar tier:
+ * Yellow (#FDE68A -> #EAB308) < 50%, Emerald (#86EFAC -> #059669) 50..99%,
+ * and Crystal Butterfly Violet (#6D28D9) at 100%.
  */
 export function getSakugaProgressColor(percent: number): string {
   const clamped = Math.max(0, Math.min(100, percent));
+  if (clamped >= 100) {
+    return '#6D28D9';
+  }
   if (clamped < 50) {
     return interpolateStops(YELLOW_PROGRESS_STOPS, clamped);
   }
   return interpolateStops(GREEN_PROGRESS_STOPS, clamped);
+}
+
+/**
+ * Pill styling synced with SakugaProgressBar:
+ * Amber (< 50%), Emerald (50..99%), and Luminous Butterfly Crystal Violet (100%).
+ */
+export function getSakugaProgressBadgeClass(percent: number): string {
+  if (percent >= 100) {
+    return 'border-[#4C1D95] bg-[#6D28D9] text-white shadow-[2px_2px_0_0_#C4B5FD,0_0_12px_rgba(124,58,237,0.45)] dark:border-[#DDD6FE] dark:bg-[#7C3AED] dark:text-[#FFFFFF] dark:shadow-[2px_2px_0_0_#4C1D95,0_0_14px_rgba(196,181,253,0.6)]';
+  }
+  if (percent >= 50) {
+    return 'border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]';
+  }
+  return 'border-[#F59E0B]/65 bg-[#FEF3C7] text-[#92400E] dark:border-[#F59E0B]/45 dark:bg-[#92400E]/25 dark:text-[#FDE68A]';
+}
+
+/**
+ * Inline percentage counter text color synced with SakugaProgressBar.
+ */
+export function getSakugaProgressTextClass(percent: number): string {
+  if (percent >= 100) {
+    return 'text-[#6D28D9] dark:text-[#C4B5FD]';
+  }
+  if (percent >= 50) {
+    return 'text-[#047857] dark:text-[#34D399]';
+  }
+  return 'text-[#B45309] dark:text-[#FCD34D]';
 }
 
 export { SakugaBorderFire } from './SakugaBorderFire';
@@ -423,37 +454,56 @@ export const SakugaProgressBar: React.FC<SakugaProgressBarProps> = ({
       <div
         className={`sakuga-progress-track relative h-full w-full overflow-hidden rounded-full bg-[#D5CFC2] transition-shadow duration-300 dark:bg-[#0F100E] ${
           isMax
-            ? 'ring-2 ring-[#34D399] shadow-[0_0_14px_rgba(16,185,129,0.65),0_0_5px_rgba(250,204,21,0.55)] dark:ring-[#6EE7B7] dark:shadow-[0_0_16px_rgba(52,211,153,0.75),0_0_6px_rgba(250,204,21,0.55)]'
+            ? 'ring-2 ring-[#7C3AED] shadow-[0_0_14px_rgba(124,58,237,0.58),0_0_5px_rgba(219,39,119,0.28)] dark:ring-[#C4B5FD] dark:shadow-[0_0_18px_rgba(167,139,250,0.85),0_0_7px_rgba(244,114,182,0.45)]'
             : ''
         }`}
       >
         <div
-          className="sakuga-progress-fill relative h-full overflow-hidden rounded-full transition-all duration-300"
-          style={{ width: `${clampedPct}%`, backgroundColor: fillColor }}
+          className={`sakuga-progress-fill relative h-full overflow-hidden rounded-full transition-all duration-300 ${
+            isMax
+              ? 'border border-[#A78BFA]/70 bg-[#6D28D9] dark:border-[#DDD6FE]/75 dark:bg-[#8B5CF6]'
+              : ''
+          }`}
+          style={isMax ? { width: `${clampedPct}%` } : { width: `${clampedPct}%`, backgroundColor: fillColor }}
         >
           {isMax && (
-            <span
-              aria-hidden="true"
-              className="sakuga-bar-radiant-sweep pointer-events-none absolute inset-y-0 left-0 flex w-7 items-stretch gap-1"
-            >
-              <span className="h-full w-3 bg-[#FEF9C3]/75" />
-              <span className="h-full w-1.5 bg-white/85" />
-            </span>
+            <>
+              {/* Stepped faceted crystal prism blocks (100% Zero-Gradient, butterfly wing motif) */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 left-[12%] w-[16%] -skew-x-[28deg] bg-[#4F46E5]/55 dark:bg-[#DDD6FE]/25"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 left-[44%] w-[18%] -skew-x-[28deg] bg-[#7C3AED]/60 dark:bg-[#A78BFA]/35"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 left-[74%] w-[10%] -skew-x-[28deg] bg-[#DB2777]/35 dark:bg-[#F472B6]/45"
+              />
+              <span
+                aria-hidden="true"
+                className="sakuga-bar-radiant-sweep pointer-events-none absolute inset-y-0 left-0 flex w-7 items-stretch gap-1"
+              >
+                <span className="h-full w-3 bg-[#DDD6FE]/80" />
+                <span className="h-full w-1.5 bg-white/95" />
+              </span>
+            </>
           )}
         </div>
       </div>
 
-      {/* Radiant 100% 4-point anime star sparkles along the bar */}
+      {/* Radiant 100% 4-point butterfly crystal star sparkles along the bar */}
       {isMax && (
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-20 overflow-visible">
           <svg
             viewBox="0 0 16 16"
-            className="sakuga-flame-star absolute -top-2 left-[18%] h-3 w-3 -translate-x-1/2"
+            className="sakuga-flame-star absolute -top-2 left-[18%] h-3 w-3 -translate-x-1/2 drop-shadow-[0_0_4px_rgba(167,139,250,0.9)]"
           >
             <path
               d="M8 1 L9.7 6.3 L15 8 L9.7 9.7 L8 15 L6.3 9.7 L1 8 L6.3 6.3 Z"
-              fill="#FEF08A"
-              stroke="#18181B"
+              fill="#DDD6FE"
+              stroke="#4C1D95"
               strokeWidth="1"
               strokeLinejoin="round"
             />
@@ -461,12 +511,12 @@ export const SakugaProgressBar: React.FC<SakugaProgressBarProps> = ({
           <svg
             viewBox="0 0 16 16"
             style={{ animationDelay: '220ms' }}
-            className="sakuga-flame-star absolute -bottom-2 left-[54%] h-3.5 w-3.5 -translate-x-1/2"
+            className="sakuga-flame-star absolute -bottom-2 left-[54%] h-3.5 w-3.5 -translate-x-1/2 drop-shadow-[0_0_5px_rgba(244,114,182,0.85)]"
           >
             <path
               d="M8 1 L9.7 6.3 L15 8 L9.7 9.7 L8 15 L6.3 9.7 L1 8 L6.3 6.3 Z"
-              fill="#A7F3D0"
-              stroke="#064E3B"
+              fill="#F9A8D4"
+              stroke="#6D28D9"
               strokeWidth="1"
               strokeLinejoin="round"
             />
@@ -474,12 +524,12 @@ export const SakugaProgressBar: React.FC<SakugaProgressBarProps> = ({
           <svg
             viewBox="0 0 16 16"
             style={{ animationDelay: '440ms' }}
-            className="sakuga-flame-star absolute -top-2 right-0 h-3.5 w-3.5 translate-x-1/3"
+            className="sakuga-flame-star absolute -top-2 right-0 h-3.5 w-3.5 translate-x-1/3 drop-shadow-[0_0_5px_rgba(196,181,253,0.95)]"
           >
             <path
               d="M8 1 L9.7 6.3 L15 8 L9.7 9.7 L8 15 L6.3 9.7 L1 8 L6.3 6.3 Z"
-              fill="#FEF08A"
-              stroke="#18181B"
+              fill="#FFFFFF"
+              stroke="#6D28D9"
               strokeWidth="1"
               strokeLinejoin="round"
             />

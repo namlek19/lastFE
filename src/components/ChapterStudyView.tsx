@@ -25,6 +25,7 @@ import { QuestionItem, QuestionProgress, StudyTier, SubjectId, UserProgressStore
 import { getDetailedMasteryState, isMastered } from '../utils/storage';
 import { RichExplanation } from './RichExplanation';
 import {
+  getSakugaProgressBadgeClass,
   SakugaBorderFire,
   SakugaBurst,
   SakugaEvent,
@@ -573,7 +574,7 @@ return (
                       className={`relative w-full cursor-pointer rounded-xl border p-4 text-left transition-all ${active
                           ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
                           : stat.pct >= 100
-                            ? 'border-[#10B981] bg-[#FAF9F5] ring-2 ring-[#34D399]/35 hover:border-[#059669] hover:bg-[#ECFDF5] dark:border-[#10B981]/80 dark:bg-[#1C1F1C] dark:ring-[#34D399]/30 dark:hover:border-[#34D399] dark:hover:bg-[#059669]/20'
+                            ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35 dark:hover:border-[#C4B5FD] dark:hover:bg-[#5B21B6]/20'
                             : stat.pct >= 50
                               ? 'border-[#F59E0B]/70 bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                               : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
@@ -589,7 +590,9 @@ return (
                         >
                           Chương {ch.chapter}
                         </span>
-                        <span className="tabular-nums rounded-full border border-[#10B981] bg-[#D1FAE5] px-2 py-0.5 text-[11px] font-semibold text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
+                        <span
+                          className={`tabular-nums rounded-full border px-2 py-0.5 text-[11px] font-semibold transition-colors ${getSakugaProgressBadgeClass(stat.pct)}`}
+                        >
                           {stat.pct}% Đã thuộc
                         </span>
                       </div>
@@ -707,7 +710,7 @@ return (
             type="button"
             onClick={() => setIsMobileSheetOpen(true)}
             className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border bg-[#EAE6DD] px-3.5 py-2.5 text-left transition active:scale-[0.99] dark:bg-[#161816] ${activeChapterStat.pct >= 100
-                ? 'border-[#10B981] ring-2 ring-[#34D399]/35 dark:border-[#10B981]/80 dark:ring-[#34D399]/30'
+                ? 'border-[#7C3AED] ring-2 ring-[#A78BFA]/45 dark:border-[#A78BFA]/85 dark:ring-[#C4B5FD]/35'
                 : activeChapterStat.pct >= 50
                   ? 'border-[#F59E0B]/70 dark:border-[#F59E0B]/55'
                   : 'border-[#D5CFC2] dark:border-[#262925]'
@@ -736,10 +739,7 @@ return (
 
               <span className="flex shrink-0 items-center gap-1.5">
                 <span
-                  className={`tabular-nums rounded-full border px-2 py-0.5 text-[11px] font-bold ${activeChapterStat.pct >= 50
-                      ? 'border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]'
-                      : 'border-[#F59E0B]/60 bg-[#FEF3C7] text-[#92400E] dark:border-[#F59E0B]/45 dark:bg-[#92400E]/25 dark:text-[#FDE68A]'
-                    }`}
+                  className={`tabular-nums rounded-full border px-2 py-0.5 text-[11px] font-bold transition-colors ${getSakugaProgressBadgeClass(activeChapterStat.pct)}`}
                 >
                   {activeChapterStat.mastered}/{activeChapterStat.total} ({activeChapterStat.pct}%)
                 </span>
@@ -1352,7 +1352,7 @@ return (
                         className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border px-3.5 py-2.5 text-left transition ${active
                             ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
                             : stat.pct >= 100
-                              ? 'border-[#10B981] bg-[#FAF9F5] ring-2 ring-[#34D399]/35 text-[#292524] hover:border-[#059669] hover:bg-[#ECFDF5] dark:border-[#10B981]/80 dark:bg-[#1C1F1C] dark:ring-[#34D399]/30 dark:text-[#E7E5E4] dark:hover:border-[#34D399] dark:hover:bg-[#059669]/20'
+                              ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 text-[#292524] hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35 dark:text-[#E7E5E4] dark:hover:border-[#C4B5FD] dark:hover:bg-[#5B21B6]/20'
                               : stat.pct >= 50
                                 ? 'border-[#F59E0B]/70 bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                                 : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
@@ -1370,7 +1370,9 @@ return (
                             </div>
                             <div className="truncate text-xs opacity-85">{ch.title}</div>
                           </div>
-                          <span className="shrink-0 rounded-full border border-[#10B981] bg-[#D1FAE5] px-2 py-0.5 text-[11px] font-semibold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
+                          <span
+                            className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stat.pct)}`}
+                          >
                             {stat.pct}%
                           </span>
                         </div>

@@ -226,7 +226,7 @@ function drawSmoothClosedWave(ctx: CanvasRenderingContext2D, points: readonly Po
 
 function buildBurstShards(compact: boolean): BurstShard[] {
   const count = compact ? 14 : 22;
-  const palette = ['#F97316', '#FACC15', '#FEF08A', '#34D399'];
+  const palette = ['#F97316', '#FACC15', '#FEF08A', '#C4B5FD'];
   return Array.from({ length: count }, (_, idx) => ({
     u: (idx + 0.35) / count,
     speed: compact ? 8 + (idx % 3) * 2.5 : 10 + (idx % 3) * 3,
@@ -464,7 +464,7 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
           const er = Math.max(mini ? 0.5 : 0.65, (1 - cycle) * maxEr);
           ctx.beginPath();
           ctx.arc(ex, ey, er, 0, TAU);
-          ctx.fillStyle = cycle < 0.42 ? '#FEF08A' : isMax && e % 4 === 0 ? '#6EE7B7' : '#FB923C';
+          ctx.fillStyle = cycle < 0.42 ? '#FEF08A' : isMax && e % 4 === 0 ? '#C4B5FD' : '#FB923C';
           ctx.fill();
         }
       }
@@ -481,8 +481,8 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
           const sx = pt.px + pt.nx * offset;
           const sy = pt.py + pt.ny * offset - 1;
           const outerR = (compact ? 2.6 : 3.4) * pulse;
-          const fill = s % 2 === 0 ? '#FEF08A' : isMax ? '#6EE7B7' : '#FDE047';
-          const stroke = s % 2 === 0 ? 'rgba(120, 53, 15, 0.7)' : 'rgba(6, 78, 59, 0.75)';
+          const fill = s % 2 === 0 ? '#FEF08A' : isMax ? '#C4B5FD' : '#FDE047';
+          const stroke = s % 2 === 0 ? 'rgba(120, 53, 15, 0.7)' : 'rgba(91, 33, 182, 0.8)';
           drawStarSpark(ctx, sx, sy, outerR, fill, stroke, t * 1.6 + s);
         }
       }
@@ -504,7 +504,7 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
           height + ringExpand * 2,
           radius + ringExpand * 0.65
         );
-        ctx.strokeStyle = burstP < 0.45 ? '#FEF08A' : '#34D399';
+        ctx.strokeStyle = burstP < 0.45 ? '#FEF08A' : '#A78BFA';
         ctx.lineWidth = Math.max(0.9, (1 - burstP) * 2.8);
         ctx.stroke();
 
