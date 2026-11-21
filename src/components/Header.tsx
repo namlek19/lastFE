@@ -246,10 +246,10 @@ const HeaderComponent: React.FC<HeaderProps> = ({
       }`}
     >
       <div className="mx-auto w-full max-w-[1720px] px-3 sm:px-6 lg:px-8 xl:px-12">
-        {/* Main Row: Single-Row Desktop Anime HUD (>= 1024px) & Top Row on Mobile/Tablet */}
-        <div className="flex w-full items-center justify-between gap-2 py-2 sm:gap-3 sm:py-2.5 lg:gap-4 lg:py-3">
+        {/* Main Row: Single-Row Desktop Anime HUD (>= 1024px) & Responsive Two-Tier Header on Mobile */}
+        <div className="flex w-full flex-wrap items-center justify-between gap-x-2 gap-y-2 py-2 sm:flex-nowrap sm:gap-3 sm:py-2.5 lg:gap-4 lg:py-3">
           {/* Left Cluster: Super Saiyan Icon + Origami LastFE Logo + Subject Switcher */}
-          <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 lg:gap-3.5">
+          <div className="order-1 flex min-w-0 shrink-0 items-center gap-1.5 sm:order-none sm:gap-3 lg:gap-3.5">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <SakugaSaiyanLogo event={saiyanEvent} onLogoClick={handleLogoClick} />
               <span
@@ -338,106 +338,112 @@ const HeaderComponent: React.FC<HeaderProps> = ({
             </div>
           )}
 
-          {/* Right Cluster: Mastery HUD Counter, Standalone "Thi thử" Stamp, Sync, Theme */}
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 xl:gap-2.5">
-            {/* Overall Mastery HUD Counter (Color & Anime Jump keyed to Study Tier & Subject) */}
-            <motion.div
-              key={badgeBounceSeq > 0 ? `mastery-bounce-${badgeBounceSeq}` : 'mastery-static'}
-              initial={
-                badgeBounceSeq > 0
-                  ? { y: 0, scaleX: 1.18, scaleY: 0.84 }
-                  : false
-              }
-              animate={
-                badgeBounceSeq > 0
-                  ? {
-                      y: [0, -11, 2, 0],
-                      scaleX: [1.18, 0.9, 1.06, 1],
-                      scaleY: [0.84, 1.14, 0.94, 1],
-                    }
-                  : { y: 0, scaleX: 1, scaleY: 1 }
-              }
-              transition={{ duration: 0.44, times: [0, 0.36, 0.72, 1], ease: [0.22, 1, 0.36, 1] }}
-              className={`inline-flex items-center gap-1 rounded-lg border-2 px-2 py-1 text-[11px] font-extrabold tabular-nums whitespace-nowrap transition-colors duration-200 sm:gap-1.5 sm:px-2.5 sm:text-xs ${TIER_BADGE_STYLES[tier].pill}`}
-              title={`Đã thuộc ${masteredCount} trên ${totalQuestionCount} câu môn ${activeSubjectMeta.code}`}
-            >
-              <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${TIER_BADGE_STYLES[tier].icon}`} />
-              <span>
-                {masteredCount}/{totalQuestionCount}
-                <span className="hidden sm:inline lg:hidden xl:inline"> Đã thuộc</span>
-              </span>
-            </motion.div>
-
-            {/* Standalone Mock Exam ("Thi thử") Cel-Shaded Action Button */}
-            <button
-              type="button"
-              onClick={handleExamClick}
-              aria-current={mode === 'exam' ? 'page' : undefined}
-              title="Thi thử trộn đề (Full Hardcore)"
-              className="sakuga-btn group relative inline-flex cursor-pointer items-center justify-center overflow-visible focus-visible:outline-none"
-            >
-              {isExamBursting && (
-                <SakugaParticles
-                  key={`exam-particles-${examBurstSeq}`}
-                  isMiss={false}
-                  showShards={true}
-                  accentFill="#EA580C"
-                  smokeTint="#FEF08A"
-                  sparkleFill="#FACC15"
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[60px] w-[118px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
-                />
-              )}
-              <motion.span
-                key={isExamBursting ? `exam-pop-${examBurstSeq}` : 'exam-static'}
-                initial={isExamBursting ? { y: -5, scaleX: 1.16, scaleY: 0.85 } : false}
-                animate={{ y: 0, scaleX: 1, scaleY: 1 }}
-                transition={{ type: 'spring', stiffness: 360, damping: 16 }}
-                className={`relative z-10 inline-flex items-center gap-1.5 rounded-lg border-2 px-2 py-1 text-[11px] font-extrabold tracking-tight whitespace-nowrap transition-colors duration-150 sm:px-2.5 sm:text-xs xl:px-3 ${
-                  mode === 'exam'
-                    ? 'border-[#7C2D12] bg-[#EA580C] text-white shadow-[2px_2px_0_0_#FACC15] hover:bg-[#C2410C] dark:border-[#FEF08A] dark:bg-[#EA580C] dark:text-white dark:shadow-[2px_2px_0_0_#CA8A04] dark:hover:bg-[#C2410C]'
-                    : 'border-[#92400E] bg-[#FDE68A] text-[#78350F] shadow-[2px_2px_0_0_#D97706] hover:border-[#78350F] hover:bg-[#FCD34D] hover:text-[#451A03] dark:border-[#FBBF24] dark:bg-[#78350F]/75 dark:text-[#FEF3C7] dark:shadow-[2px_2px_0_0_#D97706] dark:hover:bg-[#92400E] dark:hover:text-white'
-                }`}
+          {/* Right Cluster: Split into Top-Right Utilities (order-2) & Full-Width Progress+Exam Bar (order-3) on mobile */}
+          <div className="contents sm:flex sm:shrink-0 sm:items-center sm:gap-2 xl:gap-2.5">
+            {/* Group A: Overall Mastery HUD Counter & Standalone Mock Exam ("Thi thử") */}
+            <div className="order-3 flex w-full items-center justify-between gap-2 border-t border-[#D5CFC2]/80 pt-2 dark:border-[#262925] sm:order-none sm:w-auto sm:justify-start sm:gap-2 sm:border-t-0 sm:pt-0 xl:gap-2.5">
+              {/* Overall Mastery HUD Counter (Color & Anime Jump keyed to Study Tier & Subject) */}
+              <motion.div
+                key={badgeBounceSeq > 0 ? `mastery-bounce-${badgeBounceSeq}` : 'mastery-static'}
+                initial={
+                  badgeBounceSeq > 0
+                    ? { y: 0, scaleX: 1.18, scaleY: 0.84 }
+                    : false
+                }
+                animate={
+                  badgeBounceSeq > 0
+                    ? {
+                        y: [0, -11, 2, 0],
+                        scaleX: [1.18, 0.9, 1.06, 1],
+                        scaleY: [0.84, 1.14, 0.94, 1],
+                      }
+                    : { y: 0, scaleX: 1, scaleY: 1 }
+                }
+                transition={{ duration: 0.44, times: [0, 0.36, 0.72, 1], ease: [0.22, 1, 0.36, 1] }}
+                className={`inline-flex items-center gap-1 rounded-lg border-2 px-2 py-1 text-[11px] font-extrabold tabular-nums whitespace-nowrap transition-colors duration-200 sm:gap-1.5 sm:px-2.5 sm:text-xs ${TIER_BADGE_STYLES[tier].pill}`}
+                title={`Đã thuộc ${masteredCount} trên ${totalQuestionCount} câu môn ${activeSubjectMeta.code}`}
               >
-                <ClipboardCheck className="hidden h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:-rotate-6 group-hover:scale-110 sm:block lg:hidden xl:block" />
-                <span>Thi thử</span>
-              </motion.span>
-            </button>
+                <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${TIER_BADGE_STYLES[tier].icon}`} />
+                <span>
+                  {masteredCount}/{totalQuestionCount}
+                  <span className="inline sm:hidden md:inline lg:hidden xl:inline"> Đã thuộc</span>
+                </span>
+              </motion.div>
 
-            {/* Progress Sync Button */}
-            <button
-              type="button"
-              onClick={handleSyncClick}
-              aria-label="Đồng bộ tiến độ"
-              title="Đồng bộ tiến độ"
-              className="sakuga-btn group inline-flex cursor-pointer items-center gap-1.5 rounded-lg border-2 border-[#A5B4FC] bg-[#EEF2FF] p-1 text-xs font-extrabold text-[#3730A3] shadow-[2px_2px_0_0_#C7D2FE] whitespace-nowrap hover:-translate-y-0.5 hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/60 dark:bg-[#312E81]/35 dark:text-[#A5B4FC] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:border-[#A5B4FC] dark:hover:bg-[#312E81]/55 sm:px-2.5 sm:py-1 lg:p-1.5 2xl:px-2.5 2xl:py-1"
-            >
-              <Cloud className="h-4 w-4 shrink-0 transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:scale-110 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 2xl:h-3.5 2xl:w-3.5" />
-              <span className="hidden sm:inline lg:hidden 2xl:inline">Đồng bộ</span>
-            </button>
-
-            {/* Light / Dark Mode Toggle with Anime Spin-Pop */}
-            <button
-              type="button"
-              onClick={handleThemeClick}
-              aria-pressed={theme === 'dark'}
-              aria-label={theme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
-              title={theme === 'dark' ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối'}
-              className="sakuga-btn inline-flex cursor-pointer items-center justify-center rounded-lg border-2 border-[#C6BEB0] bg-[#FAF9F5] p-1 text-xs font-medium text-[#292524] shadow-[2px_2px_0_0_#D5CFC2] hover:-translate-y-0.5 hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#323833] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:shadow-[2px_2px_0_0_#0A0B0A] dark:hover:border-[#A5B4FC] dark:hover:bg-[#312E81]/35 dark:hover:text-[#A5B4FC] sm:p-1.5"
-            >
-              <motion.span
-                key={theme}
-                initial={hasToggledTheme ? { rotate: -85, scale: 0.55, opacity: 0 } : false}
-                animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 420, damping: 20 }}
-                className="inline-flex"
+              {/* Standalone Mock Exam ("Thi thử") Cel-Shaded Action Button */}
+              <button
+                type="button"
+                onClick={handleExamClick}
+                aria-current={mode === 'exam' ? 'page' : undefined}
+                title="Thi thử trộn đề (Full Hardcore)"
+                className="sakuga-btn group relative inline-flex cursor-pointer items-center justify-center overflow-visible focus-visible:outline-none"
               >
-                {theme === 'dark' ? (
-                  <Sun className="h-4 w-4 text-[#FCD34D]" />
-                ) : (
-                  <Moon className="h-4 w-4 text-[#4338CA]" />
+                {isExamBursting && (
+                  <SakugaParticles
+                    key={`exam-particles-${examBurstSeq}`}
+                    isMiss={false}
+                    showShards={true}
+                    accentFill="#EA580C"
+                    smokeTint="#FEF08A"
+                    sparkleFill="#FACC15"
+                    className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[60px] w-[118px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
+                  />
                 )}
-              </motion.span>
-            </button>
+                <motion.span
+                  key={isExamBursting ? `exam-pop-${examBurstSeq}` : 'exam-static'}
+                  initial={isExamBursting ? { y: -5, scaleX: 1.16, scaleY: 0.85 } : false}
+                  animate={{ y: 0, scaleX: 1, scaleY: 1 }}
+                  transition={{ type: 'spring', stiffness: 360, damping: 16 }}
+                  className={`relative z-10 inline-flex items-center gap-1.5 rounded-lg border-2 px-2 py-1 text-[11px] font-extrabold tracking-tight whitespace-nowrap transition-colors duration-150 sm:px-2.5 sm:text-xs xl:px-3 ${
+                    mode === 'exam'
+                      ? 'border-[#7C2D12] bg-[#EA580C] text-white shadow-[2px_2px_0_0_#FACC15] hover:bg-[#C2410C] dark:border-[#FEF08A] dark:bg-[#EA580C] dark:text-white dark:shadow-[2px_2px_0_0_#CA8A04] dark:hover:bg-[#C2410C]'
+                      : 'border-[#92400E] bg-[#FDE68A] text-[#78350F] shadow-[2px_2px_0_0_#D97706] hover:border-[#78350F] hover:bg-[#FCD34D] hover:text-[#451A03] dark:border-[#FBBF24] dark:bg-[#78350F]/75 dark:text-[#FEF3C7] dark:shadow-[2px_2px_0_0_#D97706] dark:hover:bg-[#92400E] dark:hover:text-white'
+                  }`}
+                >
+                  <ClipboardCheck className="block h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:-rotate-6 group-hover:scale-110 lg:hidden xl:block" />
+                  <span>Thi thử</span>
+                </motion.span>
+              </button>
+            </div>
+
+            {/* Group B: Progress Sync Button & Light/Dark Mode Toggle */}
+            <div className="order-2 flex shrink-0 items-center gap-1.5 sm:order-none sm:gap-2 xl:gap-2.5">
+              {/* Progress Sync Button */}
+              <button
+                type="button"
+                onClick={handleSyncClick}
+                aria-label="Đồng bộ tiến độ"
+                title="Đồng bộ tiến độ"
+                className="sakuga-btn group inline-flex cursor-pointer items-center gap-1.5 rounded-lg border-2 border-[#A5B4FC] bg-[#EEF2FF] p-1 text-xs font-extrabold text-[#3730A3] shadow-[2px_2px_0_0_#C7D2FE] whitespace-nowrap hover:-translate-y-0.5 hover:border-[#4338CA] hover:bg-[#E0E7FF] dark:border-[#818CF8]/60 dark:bg-[#312E81]/35 dark:text-[#A5B4FC] dark:shadow-[2px_2px_0_0_#312E81] dark:hover:border-[#A5B4FC] dark:hover:bg-[#312E81]/55 sm:p-1.5 md:px-2.5 md:py-1 lg:p-1.5 2xl:px-2.5 2xl:py-1"
+              >
+                <Cloud className="h-4 w-4 shrink-0 transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:scale-110 md:h-3.5 md:w-3.5 lg:h-4 lg:w-4 2xl:h-3.5 2xl:w-3.5" />
+                <span className="hidden md:inline lg:hidden 2xl:inline">Đồng bộ</span>
+              </button>
+
+              {/* Light / Dark Mode Toggle with Anime Spin-Pop */}
+              <button
+                type="button"
+                onClick={handleThemeClick}
+                aria-pressed={theme === 'dark'}
+                aria-label={theme === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'}
+                title={theme === 'dark' ? 'Chuyển sang chế độ Sáng' : 'Chuyển sang chế độ Tối'}
+                className="sakuga-btn inline-flex cursor-pointer items-center justify-center rounded-lg border-2 border-[#C6BEB0] bg-[#FAF9F5] p-1 text-xs font-medium text-[#292524] shadow-[2px_2px_0_0_#D5CFC2] hover:-translate-y-0.5 hover:border-[#4338CA] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:border-[#323833] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:shadow-[2px_2px_0_0_#0A0B0A] dark:hover:border-[#A5B4FC] dark:hover:bg-[#312E81]/35 dark:hover:text-[#A5B4FC] sm:p-1.5"
+              >
+                <motion.span
+                  key={theme}
+                  initial={hasToggledTheme ? { rotate: -85, scale: 0.55, opacity: 0 } : false}
+                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 20 }}
+                  className="inline-flex"
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="h-4 w-4 text-[#FCD34D]" />
+                  ) : (
+                    <Moon className="h-4 w-4 text-[#4338CA]" />
+                  )}
+                </motion.span>
+              </button>
+            </div>
           </div>
         </div>
 

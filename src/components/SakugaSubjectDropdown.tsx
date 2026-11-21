@@ -407,7 +407,7 @@ const SakugaSubjectDropdownComponent: React.FC<SakugaSubjectDropdownProps> = ({
               clipPath: 'inset(0% 0% 100% 0% round 14px)',
             }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute left-0 top-[calc(100%+8px)] z-50 w-[min(340px,calc(100vw-24px))] overflow-hidden rounded-2xl border-2 border-[#27272A] bg-[#FAF9F5] shadow-[5px_5px_0_0_#27272A] dark:border-[#52525B] dark:bg-[#161816] dark:shadow-[5px_5px_0_0_#000000]"
+            className="absolute -left-[104px] top-[calc(100%+8px)] z-50 w-[min(340px,calc(100vw-24px))] overflow-hidden rounded-2xl border-2 border-[#27272A] bg-[#FAF9F5] shadow-[5px_5px_0_0_#27272A] dark:border-[#52525B] dark:bg-[#161816] dark:shadow-[5px_5px_0_0_#000000] sm:left-0"
           >
             {/* Clean Header Bar (z-20 so Spidey-Clawd's vertical web strand tucks neatly under this seam) */}
             <div className="relative z-20 flex items-center justify-between border-b-2 border-[#27272A]/85 bg-[#EAE6DD] px-3.5 py-2 dark:border-[#323833] dark:bg-[#1E221F]">
