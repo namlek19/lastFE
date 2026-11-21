@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import React, { lazy, startTransition, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { MotionConfig } from 'framer-motion';
 import { Header } from './components/Header';
 import { setBorderFirePaused } from './components/SakugaBorderFire';
@@ -115,7 +115,7 @@ export const App: React.FC = () => {
     }
     loadSubjectData(subject).then((loaded) => {
       if (!cancelled) {
-        setSubjectData(loaded);
+        startTransition(() => setSubjectData(loaded));
       }
     });
     return () => {

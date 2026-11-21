@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { startTransition, useCallback, useEffect, useRef, useState } from 'react';
 import {
   LASTFE_FACETS,
   LASTFE_PALETTES,
@@ -277,6 +277,10 @@ function isDarkModeActive(): boolean {
   return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 }
 
+function getBgHex(dark: boolean): string {
+  return dark ? '#0F100E' : '#F4F2EC';
+}
+
 const BRUSH_SEGS = 10;
 const BRUSH_TOP_X = new Float32Array(BRUSH_SEGS + 1);
 const BRUSH_TOP_Y = new Float32Array(BRUSH_SEGS + 1);
@@ -332,8 +336,14 @@ function drawCalligraphyEllipseRipple(
   ry: number,
   rotOffset: number,
   lineWidth: number,
-  color: string
+  color: string,
+  alpha = 1
 ): void {
+  if (alpha <= 0.002) return;
+  const prevAlpha = ctx.globalAlpha;
+  if (alpha < 1) {
+    ctx.globalAlpha = prevAlpha * alpha;
+  }
   ctx.strokeStyle = color;
   ctx.lineCap = 'round';
 
@@ -351,6 +361,10 @@ function drawCalligraphyEllipseRipple(
   ctx.ellipse(cx, cy, rx, ry, 0, 5.18 + rotOffset, 6.08 + rotOffset);
   ctx.lineWidth = Math.max(0.55, lineWidth * 0.48);
   ctx.stroke();
+
+  if (alpha < 1) {
+    ctx.globalAlpha = prevAlpha;
+  }
 }
 
 function drawOrigamiPetalCanvas(
@@ -361,7 +375,8 @@ function drawOrigamiPetalCanvas(
   scale: number,
   rotRad: number,
   isDark: boolean,
-  creaseColor: string
+  creaseColor: string,
+  drawCrease = true
 ): void {
   const facets = PETAL_SHAPES[variant];
   ctx.save();
@@ -379,7 +394,7 @@ function drawOrigamiPetalCanvas(
     ctx.closePath();
     ctx.fillStyle = isDark ? f.dark : f.light;
     ctx.fill();
-    if (!isDark) {
+    if (!isDark && drawCrease) {
       ctx.strokeStyle = creaseColor;
       ctx.lineWidth = 0.45;
       ctx.stroke();
@@ -438,8 +453,8 @@ function drawOrigamiButterfly3D(
   ctx.scale(scale, scale);
 
   if (auraAlpha > 0.02) {
-    ctx.save();
-    ctx.globalAlpha *= auraAlpha;
+    const prevAlpha = ctx.globalAlpha;
+    ctx.globalAlpha = prevAlpha * auraAlpha;
     ctx.beginPath();
     ctx.moveTo(0, -16 * flapScaleX - 4);
     ctx.lineTo(18 * flapScaleX + 4, 0);
@@ -448,7 +463,7 @@ function drawOrigamiButterfly3D(
     ctx.closePath();
     ctx.fillStyle = isDark ? 'rgba(196, 181, 253, 0.22)' : 'rgba(99, 102, 241, 0.16)';
     ctx.fill();
-    ctx.restore();
+    ctx.globalAlpha = prevAlpha;
   }
 
   for (let i = 0; i < BUTTERFLY_FACETS.length; i++) {
@@ -621,6 +636,7 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
   onComplete,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const promptRef = useRef<HTMLDivElement | null>(null);
   const finishedRef = useRef(false);
   const phaseRef = useRef<IntroPhase>('idle');
   const startGlideRef = useRef<((rect: GlideRect) => void) | null>(null);
@@ -680,9 +696,8 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
 
     raf1 = window.requestAnimationFrame(() => {
       const canvas = canvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      if (canvas && ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (canvas) {
+        canvas.style.visibility = 'hidden';
       }
 
       const targetRect = targetLogoRef.current?.getBoundingClientRect();
@@ -721,7 +736,7 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false }) ?? canvas.getContext('2d');
     if (!ctx) return;
 
     const lowPower = isLowPowerDevice();
@@ -746,8 +761,10 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
 
     const ripples: InkRipple[] = [];
     const splashes: SplashBead[] = [];
+    const lockSparks: Array<{ x: number; y: number; r: number; a: number; color: string }> = [];
 
     let phaseStartMs = performance.now();
+    let phasePendingStart = false;
     let prevFrameMs = phaseStartMs;
     let lastDrawMs = 0;
     let hiddenAtMs = 0;
@@ -774,9 +791,13 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
       dpr = computeIntroDpr(vw, vh);
       const pixelW = Math.max(1, Math.round(vw * dpr));
       const pixelH = Math.max(1, Math.round(vh * dpr));
-      canvas.width = pixelW;
-      canvas.height = pixelH;
+      if (canvas.width !== pixelW || canvas.height !== pixelH) {
+        canvas.width = pixelW;
+        canvas.height = pixelH;
+      }
       ctx.setTransform(pixelW / vw, 0, 0, pixelH / vh, 0, 0);
+      ctx.fillStyle = getBgHex(isDarkModeActive());
+      ctx.fillRect(0, 0, vw, vh);
       if (phaseRef.current === 'idle') {
         dropX = vw * 0.5;
         dropY = vh * 0.62;
@@ -842,9 +863,14 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
       dropX = clamp(targetX, vw * 0.3, vw * 0.7);
       dropY = clamp(targetY, vh * 0.5, vh * 0.72);
       dropImpacted = false;
+      phasePendingStart = true;
+      lastDrawMs = 0;
       phaseRef.current = 'drop';
       phaseStartMs = performance.now();
-      setIsPromptVisible(false);
+      if (promptRef.current) {
+        promptRef.current.style.opacity = '0';
+      }
+      startTransition(() => setIsPromptVisible(false));
     };
 
     startGlideRef.current = (rect: GlideRect) => {
@@ -927,6 +953,8 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
       }
 
       // Subtle ambient breeze ripples on calm spots so the water surface stays gently alive
+      const ambientStroke = isDark ? '#C4B5FD' : '#312E81';
+      const rippleStroke = isDark ? '#E0E7FF' : '#312E81';
       const ambientSpots: readonly [number, number, number][] = [
         [0.26, 0.67, 0],
         [0.74, 0.54, 1900],
@@ -944,7 +972,8 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
           rx * 0.28,
           cycle * 1.1 + aIdx * 2.1,
           1.0,
-          isDark ? `rgba(196, 181, 253, ${alpha.toFixed(3)})` : `rgba(49, 46, 129, ${alpha.toFixed(3)})`
+          ambientStroke,
+          alpha
         );
       }
 
@@ -961,7 +990,8 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
           rx * 0.28,
           breath * 0.8,
           1.4,
-          isDark ? `rgba(196, 181, 253, ${a.toFixed(3)})` : `rgba(49, 46, 129, ${a.toFixed(3)})`
+          ambientStroke,
+          a
         );
       }
 
@@ -986,37 +1016,38 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
           ry,
           rp.rotOffset,
           rp.strokeWidth * (1 - p * 0.35),
-          isDark
-            ? `rgba(224, 231, 255, ${alpha.toFixed(3)})`
-            : `rgba(49, 46, 129, ${alpha.toFixed(3)})`
+          rippleStroke,
+          alpha
         );
       }
 
       // Impact splash droplets
-      for (let i = splashes.length - 1; i >= 0; i--) {
-        const sp = splashes[i];
-        sp.ageMs += dtSec * 1000;
-        if (sp.ageMs >= sp.durationMs) {
-          splashes.splice(i, 1);
-          continue;
+      if (splashes.length > 0) {
+        ctx.fillStyle = rippleStroke;
+        for (let i = splashes.length - 1; i >= 0; i--) {
+          const sp = splashes[i];
+          sp.ageMs += dtSec * 1000;
+          if (sp.ageMs >= sp.durationMs) {
+            splashes.splice(i, 1);
+            continue;
+          }
+          const t = sp.ageMs / 1000;
+          const p = sp.ageMs / sp.durationMs;
+          const sx = sp.x + sp.vx * t;
+          const sy = sp.y + sp.vy * t + 190 * t * t;
+          ctx.globalAlpha = waterAlpha * (1 - p);
+          ctx.beginPath();
+          ctx.arc(sx, sy, sp.size * (1 - p * 0.4), 0, TAU);
+          ctx.fill();
         }
-        const t = sp.ageMs / 1000;
-        const p = sp.ageMs / sp.durationMs;
-        const sx = sp.x + sp.vx * t;
-        const sy = sp.y + sp.vy * t + 190 * t * t;
-        ctx.save();
-        ctx.globalAlpha = waterAlpha * (1 - p);
-        ctx.beginPath();
-        ctx.arc(sx, sy, sp.size * (1 - p * 0.4), 0, TAU);
-        ctx.fillStyle = isDark ? '#E0E7FF' : '#312E81';
-        ctx.fill();
-        ctx.restore();
+        ctx.globalAlpha = waterAlpha;
       }
 
       // Continuously drifting origami petals carried by the water current with gentle wake trails
       const petalWrapW = vw + 72;
       const dampFactor = 1 - Math.exp(-dtSec * 7);
       const wakeColor = isDark ? 'rgba(196, 181, 253, 0.18)' : 'rgba(49, 46, 129, 0.14)';
+      const ringAlpha = isDark ? 0.24 : 0.19;
 
       for (let i = 0; i < lakePetals.length; i++) {
         const lp = lakePetals[i];
@@ -1052,10 +1083,21 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
           ringRx * 0.3,
           i + tSec * 0.35,
           0.9,
-          isDark ? 'rgba(196, 181, 253, 0.24)' : 'rgba(49, 46, 129, 0.19)'
+          ambientStroke,
+          ringAlpha
         );
 
-        drawOrigamiPetalCanvas(ctx, px, py, lp.variant, lp.scale, rot, isDark, creaseColor);
+        drawOrigamiPetalCanvas(
+          ctx,
+          px,
+          py,
+          lp.variant,
+          lp.scale,
+          rot,
+          isDark,
+          creaseColor,
+          !lowPower
+        );
       }
 
       ctx.restore();
@@ -1067,22 +1109,21 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
       const windFade = smoothstep(0.05, 0.3, progress) * (1 - smoothstep(0.82, 1, progress));
       if (windFade <= 0.01) return;
 
+      const prevAlpha = ctx.globalAlpha;
+      ctx.strokeStyle = isDark ? '#C4B5FD' : '#312E81';
+      ctx.lineWidth = 1.2;
+      ctx.lineCap = 'round';
       for (let i = 0; i < windWisps.length; i++) {
         const w = windWisps[i];
         const wy = ((w.yFrac + progress * w.speed * 1.45) % 1.2) * vh - 40;
         const wx = w.xFrac * vw;
-        ctx.save();
-        ctx.strokeStyle = isDark
-          ? `rgba(196, 181, 253, ${(w.alpha * windFade).toFixed(3)})`
-          : `rgba(49, 46, 129, ${(w.alpha * windFade).toFixed(3)})`;
-        ctx.lineWidth = 1.2;
-        ctx.lineCap = 'round';
+        ctx.globalAlpha = prevAlpha * w.alpha * windFade;
         ctx.beginPath();
         ctx.moveTo(wx, wy);
         ctx.quadraticCurveTo(wx + (i % 2 === 0 ? 5 : -5), wy + w.len * 0.5, wx, wy + w.len);
         ctx.stroke();
-        ctx.restore();
       }
+      ctx.globalAlpha = prevAlpha;
     };
 
     const step = (now: number) => {
@@ -1092,12 +1133,18 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
       }
 
       const phase = phaseRef.current;
-      const minFrameMs = phase === 'idle' ? 33 : lowPower ? 22 : 0;
+      const minFrameMs = phase === 'idle' ? 32 : 0;
       if (minFrameMs > 0 && lastDrawMs !== 0 && now - lastDrawMs < minFrameMs) {
         rafId = window.requestAnimationFrame(step);
         return;
       }
       lastDrawMs = now;
+
+      if (phasePendingStart) {
+        phasePendingStart = false;
+        phaseStartMs = now;
+        prevFrameMs = now;
+      }
 
       const dtSec = Math.min(0.05, Math.max(0.001, (now - prevFrameMs) / 1000));
       prevFrameMs = now;
@@ -1108,7 +1155,8 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
       const creaseColor = isDark ? 'rgba(76, 29, 149, 0.28)' : 'rgba(224, 231, 255, 0.55)';
       const moteColors = isDark ? DARK_MOTE_COLORS : LIGHT_MOTE_COLORS;
 
-      ctx.clearRect(0, 0, vw, vh);
+      ctx.fillStyle = getBgHex(isDark);
+      ctx.fillRect(0, 0, vw, vh);
 
       const elapsed = Math.max(0, now - phaseStartMs);
 
@@ -1167,30 +1215,32 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
         drawLakeLayer(now, dtSec, tSec, camY, waterAlpha, isDark, creaseColor);
         drawCameraWindParallax(p, 0, isDark);
 
-        // Gently taper horizontal & vertical sway near end of ascend for a zero-seam handoff into surge
+        // Gently blend out of drop's ending wing/bob/heading & taper near surge for zero-seam handoff
         const swayDecay = 1 - smoothstep(0.65, 1, p);
+        const introBlend = smoothstep(0, 0.16, p);
         const bfX =
           lerp(dropX, vw * 0.5, easeOutCubic(Math.min(1, p * 1.4))) +
           Math.sin(p * Math.PI * 2) * 14 * swayDecay;
         const bfBaseY = lerp(dropY - 16, vh * 0.48, easeInOutCubic(p));
         const flapWave = 0.5 - 0.5 * Math.cos(p * TAU * 4.5);
-        const wingDeg = -14 + Math.pow(flapWave, 0.82) * 82;
-        const liftBob = (0.5 - flapWave) * 5 * swayDecay;
-        const heading = Math.cos(p * Math.PI * 2) * 0.08 * swayDecay;
+        const flapCurve = flapWave * (1.24 - 0.24 * flapWave);
+        const wingDeg = lerp(10, -14 + flapCurve * 82, introBlend);
+        const liftBob = (0.5 - flapWave) * 5 * swayDecay * introBlend;
+        const heading = Math.cos(p * Math.PI * 2) * 0.08 * swayDecay * introBlend;
         const bfY = bfBaseY + liftBob;
 
+        const prevMoteAlpha = ctx.globalAlpha;
         for (let m = 0; m < 6; m++) {
           const ageP = (p * 2.6 + m * 0.17) % 1;
           const mx = bfX - Math.sin(m * 1.9 + p * 6) * (6 + ageP * 14);
           const my = bfY + 12 + ageP * 48;
-          ctx.save();
-          ctx.globalAlpha = (1 - ageP) * 0.72;
+          ctx.globalAlpha = prevMoteAlpha * (1 - ageP) * 0.72;
           ctx.beginPath();
           ctx.arc(mx, my, (1 - ageP) * 2.4 + 0.6, 0, TAU);
           ctx.fillStyle = moteColors[m % moteColors.length];
           ctx.fill();
-          ctx.restore();
         }
+        ctx.globalAlpha = prevMoteAlpha;
 
         drawOrigamiButterfly3D(
           ctx,
@@ -1225,18 +1275,18 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
 
         // Smoothly fade remaining hover motes downward behind rising butterfly
         const moteFade = 1 - p;
+        const prevMoteAlpha = ctx.globalAlpha;
         for (let m = 0; m < 6; m++) {
           const ageP = (1 + p * 0.5 + m * 0.17) % 1;
           const mx = bfX - Math.sin(m * 1.9 + 6 + p * 2) * (6 + ageP * 14);
           const my = bfY + 14 + ageP * 48 + p * 18;
-          ctx.save();
-          ctx.globalAlpha = (1 - ageP) * 0.72 * moteFade;
+          ctx.globalAlpha = prevMoteAlpha * (1 - ageP) * 0.72 * moteFade;
           ctx.beginPath();
           ctx.arc(mx, my, (1 - ageP) * 2.4 + 0.6, 0, TAU);
           ctx.fillStyle = moteColors[m % moteColors.length];
           ctx.fill();
-          ctx.restore();
         }
+        ctx.globalAlpha = prevMoteAlpha;
 
         // Luminous upward slipstream streak
         const streakAlpha = Math.sin(p * Math.PI) * 0.45;
@@ -1286,12 +1336,12 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
           const mp = p / 0.48;
           const me = easeOutQuart(mp);
           const mAlpha = 1 - smoothstep(0.22, 0.48, p);
+          const prevAlpha = ctx.globalAlpha;
+          ctx.globalAlpha = prevAlpha * mAlpha;
           for (let i = 0; i < burstMotes.length; i++) {
             const m = burstMotes[i];
             const mx = cx + Math.cos(m.angle) * spreadX * m.radiusFactor * me;
             const my = cy + Math.sin(m.angle) * spreadY * m.radiusFactor * me;
-            ctx.save();
-            ctx.globalAlpha = mAlpha;
             if (m.isStar) {
               drawFourPointStar(ctx, mx, my, m.size * 2.05, moteColors[m.colorIdx], mp * 1.9);
             } else {
@@ -1300,8 +1350,8 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
               ctx.fillStyle = moteColors[m.colorIdx];
               ctx.fill();
             }
-            ctx.restore();
           }
+          ctx.globalAlpha = prevAlpha;
         }
 
         // Diagonal crystal chime shimmer across assembled LastFE facets
@@ -1311,7 +1361,7 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
         const chimeEnv = chimeActive ? Math.sin(clamp(chimeP, 0, 1) * Math.PI) * 0.55 : 0;
 
         // 2. All 31 facets: continuous C-infinity cubic-Bezier shatter-hang-swoop into LastFE
-        const lockSparks: Array<{ x: number; y: number; r: number; a: number; color: string }> = [];
+        lockSparks.length = 0;
         const trailSteps = lowPower ? 1 : 2;
 
         for (let i = 0; i < LASTFE_FACETS.length; i++) {
@@ -1415,12 +1465,14 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
           ctx.restore();
         }
 
-        for (let i = 0; i < lockSparks.length; i++) {
-          const spk = lockSparks[i];
-          ctx.save();
-          ctx.globalAlpha = spk.a;
-          drawFourPointStar(ctx, spk.x, spk.y, spk.r, spk.color, 0.25);
-          ctx.restore();
+        if (lockSparks.length > 0) {
+          const prevAlpha = ctx.globalAlpha;
+          for (let i = 0; i < lockSparks.length; i++) {
+            const spk = lockSparks[i];
+            ctx.globalAlpha = prevAlpha * spk.a;
+            drawFourPointStar(ctx, spk.x, spk.y, spk.r, spk.color, 0.25);
+          }
+          ctx.globalAlpha = prevAlpha;
         }
 
         // 3. Mini origami butterflies steer nose-first along smooth Bezier swoops; hero settles onto E
@@ -1572,13 +1624,13 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
               [192, -6, 3.8, 1],
               [288, 56, 4.0, 2],
             ];
+            const prevAlpha = ctx.globalAlpha;
+            ctx.globalAlpha = prevAlpha * compFade * 0.82;
             for (let g = 0; g < glints.length; g++) {
               const [gx, gy, gr, cIdx] = glints[g];
-              ctx.save();
-              ctx.globalAlpha = compFade * 0.82;
               drawFourPointStar(ctx, mapSvgX(gx), mapSvgY(gy), gr * compFade, moteColors[cIdx], p * 2 + g);
-              ctx.restore();
             }
+            ctx.globalAlpha = prevAlpha;
           }
         }
 
@@ -1653,6 +1705,7 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
       {/* Subtle bottom cue while lake waits for click/tap */}
       {isPromptVisible && (
         <div
+          ref={promptRef}
           aria-hidden="true"
           className="pointer-events-none fixed inset-x-0 bottom-[max(2.25rem,calc(env(safe-area-inset-bottom)+1.5rem))] z-20 flex justify-center sm:bottom-12"
         >
