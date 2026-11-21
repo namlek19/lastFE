@@ -328,7 +328,7 @@ const SakugaSubjectDropdownComponent: React.FC<SakugaSubjectDropdownProps> = ({
         aria-expanded={isOpen}
         aria-label={`Chọn môn học (đang chọn ${SUBJECTS[subject].code})`}
         title={`${SUBJECTS[subject].code} • ${SUBJECTS[subject].name}`}
-        className={`sakuga-btn group relative inline-flex cursor-pointer items-center gap-1.5 overflow-hidden rounded-xl border-2 px-2 py-1 text-[11px] font-black tracking-wide whitespace-nowrap transition-colors duration-150 focus-visible:outline-none sm:gap-2 sm:px-2.5 sm:py-1.5 sm:text-xs ${activeSpec.triggerClass}`}
+        className={`sakuga-btn group relative inline-flex cursor-pointer items-center gap-0.5 overflow-hidden rounded-xl border-2 px-1.5 py-1 text-[10.5px] font-black tracking-wide whitespace-nowrap transition-colors duration-150 focus-visible:outline-none min-[420px]:gap-1 min-[420px]:px-2 min-[420px]:text-[11px] sm:gap-2 sm:px-2.5 sm:py-1.5 sm:text-xs ${activeSpec.triggerClass}`}
       >
         {/* Soft Anime Glint Sheen Sweep BEHIND text (`z-[1]`) and cleanly unmounted after 460ms */}
         {glintState.active && (
@@ -350,7 +350,7 @@ const SakugaSubjectDropdownComponent: React.FC<SakugaSubjectDropdownProps> = ({
           aria-hidden="true"
           animate={{ rotate: isOpen ? -12 : 0, scale: isOpen ? 1.08 : 1 }}
           transition={{ type: 'spring', stiffness: 420, damping: 20 }}
-          className="relative z-10 hidden shrink-0 min-[390px]:inline-flex"
+          className="relative z-10 hidden shrink-0 min-[460px]:inline-flex"
         >
           <MiniTriggerSpider />
         </motion.span>
@@ -379,7 +379,7 @@ const SakugaSubjectDropdownComponent: React.FC<SakugaSubjectDropdownProps> = ({
           transition={{ type: 'spring', stiffness: 440, damping: 22 }}
           className="relative z-10 inline-flex shrink-0"
         >
-          <ChevronDown className="h-3.5 w-3.5 stroke-[2.75]" />
+          <ChevronDown className="h-3 w-3 stroke-[2.75] sm:h-3.5 sm:w-3.5" />
         </motion.span>
       </button>
 
@@ -407,7 +407,7 @@ const SakugaSubjectDropdownComponent: React.FC<SakugaSubjectDropdownProps> = ({
               clipPath: 'inset(0% 0% 100% 0% round 14px)',
             }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute -left-[104px] top-[calc(100%+8px)] z-50 w-[min(340px,calc(100vw-24px))] overflow-hidden rounded-2xl border-2 border-[#27272A] bg-[#FAF9F5] shadow-[5px_5px_0_0_#27272A] dark:border-[#52525B] dark:bg-[#161816] dark:shadow-[5px_5px_0_0_#000000] sm:left-0"
+            className="absolute -left-[88px] top-[calc(100%+8px)] z-50 w-[min(340px,calc(100vw-24px))] overflow-hidden rounded-2xl border-2 border-[#27272A] bg-[#FAF9F5] shadow-[5px_5px_0_0_#27272A] dark:border-[#52525B] dark:bg-[#161816] dark:shadow-[5px_5px_0_0_#000000] sm:left-0"
           >
             {/* Clean Header Bar (z-20 so Spidey-Clawd's vertical web strand tucks neatly under this seam) */}
             <div className="relative z-20 flex items-center justify-between border-b-2 border-[#27272A]/85 bg-[#EAE6DD] px-3.5 py-2 dark:border-[#323833] dark:bg-[#1E221F]">

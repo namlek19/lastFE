@@ -637,6 +637,7 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const promptRef = useRef<HTMLDivElement | null>(null);
+  const skipBtnRef = useRef<HTMLButtonElement | null>(null);
   const finishedRef = useRef(false);
   const phaseRef = useRef<IntroPhase>('idle');
   const startGlideRef = useRef<((rect: GlideRect) => void) | null>(null);
@@ -647,6 +648,7 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
   onCompleteRef.current = onComplete;
 
   const [isPromptVisible, setIsPromptVisible] = useState(true);
+  const [isSkipHidden, setIsSkipHidden] = useState(false);
   const [glideRect, setGlideRect] = useState<GlideRect | null>(null);
   const [flipTransform, setFlipTransform] = useState('translate3d(0px, 0px, 0px) scale(1)');
   const [curtainTransparent, setCurtainTransparent] = useState(false);
@@ -780,6 +782,7 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
     let surgeStartWingDeg = 12;
     let shatterCenterY = vh * 0.4;
 
+    let skipHidden = false;
     let glideTriggered = false;
     let rafId = 0;
 
@@ -1319,6 +1322,14 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
           phaseStartMs = now;
         }
       } else if (phase === 'shatter_converge') {
+        if (!skipHidden && elapsed >= SHATTER_CONVERGE_DURATION_MS - 300) {
+          skipHidden = true;
+          if (skipBtnRef.current) {
+            skipBtnRef.current.style.opacity = '0';
+            skipBtnRef.current.style.pointerEvents = 'none';
+          }
+          startTransition(() => setIsSkipHidden(true));
+        }
         const p = clamp(elapsed / SHATTER_CONVERGE_DURATION_MS, 0, 1);
         const cx = vw * 0.5;
         const cy = shatterCenterY;
@@ -1717,13 +1728,18 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
 
       {/* Faint Skip button at top-right (also triggered via Space bar) */}
       <button
+        ref={skipBtnRef}
         type="button"
+        tabIndex={isSkipHidden ? -1 : 0}
+        aria-hidden={isSkipHidden || undefined}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           handleSkip();
         }}
-        className="fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.75rem,env(safe-area-inset-top))] z-30 inline-flex min-h-[36px] min-w-[60px] cursor-pointer items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium tracking-wide text-[#57534E]/55 transition-colors hover:text-[#18181B]/90 focus-visible:outline-2 focus-visible:outline-[#4338CA] dark:text-[#A1A1AA]/50 dark:hover:text-[#F5F5F4]/90 dark:focus-visible:outline-[#818CF8] sm:right-6 sm:top-5"
+        className={`fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.75rem,env(safe-area-inset-top))] z-30 inline-flex min-h-[36px] min-w-[60px] cursor-pointer items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium tracking-wide text-[#57534E]/55 transition-[color,opacity] duration-200 hover:text-[#18181B]/90 focus-visible:outline-2 focus-visible:outline-[#4338CA] dark:text-[#A1A1AA]/50 dark:hover:text-[#F5F5F4]/90 dark:focus-visible:outline-[#818CF8] sm:right-6 sm:top-5 ${
+          isSkipHidden ? 'pointer-events-none opacity-0' : 'opacity-100'
+        }`}
       >
         Bỏ qua
       </button>

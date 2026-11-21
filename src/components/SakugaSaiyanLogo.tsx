@@ -123,7 +123,7 @@ export const SakugaSaiyanLogo: React.FC<SakugaSaiyanLogoProps> = ({ event, onLog
         onClick={onLogoClick}
         aria-label="Ôn FE — Người Nhện bật Super Saiyan"
         title="Bấm để Người Nhện hóa Super Saiyan!"
-        className={`sakuga-btn group relative flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-visible rounded-xl border-2 transition-[transform,background-color,border-color,box-shadow] duration-300 ease-out focus-visible:outline-none sm:h-9 sm:w-9 ${
+        className={`sakuga-btn group relative flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center overflow-visible rounded-xl border-2 transition-[transform,background-color,border-color,box-shadow] duration-300 ease-out focus-visible:outline-none min-[420px]:h-8 min-[420px]:w-8 sm:h-9 sm:w-9 ${
           isPowered
             ? 'border-[#78350F] bg-[#FEF08A] shadow-[0_0_0_2px_#FACC15,3px_3px_0_0_#EA580C] dark:border-[#FEF9C3] dark:bg-[#CA8A04] dark:shadow-[0_0_0_2px_#FEF08A,3px_3px_0_0_#EA580C]'
             : 'border-[#1E1B4B] bg-[#1D4ED8] shadow-[2px_2px_0_0_#93C5FD] hover:bg-[#1E40AF] dark:border-[#93C5FD] dark:bg-[#1E3A8A] dark:shadow-[2px_2px_0_0_#172554] dark:hover:bg-[#1D4ED8]'
@@ -223,7 +223,7 @@ export const SakugaSaiyanLogo: React.FC<SakugaSaiyanLogoProps> = ({ event, onLog
           <svg
             viewBox="0 0 48 48"
             aria-hidden="true"
-            className="h-7 w-7 overflow-visible transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:-rotate-3 sm:h-8 sm:w-8"
+            className="h-6 w-6 overflow-visible transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:-rotate-3 min-[420px]:h-7 min-[420px]:w-7 sm:h-8 sm:w-8"
           >
             {/* Spider-Man Blue Shoulders & Red Chest Panel */}
             <path
