@@ -725,8 +725,17 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
     if (!ctx) return;
 
     const lowPower = isLowPowerDevice();
-    let { w: vw, h: vh } = getViewportMetrics();
-    let dpr = lowPower ? 1 : Math.min(window.devicePixelRatio || 1, 1.25);
+    const computeIntroDpr = (w: number, h: number): number => {
+      const raw = window.devicePixelRatio || 1;
+      const cap = lowPower ? (w * h <= 480000 ? 2 : 1.5) : 2;
+      return Math.min(raw, cap);
+    };
+
+    const initialRect = canvas.getBoundingClientRect();
+    const initialMetrics = getViewportMetrics();
+    let vw = initialRect.width > 0 ? initialRect.width : initialMetrics.w;
+    let vh = initialRect.height > 0 ? initialRect.height : initialMetrics.h;
+    let dpr = computeIntroDpr(vw, vh);
 
     const waterStrokes = buildWaterStrokes(lowPower);
     const lakePetals = buildLakePetals(lowPower);
@@ -758,13 +767,16 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
     let rafId = 0;
 
     const syncSize = () => {
+      const rect = canvas.getBoundingClientRect();
       const next = getViewportMetrics();
-      vw = next.w;
-      vh = next.h;
-      dpr = lowPower ? 1 : Math.min(window.devicePixelRatio || 1, 1.25);
-      canvas.width = Math.max(1, Math.round(vw * dpr));
-      canvas.height = Math.max(1, Math.round(vh * dpr));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      vw = rect.width > 0 ? rect.width : next.w;
+      vh = rect.height > 0 ? rect.height : next.h;
+      dpr = computeIntroDpr(vw, vh);
+      const pixelW = Math.max(1, Math.round(vw * dpr));
+      const pixelH = Math.max(1, Math.round(vh * dpr));
+      canvas.width = pixelW;
+      canvas.height = pixelH;
+      ctx.setTransform(pixelW / vw, 0, 0, pixelH / vh, 0, 0);
       if (phaseRef.current === 'idle') {
         dropX = vw * 0.5;
         dropY = vh * 0.62;
@@ -1389,12 +1401,10 @@ export const SakugaSumieIntro: React.FC<SakugaSumieIntroProps> = ({
           ctx.fillStyle = palette[facet.tone];
           ctx.fill();
 
-          if (!lowPower || u >= 0.72) {
-            ctx.strokeStyle = palette.crease;
-            ctx.lineWidth = 0.45;
-            ctx.lineJoin = 'round';
-            ctx.stroke();
-          }
+          ctx.strokeStyle = palette.crease;
+          ctx.lineWidth = 0.45;
+          ctx.lineJoin = 'round';
+          ctx.stroke();
 
           const totalSheen = Math.min(0.75, lockSheenAlpha + chimeSheen);
           if (totalSheen > 0.01) {
