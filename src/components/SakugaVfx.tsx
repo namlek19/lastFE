@@ -412,7 +412,7 @@ export function getSakugaProgressColor(percent: number): string {
  */
 export function getSakugaProgressBadgeClass(percent: number): string {
   if (percent >= 100) {
-    return 'border-[#4C1D95] bg-[#6D28D9] text-white shadow-[2px_2px_0_0_#C4B5FD,0_0_12px_rgba(124,58,237,0.45)] dark:border-[#DDD6FE] dark:bg-[#7C3AED] dark:text-[#FFFFFF] dark:shadow-[2px_2px_0_0_#4C1D95,0_0_14px_rgba(196,181,253,0.6)]';
+    return 'border-[#5B21B6] bg-[#EDE9FE] text-[#4C1D95] ring-1 ring-white/80 shadow-[2px_2px_0_0_#A78BFA,0_0_12px_rgba(124,58,237,0.4)] dark:border-[#DDD6FE] dark:bg-[#7C3AED] dark:text-[#FFFFFF] dark:ring-0 dark:shadow-[2px_2px_0_0_#4C1D95,0_0_14px_rgba(196,181,253,0.6)]';
   }
   if (percent >= 50) {
     return 'border-[#10B981] bg-[#D1FAE5] text-[#047857] dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]';

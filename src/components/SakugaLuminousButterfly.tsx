@@ -75,6 +75,7 @@ interface ShatterBurst {
   id: number;
   x: number;
   y: number;
+  shieldActive: boolean;
   minis: ShatterMiniButterfly[];
   shards: ShatterShard[];
   motes: ShatterMote[];
@@ -337,7 +338,7 @@ function createShatterBurst(id: number, x: number, y: number): ShatterBurst {
     };
   });
 
-  return { id, x, y, minis, shards, motes };
+  return { id, x, y, shieldActive: true, minis, shards, motes };
 }
 
 interface OrigamiButterflySvgProps {
@@ -847,10 +848,18 @@ const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
     const burst = createShatterBurst(burstId, cx, cy);
     setBursts((prev) => [...prev, burst]);
 
+    // Keep an invisible ghost-click shield at (cx, cy) briefly so mobile touchend->click
+    // never falls through to quiz answers underneath right after butterfly unmounts
+    const shieldTimer = window.setTimeout(() => {
+      setBursts((prev) =>
+        prev.map((item) => (item.id === burstId ? { ...item, shieldActive: false } : item))
+      );
+    }, 480);
+
     const cleanupTimer = window.setTimeout(() => {
       setBursts((prev) => prev.filter((item) => item.id !== burstId));
     }, 1850);
-    burstTimersRef.current.push(cleanupTimer);
+    burstTimersRef.current.push(shieldTimer, cleanupTimer);
 
     scheduleVisit(false);
   };
@@ -912,6 +921,27 @@ const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
                           style={{ left: burst.x, top: burst.y }}
                           className="pointer-events-none absolute"
                         >
+                          {burst.shieldActive && (
+                            <div
+                              onPointerDown={(e) => {
+                                e.stopPropagation();
+                              }}
+                              onPointerUp={(e) => {
+                                e.stopPropagation();
+                              }}
+                              onMouseUp={(e) => {
+                                e.stopPropagation();
+                              }}
+                              onTouchEnd={(e) => {
+                                e.stopPropagation();
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                              }}
+                              className="pointer-events-auto absolute -left-9 -top-9 z-10 h-18 w-18 touch-manipulation rounded-full"
+                            />
+                          )}
                           {/* Core prism starburst flash */}
                           <motion.svg
                             viewBox="0 0 64 64"
