@@ -60,6 +60,8 @@ interface FireLayerSpec {
 
 interface FireClient {
   host: Element;
+  isIntersecting: boolean;
+  hasSize: boolean;
   isVisible: boolean;
   lastDraw: number;
   draw: (now: number, visibleCount: number, isDark: boolean) => void;
@@ -114,44 +116,132 @@ const MAX_MINI_VIOLET_LAYERS_DARK: readonly FireLayerSpec[] = [
   { heightScale: 0.5, phaseOffset: -0.55, fillStyle: '#DDD6FE' },
 ];
 
-function isDarkModeActive(): boolean {
-  return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-}
+// Reusable per-bucket ember coordinate arrays (0 allocations during frame draws)
+const EMBER_BUCKET_COLORS: [string, string, string] = ['', '', ''];
+const EMBER_BUCKET_COUNTS = [0, 0, 0];
+const MAX_EMBERS = 24;
+const EMBER_X = [new Float32Array(MAX_EMBERS), new Float32Array(MAX_EMBERS), new Float32Array(MAX_EMBERS)];
+const EMBER_Y = [new Float32Array(MAX_EMBERS), new Float32Array(MAX_EMBERS), new Float32Array(MAX_EMBERS)];
+const EMBER_R = [new Float32Array(MAX_EMBERS), new Float32Array(MAX_EMBERS), new Float32Array(MAX_EMBERS)];
 
-// ---- Module-level shared RAF & IntersectionObserver coordinator ----
+// ---- Module-level shared Smart Timer + VSync & IntersectionObserver coordinator ----
 const allClients = new Set<FireClient>();
 const visibleClients = new Set<FireClient>();
 const elementToClient = new WeakMap<Element, FireClient>();
 
 let sharedIo: IntersectionObserver | null = null;
 let sharedMotionQuery: MediaQueryList | null = null;
+let darkClassObserver: MutationObserver | null = null;
+let cachedIsDark = false;
 let prefersReducedMotion = false;
 let sharedListenersBound = false;
+let externallyPaused = false;
+let scrollPaused = false;
+let scrollResumeTimerId = 0;
+let coordinatorTimerId = 0;
 let coordinatorRafId = 0;
 
+function readDarkClass(): boolean {
+  return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+}
+
+function isDarkModeActive(): boolean {
+  return darkClassObserver ? cachedIsDark : readDarkClass();
+}
+
 function stopCoordinatorLoop(): void {
+  if (coordinatorTimerId !== 0) {
+    window.clearTimeout(coordinatorTimerId);
+    coordinatorTimerId = 0;
+  }
   if (coordinatorRafId !== 0) {
     cancelAnimationFrame(coordinatorRafId);
     coordinatorRafId = 0;
   }
 }
 
+function syncClientActiveSet(client: FireClient): void {
+  const shouldRun = client.isIntersecting && client.hasSize;
+  if (shouldRun && !client.isVisible) {
+    client.isVisible = true;
+    visibleClients.add(client);
+    client.lastDraw = 0;
+  } else if (!shouldRun && client.isVisible) {
+    client.isVisible = false;
+    visibleClients.delete(client);
+  }
+}
+
+export function setBorderFirePaused(paused: boolean): void {
+  if (externallyPaused === paused) return;
+  externallyPaused = paused;
+  if (paused) {
+    stopCoordinatorLoop();
+  } else if (typeof document !== 'undefined' && !document.hidden) {
+    const now = performance.now();
+    const count = Math.max(1, visibleClients.size);
+    const isDark = isDarkModeActive();
+    for (const client of visibleClients) {
+      client.lastDraw = now;
+      client.draw(now, count, isDark);
+    }
+    ensureCoordinatorLoop();
+  }
+}
+
 function getTargetIntervalMs(visibleCount: number, lowPower: boolean, isBursting: boolean): number {
   if (isBursting) return 33;
   if (lowPower) {
-    if (visibleCount <= 2) return 42;
-    if (visibleCount <= 5) return 56;
-    return 72;
+    if (visibleCount <= 2) return 56;
+    return 80;
   }
-  if (visibleCount <= 2) return 33;
-  if (visibleCount <= 5) return 42;
-  if (visibleCount <= 9) return 50;
-  return 62;
+  if (visibleCount <= 2) return 42;
+  if (visibleCount <= 5) return 56;
+  return 72;
+}
+
+function scheduleNextCoordinatorStep(waitMs: number): void {
+  if (
+    externallyPaused ||
+    scrollPaused ||
+    prefersReducedMotion ||
+    typeof document === 'undefined' ||
+    document.hidden ||
+    visibleClients.size === 0 ||
+    coordinatorTimerId !== 0 ||
+    coordinatorRafId !== 0
+  ) {
+    return;
+  }
+
+  if (waitMs <= 18) {
+    coordinatorRafId = requestAnimationFrame(coordinatorTick);
+  } else {
+    coordinatorTimerId = window.setTimeout(() => {
+      coordinatorTimerId = 0;
+      if (
+        !externallyPaused &&
+        !scrollPaused &&
+        !prefersReducedMotion &&
+        !document.hidden &&
+        visibleClients.size > 0 &&
+        coordinatorRafId === 0
+      ) {
+        coordinatorRafId = requestAnimationFrame(coordinatorTick);
+      }
+    }, Math.max(8, Math.round(waitMs - 8)));
+  }
 }
 
 function coordinatorTick(now: number): void {
   coordinatorRafId = 0;
-  if (prefersReducedMotion || document.hidden || visibleClients.size === 0) {
+  if (
+    externallyPaused ||
+    scrollPaused ||
+    prefersReducedMotion ||
+    document.hidden ||
+    visibleClients.size === 0
+  ) {
     return;
   }
 
@@ -161,47 +251,46 @@ function coordinatorTick(now: number): void {
   const maxNonBurstDraws = visibleCount >= 5 ? Math.max(2, Math.ceil(visibleCount / 3)) : visibleCount;
 
   let nonBurstDrawn = 0;
+  let minNextWait = Infinity;
   const drawnClients: FireClient[] = [];
 
   for (const client of visibleClients) {
     const bursting = client.hasBurst();
+    const interval = getTargetIntervalMs(visibleCount, lowPower, bursting);
+
     if (!bursting && nonBurstDrawn >= maxNonBurstDraws) {
+      minNextWait = Math.min(minNextWait, 16);
       continue;
     }
 
-    const interval = getTargetIntervalMs(visibleCount, lowPower, bursting);
-    if (client.lastDraw === 0 || now - client.lastDraw >= interval) {
+    const elapsed = client.lastDraw === 0 ? interval : now - client.lastDraw;
+    if (elapsed >= interval) {
       client.lastDraw = now;
       client.draw(now, visibleCount, isDark);
       drawnClients.push(client);
       if (!bursting) {
         nonBurstDrawn += 1;
       }
+      minNextWait = Math.min(minNextWait, interval);
+    } else {
+      minNextWait = Math.min(minNextWait, interval - elapsed);
     }
   }
 
   // Rotate drawn entries to the tail of the Set so next frame services oldest entries first
-  for (const client of drawnClients) {
+  for (let i = 0; i < drawnClients.length; i++) {
+    const client = drawnClients[i];
     if (visibleClients.has(client)) {
       visibleClients.delete(client);
       visibleClients.add(client);
     }
   }
 
-  coordinatorRafId = requestAnimationFrame(coordinatorTick);
+  scheduleNextCoordinatorStep(Number.isFinite(minNextWait) ? minNextWait : 56);
 }
 
 function ensureCoordinatorLoop(): void {
-  if (
-    prefersReducedMotion ||
-    typeof document === 'undefined' ||
-    document.hidden ||
-    visibleClients.size === 0 ||
-    coordinatorRafId !== 0
-  ) {
-    return;
-  }
-  coordinatorRafId = requestAnimationFrame(coordinatorTick);
+  scheduleNextCoordinatorStep(0);
 }
 
 function ensureSharedObservers(): void {
@@ -215,16 +304,13 @@ function ensureSharedObservers(): void {
           const client = elementToClient.get(entry.target);
           if (!client) continue;
 
-          if (entry.isIntersecting) {
-            if (!client.isVisible) {
-              client.isVisible = true;
-              visibleClients.add(client);
-              client.lastDraw = 0;
-              client.draw(performance.now(), visibleClients.size, isDark);
-            }
-          } else if (client.isVisible) {
-            client.isVisible = false;
-            visibleClients.delete(client);
+          client.isIntersecting = entry.isIntersecting;
+          const wasVisible = client.isVisible;
+          syncClientActiveSet(client);
+          if (!wasVisible && client.isVisible) {
+            const now = performance.now();
+            client.lastDraw = now;
+            client.draw(now, visibleClients.size, isDark);
           }
         }
 
@@ -240,6 +326,18 @@ function ensureSharedObservers(): void {
 
   if (!sharedListenersBound && typeof document !== 'undefined') {
     sharedListenersBound = true;
+    cachedIsDark = readDarkClass();
+
+    if (typeof MutationObserver !== 'undefined') {
+      darkClassObserver = new MutationObserver(() => {
+        cachedIsDark = readDarkClass();
+      });
+      darkClassObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class'],
+      });
+    }
+
     sharedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     prefersReducedMotion = sharedMotionQuery.matches;
 
@@ -257,6 +355,35 @@ function ensureSharedObservers(): void {
         ensureCoordinatorLoop();
       }
     });
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (prefersReducedMotion || externallyPaused || visibleClients.size === 0) return;
+        let anyBurst = false;
+        for (const client of visibleClients) {
+          if (client.hasBurst()) {
+            anyBurst = true;
+            break;
+          }
+        }
+        if (anyBurst) return;
+
+        if (!scrollPaused) {
+          scrollPaused = true;
+          stopCoordinatorLoop();
+        }
+        if (scrollResumeTimerId !== 0) {
+          window.clearTimeout(scrollResumeTimerId);
+        }
+        scrollResumeTimerId = window.setTimeout(() => {
+          scrollResumeTimerId = 0;
+          scrollPaused = false;
+          ensureCoordinatorLoop();
+        }, 120);
+      },
+      { passive: true }
+    );
 
     const handleMotionChange = () => {
       prefersReducedMotion = Boolean(sharedMotionQuery?.matches);
@@ -285,10 +412,12 @@ function registerFireClient(client: FireClient): void {
   ensureSharedObservers();
   allClients.add(client);
   elementToClient.set(client.host, client);
-  visibleClients.add(client);
-  client.isVisible = true;
+  client.isIntersecting = true;
+  syncClientActiveSet(client);
   sharedIo?.observe(client.host);
-  ensureCoordinatorLoop();
+  if (visibleClients.size > 0) {
+    ensureCoordinatorLoop();
+  }
 }
 
 function unregisterFireClient(client: FireClient): void {
@@ -297,6 +426,7 @@ function unregisterFireClient(client: FireClient): void {
   allClients.delete(client);
   visibleClients.delete(client);
   client.isVisible = false;
+  client.isIntersecting = false;
   if (visibleClients.size === 0) {
     stopCoordinatorLoop();
   }
@@ -333,19 +463,29 @@ function buildRoundedRectSamples(
 ): PerimeterPoint[] {
   if (w <= 0 || h <= 0) return [];
 
+  const lowPower = isLowPowerDevice();
   const r = Math.max(0, Math.min(rRaw, w / 2, h / 2));
   const topLen = Math.max(0, w - 2 * r);
   const sideLen = Math.max(0, h - 2 * r);
 
   const topSegs =
     topLen > 0.5
-      ? Math.max(4, Math.min(mini ? 16 : compact ? 28 : 44, Math.round(topLen / (mini ? 12 : 24))))
+      ? Math.max(
+          4,
+          Math.min(
+            mini ? 14 : compact ? 22 : 36,
+            Math.round(topLen / (mini ? 14 : lowPower ? 30 : 26))
+          )
+        )
       : 0;
   const sideSegs =
     sideLen > 0.5
-      ? Math.max(2, Math.min(mini ? 6 : 14, Math.round(sideLen / (mini ? 12 : 20))))
+      ? Math.max(
+          2,
+          Math.min(mini ? 5 : 12, Math.round(sideLen / (mini ? 14 : lowPower ? 24 : 20)))
+        )
       : 0;
-  const cornerSegs = r > 0.5 ? (mini ? 3 : 5) : 0;
+  const cornerSegs = r > 0.5 ? (mini || compact || lowPower ? 3 : 5) : 0;
 
   const raw: RawPerimeterSample[] = [];
 
@@ -638,7 +778,7 @@ function drawSmoothClosedWave(ctx: CanvasRenderingContext2D, points: readonly Po
 }
 
 function buildBurstShards(compact: boolean): BurstShard[] {
-  const count = compact ? 14 : 22;
+  const count = compact ? 12 : 18;
   const palette = ['#7C3AED', '#C084FC', '#F5F3FF', '#F472B6'];
   return Array.from({ length: count }, (_, idx) => ({
     u: (idx + 0.35) / count,
@@ -718,14 +858,20 @@ const SakugaBorderFireComponent: React.FC<SakugaBorderFireProps> = ({
       }
     };
 
-    const syncSize = () => {
+    const syncSize = (): boolean => {
       width = host.clientWidth;
       height = host.clientHeight;
+      if (width <= 0 || height <= 0) {
+        clipPath = null;
+        perimeterSamples = [];
+        return false;
+      }
+
       borderX = Math.max(0, Math.round((host.offsetWidth - width) / 2));
       borderY = Math.max(0, Math.round((host.offsetHeight - height) / 2));
 
       const rawDpr = window.devicePixelRatio || 1;
-      const dpr = isLowPowerDevice() ? 1 : mini ? Math.min(rawDpr, 1.25) : Math.min(rawDpr, 1.35);
+      const dpr = isLowPowerDevice() || mini || compact ? 1 : Math.min(rawDpr, 1.15);
       const canvasW = width + pad * 2;
       const canvasH = height + pad * 2;
       const cw = Math.max(1, Math.round(canvasW * dpr));
@@ -751,6 +897,7 @@ const SakugaBorderFireComponent: React.FC<SakugaBorderFireProps> = ({
       }
 
       rebuildPerimeterCache();
+      return perimeterSamples.length > 0;
     };
 
     const drawFrame = (now: number, visibleCount: number, isDark: boolean) => {
@@ -791,7 +938,6 @@ const SakugaBorderFireComponent: React.FC<SakugaBorderFireProps> = ({
           ? 5.2 + ratio * 4.4
           : 6.4 + ratio * 5.8;
       const edgeHeadroom = Math.max(2, pad - Math.max(borderX, borderY) - (mini ? 0.8 : 1.5));
-      // Divide by 1.12 so the outer halo layer fits strictly within canvas headroom
       const maxWaveH = Math.min(edgeHeadroom / 1.12, baseMaxH * surgeBoost);
 
       const t21 = t * 2.1;
@@ -806,7 +952,6 @@ const SakugaBorderFireComponent: React.FC<SakugaBorderFireProps> = ({
       const boxW = width + borderX * 2;
       const boxH = height + borderY * 2;
 
-      // Clip interior of the card using cached border-box Path2D evenodd rule so fire erupts flush outside border
       ctx.save();
       if (clipPath) {
         ctx.clip(clipPath, 'evenodd');
@@ -829,7 +974,10 @@ const SakugaBorderFireComponent: React.FC<SakugaBorderFireProps> = ({
             : MAX_VIOLET_LAYERS_LIGHT
           : NORMAL_LAYERS;
 
-      for (let lIdx = 0; lIdx < activeLayers.length; lIdx++) {
+      const skipOuterHalo = isLowPowerDevice() || (compact && visibleCount >= 3);
+      const startLayer = skipOuterHalo && activeLayers.length > 2 ? 1 : 0;
+
+      for (let lIdx = startLayer; lIdx < activeLayers.length; lIdx++) {
         const layer = activeLayers[lIdx];
         const heightScaleMul = maxWaveH * layer.heightScale;
 
@@ -848,11 +996,19 @@ const SakugaBorderFireComponent: React.FC<SakugaBorderFireProps> = ({
         ctx.fill();
       }
 
-      // Floating ember sparks drifting off flame crests
+      // Batched floating ember sparks drifting off flame crests (2-3 fill calls total instead of 17)
       if (!prefersReducedMotion && ratio > 0.1) {
-        const rawEmbers = mini ? 2 + ratio * 3 : compact ? 5 + ratio * 5 : 8 + ratio * 9;
+        const rawEmbers = mini ? 2 + ratio * 2 : compact ? 4 + ratio * 4 : 6 + ratio * 8;
         const emberScale = visibleCount >= 6 ? 0.65 : 1;
-        const emberCount = Math.max(1, Math.round(rawEmbers * emberScale));
+        const emberCount = Math.min(MAX_EMBERS, Math.max(1, Math.round(rawEmbers * emberScale)));
+
+        EMBER_BUCKET_COLORS[0] = isMax ? (isDark ? '#F5F3FF' : '#EDE9FE') : '#FEF08A';
+        EMBER_BUCKET_COLORS[1] = isMax ? (isDark ? '#F472B6' : '#DB2777') : '#FB923C';
+        EMBER_BUCKET_COLORS[2] = isMax ? (isDark ? '#A855F7' : '#7C3AED') : '#FB923C';
+        EMBER_BUCKET_COUNTS[0] = 0;
+        EMBER_BUCKET_COUNTS[1] = 0;
+        EMBER_BUCKET_COUNTS[2] = 0;
+
         for (let e = 0; e < emberCount; e++) {
           const cycle = (t * 1.15 + e * 0.27) % 1;
           const u = (e + 0.5) / emberCount + Math.sin(e * 4.1) * 0.02;
@@ -866,30 +1022,37 @@ const SakugaBorderFireComponent: React.FC<SakugaBorderFireProps> = ({
           const ey = pt.py + pt.ny * dist - cycle * (mini ? 2.5 : compact ? 2.8 : 4);
           const maxEr = mini ? 1.05 : isMax ? 1.7 : 1.35;
           const er = Math.max(mini ? 0.5 : 0.65, (1 - cycle) * maxEr);
+
+          const bIdx = cycle < 0.42 ? 0 : isMax && e % 4 === 0 ? 1 : isMax ? 2 : 1;
+          const slotIdx = EMBER_BUCKET_COUNTS[bIdx]++;
+          EMBER_X[bIdx][slotIdx] = ex;
+          EMBER_Y[bIdx][slotIdx] = ey;
+          EMBER_R[bIdx][slotIdx] = er;
+        }
+
+        const bucketLimit = isMax ? 3 : 2;
+        for (let b = 0; b < bucketLimit; b++) {
+          const cnt = EMBER_BUCKET_COUNTS[b];
+          if (cnt === 0) continue;
           ctx.beginPath();
-          ctx.arc(ex, ey, er, 0, TAU);
-          ctx.fillStyle = isMax
-            ? isDark
-              ? cycle < 0.42
-                ? '#F5F3FF'
-                : e % 4 === 0
-                  ? '#F472B6'
-                  : '#A855F7'
-              : cycle < 0.42
-                ? '#EDE9FE'
-                : e % 4 === 0
-                  ? '#DB2777'
-                  : '#7C3AED'
-            : cycle < 0.42
-              ? '#FEF08A'
-              : '#FB923C';
+          const xs = EMBER_X[b];
+          const ys = EMBER_Y[b];
+          const rs = EMBER_R[b];
+          for (let i = 0; i < cnt; i++) {
+            const x0 = xs[i];
+            const y0 = ys[i];
+            const r0 = rs[i];
+            ctx.moveTo(x0 + r0, y0);
+            ctx.arc(x0, y0, r0, 0, TAU);
+          }
+          ctx.fillStyle = EMBER_BUCKET_COLORS[b];
           ctx.fill();
         }
       }
 
       // Crisp 4-point anime star sparkles at >= 80% & 100% (disabled on mini button outlines)
       if (!mini && curPct >= 80) {
-        const starCount = isMax ? (compact ? 5 : 8) : compact ? 2 : 4;
+        const starCount = isMax ? (compact ? 4 : 7) : compact ? 2 : 4;
         const offset = maxWaveH * 0.82 + (compact ? 2.2 : 3.2);
         for (let s = 0; s < starCount; s++) {
           const u = (s + 0.22) / starCount;
@@ -959,18 +1122,21 @@ const SakugaBorderFireComponent: React.FC<SakugaBorderFireProps> = ({
         ctx.restore();
       }
 
-      ctx.restore(); // End interior card evenodd clip
+      ctx.restore();
     };
 
     const client: FireClient = {
       host,
-      isVisible: true,
+      isIntersecting: false,
+      hasSize: false,
+      isVisible: false,
       lastDraw: 0,
       draw: drawFrame,
       hasBurst: () => burstStartRef.current !== null && !prefersReducedMotion,
     };
 
     redrawClientRef.current = () => {
+      if (!client.isVisible) return;
       const now = performance.now();
       client.lastDraw = now;
       drawFrame(now, Math.max(1, visibleClients.size), isDarkModeActive());
@@ -980,18 +1146,30 @@ const SakugaBorderFireComponent: React.FC<SakugaBorderFireProps> = ({
     };
 
     const ro = new ResizeObserver(() => {
-      syncSize();
+      const sized = syncSize();
+      const wasVisible = client.isVisible;
+      client.hasSize = sized;
+      syncClientActiveSet(client);
       if (client.isVisible) {
         const now = performance.now();
         client.lastDraw = now;
         drawFrame(now, Math.max(1, visibleClients.size), isDarkModeActive());
+        if (!wasVisible) {
+          ensureCoordinatorLoop();
+        }
+      } else if (wasVisible && visibleClients.size === 0) {
+        stopCoordinatorLoop();
       }
     });
     ro.observe(host);
 
-    syncSize();
+    client.hasSize = syncSize();
     registerFireClient(client);
-    drawFrame(performance.now(), Math.max(1, visibleClients.size), isDarkModeActive());
+    if (client.isVisible) {
+      const now = performance.now();
+      client.lastDraw = now;
+      drawFrame(now, Math.max(1, visibleClients.size), isDarkModeActive());
+    }
 
     return () => {
       redrawClientRef.current = null;

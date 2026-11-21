@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertTriangle,
@@ -22,7 +22,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { getChaptersBySubject, getQuestionsBySubject, isAnswerCorrect, SUBJECTS } from '../data';
+import { ChapterMeta, isAnswerCorrect, SUBJECTS } from '../data';
 import {
   ExamHistoryItem,
   ExamType,
@@ -31,14 +31,18 @@ import {
   UserProgressStore,
 } from '../types/quiz';
 import { isMastered } from '../utils/storage';
+import { useIsDesktopLg } from '../utils/useIsDesktopLg';
 import { RichExplanation } from './RichExplanation';
 import { SakugaMangaTag, SakugaProgressBar } from './SakugaVfx';
 
 interface MockExamViewProps {
   subject: SubjectId;
+  questions: QuestionItem[];
+  chapters: ChapterMeta[];
   progress: UserProgressStore;
   onSaveExamResult: (result: ExamHistoryItem) => void;
   onRecordAttempt: (qId: string, isCorrect: boolean) => void;
+  onRecordAttemptsBatch?: (attempts: readonly { questionId: string; isCorrect: boolean }[]) => void;
   onToggleFlag: (qId: string) => void;
   onFlagQuestions?: (qIds: string[]) => void;
 }
@@ -60,8 +64,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
   return copy;
 }
 
-  function generateMockExam(subject: SubjectId): QuestionItem[] {
-    const allQuestions = getQuestionsBySubject(subject, 'hardcore');
+  function generateMockExam(allQuestions: QuestionItem[], subject: SubjectId): QuestionItem[] {
     const quotas = SUBJECTS[subject].examQuotas;
     const seenIds = new Set<string>();
     const selected: QuestionItem[] = [];
@@ -113,17 +116,115 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     }
   }
 
+  interface ExamTimerPillProps {
+    timerEnabled: boolean;
+    initialDurationSec: number;
+    sessionSeq: number;
+    elapsedSecondsRef: React.MutableRefObject<number>;
+    onTimeUp: () => void;
+    onToggleTimer?: () => void;
+    compact?: boolean;
+  }
+
+  /**
+   * Isolated 1-second timer pill so 60-minute countdown ticks never re-render
+   * the surrounding 60-question MockExamView tree.
+   */
+  const ExamTimerPill: React.FC<ExamTimerPillProps> = memo(
+    ({
+      timerEnabled,
+      initialDurationSec,
+      sessionSeq,
+      elapsedSecondsRef,
+      onTimeUp,
+      onToggleTimer,
+      compact = false,
+    }) => {
+      const [elapsed, setElapsed] = useState<number>(() => elapsedSecondsRef.current);
+      const onTimeUpRef = useRef(onTimeUp);
+      onTimeUpRef.current = onTimeUp;
+
+      useEffect(() => {
+        setElapsed(elapsedSecondsRef.current);
+      }, [sessionSeq, elapsedSecondsRef]);
+
+      useEffect(() => {
+        const timerId = window.setInterval(() => {
+          const next = elapsedSecondsRef.current + 1;
+          elapsedSecondsRef.current = next;
+          setElapsed(next);
+          if (timerEnabled && initialDurationSec - next <= 0) {
+            onTimeUpRef.current();
+          }
+        }, 1000);
+        return () => window.clearInterval(timerId);
+      }, [elapsedSecondsRef, initialDurationSec, timerEnabled]);
+
+      useEffect(() => {
+        if (timerEnabled && initialDurationSec - elapsedSecondsRef.current <= 0) {
+          onTimeUpRef.current();
+        }
+      }, [elapsedSecondsRef, initialDurationSec, timerEnabled]);
+
+      const remaining = Math.max(0, initialDurationSec - elapsed);
+      const isLowTime = timerEnabled && remaining < WARNING_THRESHOLD_SECONDS;
+      const clockText = timerEnabled ? formatClock(remaining) : formatClock(elapsed);
+
+      if (compact) {
+        return (
+          <button
+            type="button"
+            onClick={onToggleTimer}
+            title={
+              timerEnabled
+                ? 'Đang bật đếm ngược (chạm để tắt)'
+                : 'Đang tắt đếm ngược (chạm để bật)'
+            }
+            className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-bold tabular-nums transition ${
+              !timerEnabled
+                ? 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B]'
+                : isLowTime
+                  ? 'animate-pulse border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
+                  : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+            }`}
+          >
+            <Clock className="h-3.5 w-3.5 shrink-0" />
+            <span>{clockText}</span>
+          </button>
+        );
+      }
+
+      return (
+        <div
+          className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-bold tabular-nums transition-colors ${
+            !timerEnabled
+              ? 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
+              : isLowTime
+                ? 'animate-pulse border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
+                : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+          }`}
+        >
+          <Clock className="h-4 w-4 shrink-0" />
+          <span>{clockText}</span>
+        </div>
+      );
+    }
+  );
+  ExamTimerPill.displayName = 'ExamTimerPill';
+
   export const MockExamView: React.FC<MockExamViewProps> = ({
     subject,
+    questions: allSubjectQuestions,
+    chapters: subjectChapters,
     progress,
     onSaveExamResult,
     onRecordAttempt,
+    onRecordAttemptsBatch,
     onToggleFlag,
     onFlagQuestions,
   }) => {
+    const isDesktopLg = useIsDesktopLg();
     const subjectMeta = SUBJECTS[subject];
-    const allSubjectQuestions = useMemo(() => getQuestionsBySubject(subject, 'hardcore'), [subject]);
-    const subjectChapters = useMemo(() => getChaptersBySubject(subject, 'hardcore'), [subject]);
 
     const [phase, setPhase] = useState<ExamPhase>('lobby');
     const [examType, setExamType] = useState<ExamType>('standard');
@@ -132,8 +233,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     const [examQuestions, setExamQuestions] = useState<QuestionItem[]>([]);
     const [answers, setAnswers] = useState<Record<string, string[]>>({});
     const [currentIndex, setCurrentIndex] = useState<number>(0);
-    const [remainingSeconds, setRemainingSeconds] = useState<number>(EXAM_DURATION_SECONDS);
-    const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+    const [initialDurationSec, setInitialDurationSec] = useState<number>(EXAM_DURATION_SECONDS);
+    const [sessionSeq, setSessionSeq] = useState<number>(0);
     const [confirmSubmitOpen, setConfirmSubmitOpen] = useState<boolean>(false);
     const [lastResult, setLastResult] = useState<ExamHistoryItem | null>(null);
     const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('wrong');
@@ -143,6 +244,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     const [bulkFlaggedConfirm, setBulkFlaggedConfirm] = useState<number | null>(null);
 
     const submittedRef = useRef<boolean>(false);
+    const elapsedSecondsRef = useRef<number>(0);
     const reviewSectionRef = useRef<HTMLElement | null>(null);
 
     // Mastered question pool for the selected subject (always full Hardcore set)
@@ -151,6 +253,14 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
       [allSubjectQuestions, progress.questions]
     );
     const masteredCount = masteredPool.length;
+
+    const masteredCountByChapter = useMemo(() => {
+      const map = new Map<number, number>();
+      for (const q of masteredPool) {
+        map.set(q.chapter, (map.get(q.chapter) ?? 0) + 1);
+      }
+      return map;
+    }, [masteredPool]);
 
     const masteredExamMeta = useMemo(() => {
       if (masteredCount >= 60) {
@@ -168,12 +278,13 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     // Reset exam state if subject prop changes while component remains mounted
     useEffect(() => {
       submittedRef.current = false;
+      elapsedSecondsRef.current = 0;
       setPhase('lobby');
       setExamQuestions([]);
       setAnswers({});
       setCurrentIndex(0);
-      setRemainingSeconds(EXAM_DURATION_SECONDS);
-      setElapsedSeconds(0);
+      setInitialDurationSec(EXAM_DURATION_SECONDS);
+      setSessionSeq(s => s + 1);
       setConfirmSubmitOpen(false);
       setLastResult(null);
       setReviewFilter('wrong');
@@ -204,17 +315,18 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
             : Math.max(5, Math.round(currentMastered.length * 0.75));
         durationSec = mins * 60;
       } else {
-        generated = generateMockExam(subject);
+        generated = generateMockExam(allSubjectQuestions, subject);
         durationSec = EXAM_DURATION_SECONDS;
       }
 
       submittedRef.current = false;
+      elapsedSecondsRef.current = 0;
       setActiveExamType(examType);
       setExamQuestions(generated);
       setAnswers({});
       setCurrentIndex(0);
-      setRemainingSeconds(durationSec);
-      setElapsedSeconds(0);
+      setInitialDurationSec(durationSec);
+      setSessionSeq(s => s + 1);
       setConfirmSubmitOpen(false);
       setLastResult(null);
       setFocusedReviewId(null);
@@ -235,6 +347,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     }
 
     let correctCount = 0;
+    const batchAttempts: { questionId: string; isCorrect: boolean }[] = [];
 
     for (const q of examQuestions) {
       const selected = answers[q.id] ?? [];
@@ -251,9 +364,19 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
       }
 
       if (activeExamType === 'standard' && selected.length > 0) {
-        onRecordAttempt(q.id, correct);
+        batchAttempts.push({ questionId: q.id, isCorrect: correct });
       } else if (activeExamType === 'mastered' && correct && selected.length > 0) {
-        onRecordAttempt(q.id, true);
+        batchAttempts.push({ questionId: q.id, isCorrect: true });
+      }
+    }
+
+    if (batchAttempts.length > 0) {
+      if (onRecordAttemptsBatch) {
+        onRecordAttemptsBatch(batchAttempts);
+      } else {
+        for (const item of batchAttempts) {
+          onRecordAttempt(item.questionId, item.isCorrect);
+        }
       }
     }
 
@@ -268,7 +391,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
       totalQuestions,
       correctCount,
       scoreOn10,
-      durationSeconds: elapsedSeconds,
+      durationSeconds: elapsedSecondsRef.current,
       chapterBreakdown,
     };
 
@@ -280,34 +403,13 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
   }, [
     activeExamType,
     answers,
-    elapsedSeconds,
     examQuestions,
     onRecordAttempt,
+    onRecordAttemptsBatch,
     onSaveExamResult,
     subject,
     subjectMeta.examQuotas,
   ]);
-
-  // Active exam 1-second tick for elapsed time and optional 60-minute countdown
-  useEffect(() => {
-    if (phase !== 'active') return;
-
-    const timerId = window.setInterval(() => {
-      setElapsedSeconds(prev => prev + 1);
-      if (timerEnabled) {
-        setRemainingSeconds(prev => (prev > 0 ? prev - 1 : 0));
-      }
-    }, 1000);
-
-    return () => window.clearInterval(timerId);
-  }, [phase, timerEnabled]);
-
-  // Auto-submit when countdown hits 00:00 while timer is enabled
-  useEffect(() => {
-    if (phase === 'active' && timerEnabled && remainingSeconds === 0) {
-      handleSubmitExam();
-    }
-  }, [phase, timerEnabled, remainingSeconds, handleSubmitExam]);
 
   const currentQuestion = examQuestions[currentIndex];
 
@@ -425,8 +527,9 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     }
   };
 
-  // Graded details for results view
+  // Graded details for results view only (0 work while taking exam or on lobby)
   const gradedItems = useMemo(() => {
+    if (phase !== 'results') return [];
     return examQuestions.map((q, idx) => {
       const selected = answers[q.id] ?? [];
       const isCorrect = isAnswerCorrect(selected, q.correctAnswers);
@@ -439,7 +542,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
         isFlagged,
       };
     });
-  }, [answers, examQuestions, progress.questions]);
+  }, [answers, examQuestions, phase, progress.questions]);
 
   const wrongCount = useMemo(
     () => gradedItems.filter(item => !item.isCorrect).length,
@@ -676,7 +779,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                   {masteredCount > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#10B981]/40 pt-3 dark:border-[#10B981]/30">
                       {subjectMeta.chapters.map(ch => {
-                        const chMastered = masteredPool.filter(q => q.chapter === ch.chapter).length;
+                        const chMastered = masteredCountByChapter.get(ch.chapter) ?? 0;
                         return (
                           <span
                             key={ch.chapter}
@@ -847,13 +950,13 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
   if (phase === 'active' && currentQuestion) {
     const selectedKeys = answers[currentQuestion.id] ?? [];
     const isFlagged = Boolean(progress.questions[currentQuestion.id]?.flagged);
-    const isLowTime = timerEnabled && remainingSeconds < WARNING_THRESHOLD_SECONDS;
 
     return (
       <>
         <div className="flex w-full flex-col items-start gap-6 lg:flex-row lg:gap-8 xl:gap-10">
           {/* Desktop Navigator Sidebar */}
-          <aside className="hidden w-full shrink-0 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-6 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] lg:sticky lg:top-20 lg:order-1 lg:block lg:w-[360px] xl:w-[380px]">
+          {isDesktopLg && (
+          <aside className="w-full shrink-0 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-6 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] lg:sticky lg:top-20 lg:order-1 lg:w-[360px] xl:w-[380px]">
             <div className="flex items-center justify-between border-b border-[#D5CFC2] pb-3.5 dark:border-[#262925]">
               <h4 className="text-sm font-bold text-[#18181B] tabular-nums dark:text-[#F5F5F4]">
                 Bảng câu hỏi ({examQuestions.length} câu)
@@ -917,11 +1020,13 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
               </div>
             </div>
           </aside>
+          )}
 
           {/* Right Column: Top Toolbars + Question Card */}
           <div className="w-full min-w-0 flex-1 space-y-4 lg:order-2">
             {/* Mobile / Tablet Compact 1-Line Toolbar (< 1024px) */}
-            <div className="flex w-full items-center justify-between gap-2 lg:hidden">
+            {!isDesktopLg && (
+            <div className="flex w-full items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={() => setIsMobileSheetOpen(true)}
@@ -936,20 +1041,15 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                 <ChevronDown className="h-4 w-4 shrink-0 text-[#656058] dark:text-[#9CA39B]" />
               </button>
 
-              <button
-                type="button"
-                onClick={() => setTimerEnabled(prev => !prev)}
-                title={timerEnabled ? 'Đang bật đếm ngược (chạm để tắt)' : 'Đang tắt đếm ngược (chạm để bật)'}
-                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-bold tabular-nums transition ${!timerEnabled
-                  ? 'border-[#D5CFC2] bg-[#EAE6DD] text-[#656058] dark:border-[#262925] dark:bg-[#161816] dark:text-[#9CA39B]'
-                  : isLowTime
-                    ? 'animate-pulse border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
-                    : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
-                  }`}
-              >
-                <Clock className="h-3.5 w-3.5 shrink-0" />
-                <span>{timerEnabled ? formatClock(remainingSeconds) : formatClock(elapsedSeconds)}</span>
-              </button>
+              <ExamTimerPill
+                compact
+                timerEnabled={timerEnabled}
+                initialDurationSec={initialDurationSec}
+                sessionSeq={sessionSeq}
+                elapsedSecondsRef={elapsedSecondsRef}
+                onTimeUp={handleSubmitExam}
+                onToggleTimer={() => setTimerEnabled(prev => !prev)}
+              />
 
               <button
                 type="button"
@@ -960,25 +1060,21 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                 <span>Nộp</span>
               </button>
             </div>
+            )}
 
             {/* Desktop Sticky Top Bar (>= 1024px) */}
-            <div className="sticky top-20 z-20 hidden w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD]/[0.97] px-5 py-3.5 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816]/[0.97] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.6)] lg:flex">
+            {isDesktopLg && (
+            <div className="sticky top-20 z-20 flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD]/[0.97] px-5 py-3.5 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816]/[0.97] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.6)]">
               <div className="flex flex-wrap items-center gap-3">
                 {/* Countdown Timer + Toggle */}
                 <div className="flex items-center gap-2">
-                  <div
-                    className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-bold tabular-nums transition-colors ${!timerEnabled
-                      ? 'border-[#D5CFC2] bg-[#FAF9F5] text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#9CA39B]'
-                      : isLowTime
-                        ? 'animate-pulse border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]'
-                        : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
-                      }`}
-                  >
-                    <Clock className="h-4 w-4 shrink-0" />
-                    <span>
-                      {timerEnabled ? formatClock(remainingSeconds) : formatClock(elapsedSeconds)}
-                    </span>
-                  </div>
+                  <ExamTimerPill
+                    timerEnabled={timerEnabled}
+                    initialDurationSec={initialDurationSec}
+                    sessionSeq={sessionSeq}
+                    elapsedSecondsRef={elapsedSecondsRef}
+                    onTimeUp={handleSubmitExam}
+                  />
 
                   <button
                     type="button"
@@ -1025,6 +1121,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                 Nộp bài
               </button>
             </div>
+            )}
 
             {/* Question Card (Focal Point Elevation) */}
             <div className="w-full rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[4px_4px_0_0_#C7D2FE,0_14px_28px_-12px_rgba(24,24,27,0.10)] dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[4px_4px_0_0_#312E81,0_18px_36px_-12px_rgba(0,0,0,0.75)] sm:p-6 sm:shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:sm:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] md:p-8">
@@ -1088,7 +1185,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                       key={opt.key}
                       type="button"
                       onClick={() => handleSelectOption(currentQuestion, opt.key)}
-                      className={`group flex w-full cursor-pointer items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${isSelected
+                      className={`group flex w-full cursor-pointer items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-[border-color,background-color,color,transform] duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${isSelected
                         ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] ring-1 ring-[#4338CA] dark:border-[#818CF8] dark:bg-[#312E81]/35 dark:text-[#F5F5F4] dark:ring-[#818CF8]'
                         : 'border-[#D5CFC2] bg-[#F8F6F0] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] md:hover:translate-x-1 dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                         }`}
@@ -1159,6 +1256,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
         </div>
 
         {/* Mobile Sticky Bottom Navigation Bar */}
+        {!isDesktopLg && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D5CFC2] bg-[#EAE6DD]/[0.97] px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(28,25,23,0.08)] dark:border-[#262925] dark:bg-[#161816]/[0.97] dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.5)] md:hidden">
           <div className="flex w-full items-center justify-between gap-2">
             <button
@@ -1207,8 +1305,10 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
             )}
           </div>
         </div>
+        )}
 
         {/* Mobile / Tablet 60-Question Bottom Sheet */}
+        {!isDesktopLg && (
         <AnimatePresence>
           {isMobileSheetOpen && (
             <>
@@ -1219,7 +1319,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.16 }}
                 onClick={() => setIsMobileSheetOpen(false)}
-                className="fixed inset-0 z-50 bg-[#18181B]/50 backdrop-blur-[2px] dark:bg-[#0B0D0B]/75 lg:hidden"
+                className="fixed inset-0 z-50 bg-[#18181B]/60 dark:bg-[#0B0D0B]/82"
               />
               <motion.div
                 key="exam-sheet-drawer"
@@ -1310,10 +1410,11 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
             </>
           )}
         </AnimatePresence>
+        )}
 
         {/* Submit Confirmation Modal */}
         {confirmSubmitOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/50 p-4 backdrop-blur-[2px] dark:bg-[#0B0D0B]/75">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/60 p-4 dark:bg-[#0B0D0B]/82">
             <div className="w-full max-w-md rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-5 shadow-xl dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65)] sm:p-6">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#FDA4AF] bg-[#FFE4E6] text-[#BE123C] dark:border-[#FB7185]/50 dark:bg-[#E11D48]/20 dark:text-[#FDA4AF]">
@@ -1364,7 +1465,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     lastResult?.correctCount ?? gradedItems.filter(item => item.isCorrect).length;
   const scoreOn10 =
     lastResult?.scoreOn10 ?? (totalCount > 0 ? Math.round((correctTotal / totalCount) * 100) / 10 : 0);
-  const spentSeconds = lastResult?.durationSeconds ?? elapsedSeconds;
+  const spentSeconds = lastResult?.durationSeconds ?? elapsedSecondsRef.current;
   const breakdown = lastResult?.chapterBreakdown ?? {};
   const resultExamType = lastResult?.examType ?? activeExamType;
   const isResultMasteredMode = resultExamType === 'mastered';
@@ -1523,7 +1624,8 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
             </div>
 
             {/* Desktop Results Navigator (hidden on Mobile/Tablet — moved to Bottom Sheet) */}
-            <div className="hidden shrink-0 lg:block lg:w-[380px]">
+            {isDesktopLg && (
+            <div className="shrink-0 lg:w-[380px]">
               <div className="mb-3.5 flex items-center justify-between">
                 <h3 className="text-sm font-bold text-[#18181B] tabular-nums dark:text-[#F5F5F4]">
                   Bản đồ kết quả {gradedItems.length} câu
@@ -1574,13 +1676,15 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                 </span>
               </div>
             </div>
+            )}
           </div>
         </section>
 
         {/* Review Filter Tabs & Detailed Question Cards */}
         <section ref={reviewSectionRef} className="space-y-4 lg:space-y-6">
           {/* Mobile/Tablet 1-Line Toolbar (< 1024px) opening Results Bottom Sheet */}
-          <div className="lg:hidden">
+          {!isDesktopLg && (
+          <div>
             <button
               type="button"
               onClick={() => setIsMobileResultsSheetOpen(true)}
@@ -1601,9 +1705,11 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
               <ChevronDown className="h-4 w-4 shrink-0 text-[#656058] dark:text-[#9CA39B]" />
             </button>
           </div>
+          )}
 
           {/* Desktop Review Filter Tabs */}
-          <div className="hidden flex-wrap items-center justify-between gap-3 lg:flex">
+          {isDesktopLg && (
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="inline-flex rounded-xl border border-[#D5CFC2] bg-[#EAE6DD] p-1 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)]">
               {(
                 [
@@ -1637,6 +1743,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
               })}
             </div>
           </div>
+          )}
 
           {filteredReviewItems.length === 0 ? (
             <div className="rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-8 text-center shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] sm:p-10">
@@ -1652,11 +1759,15 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
               {filteredReviewItems.map(({ question: q, index, selected, isCorrect, isFlagged }) => {
                 const isHighlighted = focusedReviewId === q.id;
                 const isSkipped = selected.length === 0;
+                const correctSet = new Set(q.correctAnswers.map(c => c.toUpperCase()));
+                const suspectSet = new Set((q.suspectedAnswers ?? []).map(c => c.toUpperCase()));
+                const selectedSet = new Set(selected.map(s => s.toUpperCase()));
 
                 return (
                   <article
                     key={q.id}
                     id={`exam-review-q-${q.id}`}
+                    style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 340px' }}
                     className={`scroll-mt-24 rounded-3xl border-2 border-[#27272A] bg-white p-4 shadow-[4px_4px_0_0_#C7D2FE,0_14px_28px_-12px_rgba(24,24,27,0.10)] transition dark:border-2 dark:border-[#52525B] dark:bg-[#1E221F] dark:shadow-[4px_4px_0_0_#312E81,0_18px_36px_-12px_rgba(0,0,0,0.75)] sm:p-6 sm:shadow-[6px_6px_0_0_#C7D2FE,0_16px_32px_-12px_rgba(24,24,27,0.10)] dark:sm:shadow-[6px_6px_0_0_#312E81,0_20px_40px_-12px_rgba(0,0,0,0.75)] md:p-8 ${isHighlighted ? 'ring-2 ring-[#4338CA]/40 dark:ring-[#818CF8]/40' : ''
                       }`}
                   >
@@ -1708,17 +1819,10 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
 
                     <div className="mt-4 space-y-2.5 sm:mt-5 sm:space-y-3">
                       {q.options.map(opt => {
-                        const isCorrectOpt = q.correctAnswers
-                          .map(c => c.toUpperCase())
-                          .includes(opt.key.toUpperCase());
-                        const isSuspectedOpt =
-                          !isCorrectOpt &&
-                          (q.suspectedAnswers ?? [])
-                            .map(c => c.toUpperCase())
-                            .includes(opt.key.toUpperCase());
-                        const isUserSelected = selected
-                          .map(s => s.toUpperCase())
-                          .includes(opt.key.toUpperCase());
+                        const optUpper = opt.key.toUpperCase();
+                        const isCorrectOpt = correctSet.has(optUpper);
+                        const isSuspectedOpt = !isCorrectOpt && suspectSet.has(optUpper);
+                        const isUserSelected = selectedSet.has(optUpper);
 
                         let rowStyle =
                           'border-[#D5CFC2] bg-[#F8F6F0] text-[#292524] dark:border-[#353B36] dark:bg-[#252A26] dark:text-[#E7E5E4]';
@@ -1799,6 +1903,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
       </div>
 
       {/* Mobile/Tablet Results Navigator & Filter Bottom Sheet */}
+      {!isDesktopLg && (
       <AnimatePresence>
         {isMobileResultsSheetOpen && (
           <>
@@ -1809,7 +1914,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.16 }}
               onClick={() => setIsMobileResultsSheetOpen(false)}
-              className="fixed inset-0 z-50 bg-[#18181B]/50 backdrop-blur-[2px] dark:bg-[#0B0D0B]/75 lg:hidden"
+              className="fixed inset-0 z-50 bg-[#18181B]/60 dark:bg-[#0B0D0B]/82"
             />
             <motion.div
               key="results-sheet-drawer"
@@ -1917,6 +2022,9 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
           </>
         )}
       </AnimatePresence>
+      )}
     </>
   );
 };
+
+export default MockExamView;

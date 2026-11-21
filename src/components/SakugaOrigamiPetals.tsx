@@ -132,8 +132,7 @@ function buildPetalShower(showerId: number): PetalShowerState {
 const OrigamiPetalSvg: React.FC<{ variant: PetalVariant; sizeClass?: string }> = memo(
   ({ variant, sizeClass = 'h-6 w-[22px]' }) => {
     const strokeClass = 'stroke-[#E0E7FF]/55 dark:[stroke:none]';
-    const glowClass =
-      'h-full w-full overflow-visible drop-shadow-[0_0_5px_rgba(124,58,237,0.48)] dark:drop-shadow-[0_0_8px_rgba(196,181,253,0.88)]';
+    const glowClass = 'h-full w-full overflow-visible';
 
     return (
       <div className={`relative flex ${sizeClass} items-center justify-center`}>
@@ -269,7 +268,7 @@ const OrigamiStarGlintSvg: React.FC<{ variant: PetalVariant }> = memo(({ variant
   <svg
     viewBox="0 0 16 16"
     aria-hidden="true"
-    className="h-3 w-3 overflow-visible sm:drop-shadow-[0_0_4px_rgba(124,58,237,0.65)] sm:dark:drop-shadow-[0_0_5px_rgba(255,255,255,0.9)]"
+    className="h-3 w-3 overflow-visible"
   >
     <polygon
       points="8,1 9.6,6.4 15,8 9.6,9.6 8,15 6.4,9.6 1,8 6.4,6.4"
@@ -286,7 +285,7 @@ const OrigamiStarGlintSvg: React.FC<{ variant: PetalVariant }> = memo(({ variant
 
 OrigamiStarGlintSvg.displayName = 'OrigamiStarGlintSvg';
 
-export const SakugaOrigamiPetals: React.FC<SakugaOrigamiPetalsProps> = ({ mode }) => {
+export const SakugaOrigamiPetals: React.FC<SakugaOrigamiPetalsProps> = memo(({ mode }) => {
   const prefersReducedMotion = Boolean(useReducedMotion());
   const isDisabled = mode === 'exam' || prefersReducedMotion;
 
@@ -380,7 +379,7 @@ export const SakugaOrigamiPetals: React.FC<SakugaOrigamiPetalsProps> = ({ mode }
       blessingTimersRef.current.push(showTimer, hideTimer);
 
       const startTime = performance.now();
-      const minStepMs = isLowPowerDevice() ? 27 : 16;
+      const minStepMs = isLowPowerDevice() ? 36 : 22;
       let lastDrawNow = 0;
       const wasHidden = new Array<boolean>(nextShower.petals.length).fill(true);
 
@@ -524,14 +523,10 @@ export const SakugaOrigamiPetals: React.FC<SakugaOrigamiPetalsProps> = ({ mode }
             key={`sakura-blessing-${shower.id}`}
             style={{ top: shower.headerSafeTop + 4 }}
             initial={{ opacity: 0, y: -8, scale: 0.94 }}
-            animate={{ opacity: 1, y: [0, 3, 0], scale: 1 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.96 }}
-            transition={{
-              opacity: { duration: 0.42, ease: 'easeOut' },
-              scale: { duration: 0.42, ease: 'easeOut' },
-              y: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
-            }}
-            className="pointer-events-none fixed left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-[#7C3AED]/45 bg-[#FFFFFF]/95 px-4 py-1.5 text-xs font-bold tracking-wide text-[#4C1D95] shadow-[3px_3px_0_0_#DDD6FE,0_10px_24px_-8px_rgba(124,58,237,0.22)] dark:border-[#C4B5FD]/50 dark:bg-[#1E221F]/92 dark:text-[#F5F3FF] dark:shadow-[0_0_20px_rgba(167,139,250,0.42),3px_3px_0_0_#4C1D95] sm:text-sm"
+            transition={{ duration: 0.38, ease: 'easeOut' }}
+            className="sakuga-blessing-float pointer-events-none fixed left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-[#7C3AED]/45 bg-[#FFFFFF]/95 px-4 py-1.5 text-xs font-bold tracking-wide text-[#4C1D95] shadow-[3px_3px_0_0_#DDD6FE,0_10px_24px_-8px_rgba(124,58,237,0.22)] dark:border-[#C4B5FD]/50 dark:bg-[#1E221F]/92 dark:text-[#F5F3FF] dark:shadow-[0_0_20px_rgba(167,139,250,0.42),3px_3px_0_0_#4C1D95] sm:text-sm"
           >
             <OrigamiPetalSvg variant={0} sizeClass="h-5 w-[18px] shrink-0" />
             <span>học tốt nha</span>
@@ -546,4 +541,7 @@ export const SakugaOrigamiPetals: React.FC<SakugaOrigamiPetalsProps> = ({ mode }
       </AnimatePresence>
     </div>
   );
-};
+});
+
+SakugaOrigamiPetals.displayName = 'SakugaOrigamiPetals';
+export default SakugaOrigamiPetals;

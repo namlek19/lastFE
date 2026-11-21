@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useMemo, useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   BookOpen,
@@ -10,14 +10,16 @@ import {
   Moon,
   Sun,
 } from 'lucide-react';
-import { SUBJECTS, getQuestionsBySubject } from '../data/index';
+import { SUBJECTS, countSubjectMastered, getSubjectTotalCount } from '../data/index';
 import { StudyMode, StudyTier, SubjectId, UserProgressStore } from '../types/quiz';
-import { isMastered, ThemeMode } from '../utils/storage';
+import { ThemeMode } from '../utils/storage';
+import { useIsDesktopLg } from '../utils/useIsDesktopLg';
 import {
   SaiyanTagTone,
   SaiyanTriggerEvent,
   SakugaSaiyanLogo,
 } from './SakugaSaiyanLogo';
+import { LastFeOrigamiLogo } from './LastFeOrigamiLogo';
 import { SakugaSubjectDropdown } from './SakugaSubjectDropdown';
 import { SakugaParticles, SakugaTierPicker } from './SakugaVfx';
 
@@ -34,6 +36,9 @@ export interface HeaderProps {
   onSelectTier: (tier: StudyTier) => void;
   onToggleTheme: () => void;
   onOpenSyncModal: () => void;
+  logoRef?: React.RefObject<HTMLSpanElement>;
+  hideLogoMark?: boolean;
+  isRevealed?: boolean;
 }
 
 const MODE_TABS: {
@@ -110,7 +115,7 @@ const TIER_BADGE_STYLES: Record<StudyTier, { pill: string; icon: string }> = {
   },
 };
 
-export const Header: React.FC<HeaderProps> = ({
+const HeaderComponent: React.FC<HeaderProps> = ({
   subject,
   mode,
   tier,
@@ -121,7 +126,11 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectTier,
   onToggleTheme,
   onOpenSyncModal,
+  logoRef,
+  hideLogoMark = false,
+  isRevealed = true,
 }) => {
+  const isDesktopLg = useIsDesktopLg();
   const [badgeBounceSeq, setBadgeBounceSeq] = useState(0);
   const [modeBurst, setModeBurst] = useState<{ id: StudyMode; seq: number } | null>(null);
   const [examBurstSeq, setExamBurstSeq] = useState(0);
@@ -159,17 +168,12 @@ export const Header: React.FC<HeaderProps> = ({
     return () => window.clearTimeout(timer);
   }, [isExamBursting, examBurstSeq]);
 
-  const activeQuestions = useMemo(() => getQuestionsBySubject(subject, tier), [subject, tier]);
+  const totalQuestionCount = getSubjectTotalCount(subject, tier);
 
-  const masteredCount = useMemo(() => {
-    let count = 0;
-    for (const q of activeQuestions) {
-      if (isMastered(progress.questions[q.id])) {
-        count += 1;
-      }
-    }
-    return count;
-  }, [activeQuestions, progress.questions]);
+  const masteredCount = useMemo(
+    () => countSubjectMastered(subject, tier, progress.questions),
+    [subject, tier, progress.questions]
+  );
 
   const activeSubjectMeta = SUBJECTS[subject];
 
@@ -236,19 +240,26 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="z-40 mb-3.5 border-b-2 border-[#27272A]/85 bg-[#EAE6DD] shadow-[0_3px_0_0_rgba(39,39,42,0.12)] dark:border-[#323833] dark:bg-[#161816] dark:shadow-[0_3px_0_0_rgba(0,0,0,0.45)] md:sticky md:top-0 md:mb-6 lg:mb-7">
+    <header
+      className={`z-40 mb-3.5 border-b-2 border-[#27272A]/85 bg-[#EAE6DD] shadow-[0_3px_0_0_rgba(39,39,42,0.12)] transition-opacity duration-500 ease-out dark:border-[#323833] dark:bg-[#161816] dark:shadow-[0_3px_0_0_rgba(0,0,0,0.45)] md:sticky md:top-0 md:mb-6 lg:mb-7 ${
+        isRevealed ? 'opacity-100' : 'pointer-events-none opacity-0'
+      }`}
+    >
       <div className="mx-auto w-full max-w-[1720px] px-3 sm:px-6 lg:px-8 xl:px-12">
         {/* Main Row: Single-Row Desktop Anime HUD (>= 1024px) & Top Row on Mobile/Tablet */}
-        <div className="flex w-full items-center justify-between gap-1.5 py-2 sm:gap-2.5 sm:py-2.5 lg:py-3">
-          {/* Left Cluster: Super Saiyan Anime Logo + Direct VNR / MLN Anime Switcher */}
-          <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2.5">
-            <div className="flex items-center gap-2">
+        <div className="flex w-full items-center justify-between gap-2 py-2 sm:gap-3 sm:py-2.5 lg:gap-4 lg:py-3">
+          {/* Left Cluster: Super Saiyan Icon + Origami LastFE Logo + Subject Switcher */}
+          <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 lg:gap-3.5">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <SakugaSaiyanLogo event={saiyanEvent} onLogoClick={handleLogoClick} />
-              <div className="hidden leading-tight min-[440px]:block">
-                <span className="block text-xs font-black tracking-tight text-[#18181B] dark:text-[#F5F5F4] sm:text-sm xl:text-[15px]">
-                  Ôn FE
-                </span>
-              </div>
+              <span
+                ref={logoRef}
+                className={`inline-flex shrink-0 items-center ${
+                  hideLogoMark ? 'opacity-0' : 'opacity-100'
+                }`}
+              >
+                <LastFeOrigamiLogo className="h-[17px] w-auto min-[400px]:h-[20px] sm:h-[24px] lg:h-[25px]" />
+              </span>
             </div>
 
             {/* 3-Subject Anime Deck Dropdown */}
@@ -261,70 +272,74 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Center Cluster: 3 Study Mode Tabs — Anime HUD Dock with Spring Highlight (Desktop >= 1024px) */}
-          <nav
-            aria-label="Chế độ học tập"
-            className="hidden shrink-0 items-center gap-1 overflow-visible rounded-xl border-2 border-[#C6BEB0] bg-[#F4F2EC] p-1 dark:border-[#2C302B] dark:bg-[#0F100E] lg:flex"
-          >
-            {MODE_TABS.map(({
-              id,
-              label,
-              Icon,
-              activePlateClass,
-              inactiveClass,
-              inactiveIconClass,
-              accentFill,
-              smokeTint,
-              sparkleFill,
-            }) => {
-              const isActive = mode === id;
-              const isBursting = modeBurst?.id === id;
+          {isDesktopLg && (
+            <nav
+              aria-label="Chế độ học tập"
+              className="flex shrink-0 items-center gap-1 overflow-visible rounded-xl border-2 border-[#C6BEB0] bg-[#F4F2EC] p-1 dark:border-[#2C302B] dark:bg-[#0F100E]"
+            >
+              {MODE_TABS.map(({
+                id,
+                label,
+                Icon,
+                activePlateClass,
+                inactiveClass,
+                inactiveIconClass,
+                accentFill,
+                smokeTint,
+                sparkleFill,
+              }) => {
+                const isActive = mode === id;
+                const isBursting = modeBurst?.id === id;
 
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => handleModeClick(id)}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`sakuga-btn group relative inline-flex cursor-pointer items-center justify-center gap-1.5 overflow-visible rounded-lg border-2 py-1 text-xs font-extrabold tracking-tight whitespace-nowrap lg:px-2.5 xl:px-3 2xl:px-3.5 2xl:text-[13px] ${
-                    isActive ? 'border-transparent text-white' : inactiveClass
-                  }`}
-                >
-                  {isBursting && modeBurst && (
-                    <SakugaParticles
-                      key={`mode-desktop-particles-${id}-${modeBurst.seq}`}
-                      isMiss={false}
-                      showShards={false}
-                      accentFill={accentFill}
-                      smokeTint={smokeTint}
-                      sparkleFill={sparkleFill}
-                      className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[62px] w-[128px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
-                    />
-                  )}
-                  {isActive && (
-                    <motion.span
-                      layoutId="header-mode-active-desktop"
-                      transition={{ type: 'spring', stiffness: 460, damping: 30 }}
-                      className={`pointer-events-none absolute -inset-[2px] z-[1] rounded-lg border-2 ${activePlateClass}`}
-                    />
-                  )}
-                  <Icon
-                    className={`relative z-10 hidden h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:-rotate-6 xl:block ${
-                      isActive ? 'text-white' : inactiveIconClass
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => handleModeClick(id)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`sakuga-btn group relative inline-flex cursor-pointer items-center justify-center gap-1.5 overflow-visible rounded-lg border-2 py-1 text-xs font-extrabold tracking-tight whitespace-nowrap lg:px-2.5 xl:px-3 2xl:px-3.5 2xl:text-[13px] ${
+                      isActive ? 'border-transparent text-white' : inactiveClass
                     }`}
-                  />
-                  <span className="relative z-10">{label}</span>
-                </button>
-              );
-            })}
-          </nav>
+                  >
+                    {isBursting && modeBurst && (
+                      <SakugaParticles
+                        key={`mode-desktop-particles-${id}-${modeBurst.seq}`}
+                        isMiss={false}
+                        showShards={false}
+                        accentFill={accentFill}
+                        smokeTint={smokeTint}
+                        sparkleFill={sparkleFill}
+                        className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[62px] w-[128px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
+                      />
+                    )}
+                    {isActive && (
+                      <motion.span
+                        layoutId="header-mode-active-desktop"
+                        transition={{ type: 'spring', stiffness: 460, damping: 30 }}
+                        className={`pointer-events-none absolute -inset-[2px] z-[1] rounded-lg border-2 ${activePlateClass}`}
+                      />
+                    )}
+                    <Icon
+                      className={`relative z-10 hidden h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:-rotate-6 xl:block ${
+                        isActive ? 'text-white' : inactiveIconClass
+                      }`}
+                    />
+                    <span className="relative z-10">{label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          )}
 
-          {/* Desktop 3-Tier Sakuga Anime Stamp Picker (>= 1024px) — Preserved */}
-          <div className="hidden lg:inline-flex">
-            <SakugaTierPicker tier={tier} subject={subject} onSelectTier={handleTierClick} />
-          </div>
+          {/* Desktop 3-Tier Sakuga Anime Stamp Picker (>= 1024px) */}
+          {isDesktopLg && (
+            <div className="inline-flex">
+              <SakugaTierPicker tier={tier} subject={subject} onSelectTier={handleTierClick} />
+            </div>
+          )}
 
           {/* Right Cluster: Mastery HUD Counter, Standalone "Thi thử" Stamp, Sync, Theme */}
-          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 xl:gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 xl:gap-2.5">
             {/* Overall Mastery HUD Counter (Color & Anime Jump keyed to Study Tier & Subject) */}
             <motion.div
               key={badgeBounceSeq > 0 ? `mastery-bounce-${badgeBounceSeq}` : 'mastery-static'}
@@ -344,11 +359,11 @@ export const Header: React.FC<HeaderProps> = ({
               }
               transition={{ duration: 0.44, times: [0, 0.36, 0.72, 1], ease: [0.22, 1, 0.36, 1] }}
               className={`inline-flex items-center gap-1 rounded-lg border-2 px-2 py-1 text-[11px] font-extrabold tabular-nums whitespace-nowrap transition-colors duration-200 sm:gap-1.5 sm:px-2.5 sm:text-xs ${TIER_BADGE_STYLES[tier].pill}`}
-              title={`Đã thuộc ${masteredCount} trên ${activeQuestions.length} câu môn ${activeSubjectMeta.code}`}
+              title={`Đã thuộc ${masteredCount} trên ${totalQuestionCount} câu môn ${activeSubjectMeta.code}`}
             >
               <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${TIER_BADGE_STYLES[tier].icon}`} />
               <span>
-                {masteredCount}/{activeQuestions.length}
+                {masteredCount}/{totalQuestionCount}
                 <span className="hidden sm:inline lg:hidden xl:inline"> Đã thuộc</span>
               </span>
             </motion.div>
@@ -426,69 +441,75 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Row 2 (Mobile & Tablet only, < 1024px): 3 Study Tier Anime Stamps — Preserved */}
-        <div className="border-t border-[#D5CFC2] py-2 dark:border-[#262925] lg:hidden">
-          <SakugaTierPicker tier={tier} subject={subject} onSelectTier={handleTierClick} compact />
-        </div>
+        {/* Rows 2 & 3 (Mobile & Tablet only, < 1024px): mounted strictly when below lg */}
+        {!isDesktopLg && (
+          <>
+            <div className="border-t border-[#D5CFC2] py-2 dark:border-[#262925]">
+              <SakugaTierPicker tier={tier} subject={subject} onSelectTier={handleTierClick} compact />
+            </div>
 
-        {/* Row 3 (Mobile & Tablet only, < 1024px): 3 Mode Tabs Cel-Shaded Grid with Spring Highlight */}
-        <nav
-          aria-label="Chế độ học tập"
-          className="grid grid-cols-3 gap-1.5 overflow-visible border-t border-[#D5CFC2]/80 py-2 dark:border-[#262925] lg:hidden"
-        >
-          {MODE_TABS.map(({
-            id,
-            label,
-            Icon,
-            activePlateClass,
-            mobileInactiveClass,
-            inactiveIconClass,
-            accentFill,
-            smokeTint,
-            sparkleFill,
-          }) => {
-            const isActive = mode === id;
-            const isBursting = modeBurst?.id === id;
+            <nav
+              aria-label="Chế độ học tập"
+              className="grid grid-cols-3 gap-1.5 overflow-visible border-t border-[#D5CFC2]/80 py-2 dark:border-[#262925]"
+            >
+              {MODE_TABS.map(({
+                id,
+                label,
+                Icon,
+                activePlateClass,
+                mobileInactiveClass,
+                inactiveIconClass,
+                accentFill,
+                smokeTint,
+                sparkleFill,
+              }) => {
+                const isActive = mode === id;
+                const isBursting = modeBurst?.id === id;
 
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => handleModeClick(id)}
-                aria-current={isActive ? 'page' : undefined}
-                className={`sakuga-btn group relative inline-flex cursor-pointer items-center justify-center gap-1.5 overflow-visible rounded-lg border-2 px-1.5 py-1.5 text-xs font-extrabold tracking-tight whitespace-nowrap sm:px-2.5 sm:text-[13px] ${
-                  isActive ? 'border-transparent text-white' : mobileInactiveClass
-                }`}
-              >
-                {isBursting && modeBurst && (
-                  <SakugaParticles
-                    key={`mode-mobile-particles-${id}-${modeBurst.seq}`}
-                    isMiss={false}
-                    showShards={false}
-                    accentFill={accentFill}
-                    smokeTint={smokeTint}
-                    sparkleFill={sparkleFill}
-                    className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[62px] w-[124px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
-                  />
-                )}
-                {isActive && (
-                  <motion.span
-                    layoutId="header-mode-active-mobile"
-                    transition={{ type: 'spring', stiffness: 460, damping: 30 }}
-                    className={`pointer-events-none absolute -inset-[2px] z-[1] rounded-lg border-2 ${activePlateClass}`}
-                  />
-                )}
-                <Icon
-                  className={`relative z-10 hidden h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:-rotate-6 sm:block ${
-                    isActive ? 'text-white' : inactiveIconClass
-                  }`}
-                />
-                <span className="relative z-10 truncate">{label}</span>
-              </button>
-            );
-          })}
-        </nav>
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => handleModeClick(id)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`sakuga-btn group relative inline-flex cursor-pointer items-center justify-center gap-1.5 overflow-visible rounded-lg border-2 px-1.5 py-1.5 text-xs font-extrabold tracking-tight whitespace-nowrap sm:px-2.5 sm:text-[13px] ${
+                      isActive ? 'border-transparent text-white' : mobileInactiveClass
+                    }`}
+                  >
+                    {isBursting && modeBurst && (
+                      <SakugaParticles
+                        key={`mode-mobile-particles-${id}-${modeBurst.seq}`}
+                        isMiss={false}
+                        showShards={false}
+                        accentFill={accentFill}
+                        smokeTint={smokeTint}
+                        sparkleFill={sparkleFill}
+                        className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[62px] w-[124px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
+                      />
+                    )}
+                    {isActive && (
+                      <motion.span
+                        layoutId="header-mode-active-mobile"
+                        transition={{ type: 'spring', stiffness: 460, damping: 30 }}
+                        className={`pointer-events-none absolute -inset-[2px] z-[1] rounded-lg border-2 ${activePlateClass}`}
+                      />
+                    )}
+                    <Icon
+                      className={`relative z-10 hidden h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover:-rotate-6 sm:block ${
+                        isActive ? 'text-white' : inactiveIconClass
+                      }`}
+                    />
+                    <span className="relative z-10 truncate">{label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </>
+        )}
       </div>
     </header>
   );
 };
+
+export const Header = memo(HeaderComponent);
+Header.displayName = 'Header';

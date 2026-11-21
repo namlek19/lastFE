@@ -354,8 +354,7 @@ interface OrigamiButterflySvgProps {
  */
 const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
   ({ leftWingRef, rightWingRef, coreGlowRef }) => {
-    const wingGlowClass =
-      'h-full w-full overflow-visible drop-shadow-[0_0_6px_rgba(79,70,229,0.58)] dark:drop-shadow-[0_0_9px_rgba(196,181,253,0.92)]';
+    const wingGlowClass = 'h-full w-full overflow-visible';
 
     return (
       <div className="relative flex h-[36px] w-[38px] scale-90 items-center justify-center md:scale-100">
@@ -484,7 +483,7 @@ const MiniOrigamiButterflySvg: React.FC<{ variant: 0 | 1 | 2; flapDuration: numb
     const animStyle = { animationDuration: `${flapDuration}s` };
 
     return (
-      <div className="relative h-6 w-6 drop-shadow-[0_0_5px_rgba(124,58,237,0.5)] dark:drop-shadow-[0_0_7px_rgba(196,181,253,0.85)]">
+      <div className="relative h-6 w-6">
         <svg
           viewBox="0 0 28 26"
           aria-hidden="true"
@@ -540,7 +539,7 @@ const MiniOrigamiButterflySvg: React.FC<{ variant: 0 | 1 | 2; flapDuration: numb
 
 MiniOrigamiButterflySvg.displayName = 'MiniOrigamiButterflySvg';
 
-          export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = ({mode}) => {
+export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = memo(({mode}) => {
   const prefersReducedMotion = Boolean(useReducedMotion());
             const isDisabled = mode === 'exam' || prefersReducedMotion;
 
@@ -660,7 +659,7 @@ MiniOrigamiButterflySvg.displayName = 'MiniOrigamiButterflySvg';
       let prevNow = startTime;
       let lastDrawNow = 0;
       let lastTrailSpawn = startTime;
-      const minStepMs = isLowPowerDevice() ? 24 : 0;
+      const minStepMs = isLowPowerDevice() ? 32 : 18;
 
       const initSample = sampleByArcLength(lut, 0);
       let curAngle = Math.atan2(initSample.ty, initSample.tx) * (180 / Math.PI) + 90;
@@ -694,7 +693,7 @@ MiniOrigamiButterflySvg.displayName = 'MiniOrigamiButterflySvg';
                     const beatSec = elapsed * 0.001;
                     const glideMix = clamp((Math.sin(beatSec * 1.15) - 0.72) / 0.28, 0, 1);
                     const rawWave = 0.5 - 0.5 * Math.cos(beatSec * Math.PI * 6.2);
-                    const flapCurve = Math.pow(rawWave, 0.82); // 0 = wide open, 1 = folded up
+                    const flapCurve = rawWave * (0.86 + 0.14 * rawWave); // 0 = wide open, 1 = folded up
                     const activeFlapDeg = -14 + flapCurve * 88; // -14deg .. +74deg
                     const glideDeg = 10 + Math.sin(beatSec * 4.5) * 8;
                     const wingDeg = activeFlapDeg * (1 - glideMix) + glideDeg * glideMix;
@@ -954,7 +953,7 @@ MiniOrigamiButterflySvg.displayName = 'MiniOrigamiButterflySvg';
                             initial={{ scale: 0.25, opacity: 1, rotate: -18 }}
                             animate={{ scale: 1.55, opacity: 0, rotate: 24 }}
                             transition={{ duration: 0.38, ease: 'easeOut' }}
-                            className="pointer-events-none absolute -left-8 -top-8 h-16 w-16 overflow-visible drop-shadow-[0_0_10px_rgba(79,70,229,0.8)] dark:drop-shadow-[0_0_12px_rgba(103,232,249,0.95)]"
+                            className="pointer-events-none absolute -left-8 -top-8 h-16 w-16 overflow-visible"
                           >
                             <polygon
                               points="32,4 36,28 60,32 36,36 32,60 28,36 4,32 28,28"
@@ -1023,7 +1022,7 @@ MiniOrigamiButterflySvg.displayName = 'MiniOrigamiButterflySvg';
                                 delay: shard.delay,
                                 ease: 'easeOut',
                               }}
-                              className="pointer-events-none absolute h-4 w-4 overflow-visible sm:drop-shadow-[0_0_4px_rgba(79,70,229,0.55)] sm:dark:drop-shadow-[0_0_5px_rgba(103,232,249,0.8)]"
+                              className="pointer-events-none absolute h-4 w-4 overflow-visible"
                             >
                               <polygon
                                 points={shard.points}
@@ -1056,7 +1055,7 @@ MiniOrigamiButterflySvg.displayName = 'MiniOrigamiButterflySvg';
                                   delay: mote.delay,
                                   ease: 'easeOut',
                                 }}
-                                className="pointer-events-none absolute h-3 w-3 overflow-visible sm:drop-shadow-[0_0_4px_rgba(79,70,229,0.55)] sm:dark:drop-shadow-[0_0_5px_rgba(103,232,249,0.8)]"
+                                className="pointer-events-none absolute h-3 w-3 overflow-visible"
                               >
                                 <polygon points="8,1 9.5,6.5 15,8 9.5,9.5 8,15 6.5,9.5 1,8 6.5,6.5" fill={mote.color} />
                               </motion.svg>
@@ -1088,4 +1087,7 @@ MiniOrigamiButterflySvg.displayName = 'MiniOrigamiButterflySvg';
                       ))}
                     </div>
                     );
-};
+});
+
+SakugaLuminousButterfly.displayName = 'SakugaLuminousButterfly';
+export default SakugaLuminousButterfly;

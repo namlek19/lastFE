@@ -93,9 +93,14 @@ function getViewportSize(): { w: number; h: number } {
   };
 }
 
+let cachedHeaderEl: HTMLElement | null = null;
+
 function getHeaderSafeTop(vw: number, vh: number): number {
   if (typeof document !== 'undefined') {
-    const headerRect = document.querySelector('header')?.getBoundingClientRect();
+    if (!cachedHeaderEl || !cachedHeaderEl.isConnected) {
+      cachedHeaderEl = document.querySelector('header');
+    }
+    const headerRect = cachedHeaderEl?.getBoundingClientRect();
     if (headerRect && headerRect.height > 0) {
       if (headerRect.bottom <= 0) {
         return 18;
@@ -478,7 +483,7 @@ const SpideyClawdSprite: React.FC<SpideyClawdSpriteProps> = memo(({
 
 SpideyClawdSprite.displayName = 'SpideyClawdSprite';
 
-export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) => {
+const SakugaSpideyRoamerComponent: React.FC<SakugaSpideyRoamerProps> = ({ mode }) => {
   const prefersReducedMotion = useReducedMotion();
   const [isSleepingPref, setIsSleepingPref] = useState<boolean>(() => loadSleepPreference());
   const [isDoiSleeping, setIsDoiSleeping] = useState<boolean>(false);
@@ -599,9 +604,13 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       scrollRafId = 0;
       if (isFallingRef.current) return;
 
+      const perch = perchedRef.current;
+      if (!perch && viewportRef.current.w >= 768) {
+        return;
+      }
+
       const { w: vw, h: vh } = getViewportSize();
       const bounds = getPlayBounds(vw, vh);
-      const perch = perchedRef.current;
 
       if (!perch) {
         if (bounds.isMobile && zoneRef.current !== 'perch') {
@@ -1530,3 +1539,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
     </div>
   );
 };
+
+export const SakugaSpideyRoamer = memo(SakugaSpideyRoamerComponent);
+SakugaSpideyRoamer.displayName = 'SakugaSpideyRoamer';
+export default SakugaSpideyRoamer;

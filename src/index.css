@@ -529,6 +529,34 @@ button:active .sakuga-option-badge {
   animation: spidey-zzz-right 2.1s ease-out infinite;
 }
 
+@keyframes spidey-pendulum-rock {
+  0%,
+  100% {
+    transform: rotate(-3.5deg) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: rotate(3.5deg) translate3d(0, -1.8px, 0);
+  }
+}
+
+@keyframes sakuga-blessing-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 3px, 0);
+  }
+}
+
+.spidey-pendulum-rock {
+  animation: spidey-pendulum-rock 2.2s ease-in-out infinite;
+}
+
+.sakuga-blessing-float {
+  animation: sakuga-blessing-float 2.8s ease-in-out infinite;
+}
+
 .bf-mini-wing-l {
   transform-origin: 50% 50%;
   animation: bf-mini-wing-l 0.28s ease-in-out infinite;
@@ -569,7 +597,9 @@ button:active .sakuga-option-badge {
   .spidey-zzz-left,
   .spidey-zzz-right,
   .bf-mini-wing-l,
-  .bf-mini-wing-r {
+  .bf-mini-wing-r,
+  .spidey-pendulum-rock,
+  .sakuga-blessing-float {
     animation: none;
     transform: none;
   }

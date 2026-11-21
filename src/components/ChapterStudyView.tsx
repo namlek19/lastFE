@@ -16,26 +16,28 @@ import {
   XCircle,
 } from 'lucide-react';
 import {
-  getChaptersBySubject,
-  getQuestionsBySubject,
+  ChapterMeta,
   isAnswerCorrect,
   SUBJECTS,
 } from '../data';
 import { QuestionItem, QuestionProgress, StudyTier, SubjectId, UserProgressStore } from '../types/quiz';
 import { getDetailedMasteryState, isMastered } from '../utils/storage';
+import { useIsDesktopLg } from '../utils/useIsDesktopLg';
 import { RichExplanation } from './RichExplanation';
 import {
   getSakugaProgressBadgeClass,
   SakugaBorderFire,
   SakugaBurst,
   SakugaEvent,
-  SakugaMangaTag,
   SakugaProgressBar,
 } from './SakugaVfx';
+import { SakugaMangaTag } from './SakugaVfx';
 
 interface ChapterStudyViewProps {
   subject: SubjectId;
   tier: StudyTier;
+  questions: QuestionItem[];
+  chapters: ChapterMeta[];
   progress: UserProgressStore;
   onRecordAttempt: (qId: string, isCorrect: boolean, flagged?: boolean) => void;
   onToggleFlag: (qId: string) => void;
@@ -76,13 +78,13 @@ function getQuestionCellClass(qp: QuestionProgress | undefined, hoverable = fals
 
 export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
   subject,
-  tier,
+  questions: allSubjectQuestions,
+  chapters,
   progress,
   onRecordAttempt,
   onToggleFlag,
 }) => {
-  const chapters = useMemo(() => getChaptersBySubject(subject, tier), [subject, tier]);
-  const allSubjectQuestions = useMemo(() => getQuestionsBySubject(subject, tier), [subject, tier]);
+  const isDesktopLg = useIsDesktopLg();
 
   const [selectedChapter, setSelectedChapter] = useState<number>(() => chapters[0]?.chapter ?? 1);
   const [filter, setFilter] = useState<QuestionFilter>('all');
@@ -200,7 +202,7 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
     setIsMobileSheetOpen(false);
     setSakugaEvent(null);
     setIsShaking(false);
-}, [subject, tier, chapters, allSubjectQuestions]);
+}, [subject, chapters, allSubjectQuestions]);
 
 const chapterQuestions = useMemo(
   () => allSubjectQuestions.filter((q) => q.chapter === selectedChapter),
@@ -405,74 +407,76 @@ const jumpToQuestion = (idx: number) => {
   scrollToProgressOnMobile();
 };
 
-// PC keyboard shortcuts
-useEffect(() => {
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
+// PC keyboard shortcuts (single listener per mount via live handler ref)
+const keydownHandlerRef = useRef<(e: KeyboardEvent) => void>(() => {});
+keydownHandlerRef.current = (e: KeyboardEvent) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-    const target = e.target as HTMLElement | null;
-    if (target) {
-      const tag = target.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) {
-        return;
-      }
-    }
-
-    if (!currentQuestion) return;
-
-    const keyLower = e.key.toLowerCase();
-
-    // 1-6 or a-e: select/toggle option (letter F stays bound to Flag)
-    const numberIndex = ['1', '2', '3', '4', '5', '6'].indexOf(keyLower);
-    const letterIndex = ['a', 'b', 'c', 'd', 'e'].indexOf(keyLower);
-    const optionIdx = numberIndex !== -1 ? numberIndex : letterIndex;
-
-    if (optionIdx !== -1) {
-      const option = currentQuestion.options[optionIdx];
-      if (option && !currentAttempt.graded) {
-        e.preventDefault();
-        handleSelectOption(currentQuestion, option.key);
-      }
+  const target = e.target as HTMLElement | null;
+  if (target) {
+    const tag = target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) {
       return;
     }
+  }
 
-    // f / F: toggle flag
-    if (keyLower === 'f') {
+  if (!currentQuestion) return;
+
+  const keyLower = e.key.toLowerCase();
+
+  // 1-6 or a-e: select/toggle option (letter F stays bound to Flag)
+  const numberIndex = ['1', '2', '3', '4', '5', '6'].indexOf(keyLower);
+  const letterIndex = ['a', 'b', 'c', 'd', 'e'].indexOf(keyLower);
+  const optionIdx = numberIndex !== -1 ? numberIndex : letterIndex;
+
+  if (optionIdx !== -1) {
+    const option = currentQuestion.options[optionIdx];
+    if (option && !currentAttempt.graded) {
       e.preventDefault();
-      handleToggleFlag(currentQuestion.id);
+      handleSelectOption(currentQuestion, option.key);
+    }
+    return;
+  }
+
+  // f / F: toggle flag
+  if (keyLower === 'f') {
+    e.preventDefault();
+    handleToggleFlag(currentQuestion.id);
+    return;
+  }
+
+  // Enter / Space: grade multi-select or advance to next question
+  if (e.key === 'Enter' || e.key === ' ') {
+    if (target && target.closest('button[data-native-enter="true"]')) {
       return;
     }
 
-    // Enter / Space: grade multi-select or advance to next question
-    if (e.key === 'Enter' || e.key === ' ') {
-      if (target && target.closest('button[data-native-enter="true"]')) {
-        return;
-      }
-
-      if (e.key === ' ') {
-        e.preventDefault();
-      }
-
-      if (
-        currentQuestion.isMultiSelect &&
-        !currentAttempt.graded &&
-        currentAttempt.selectedKeys.length > 0
-      ) {
-        e.preventDefault();
-        handleGradeMultiSelect(currentQuestion);
-        return;
-      }
-
-      if (currentAttempt.graded && safeIndex < filteredQuestions.length - 1) {
-        e.preventDefault();
-        goToNext();
-      }
+    if (e.key === ' ') {
+      e.preventDefault();
     }
-  };
 
-  window.addEventListener('keydown', handleKeyDown);
-  return () => window.removeEventListener('keydown', handleKeyDown);
-});
+    if (
+      currentQuestion.isMultiSelect &&
+      !currentAttempt.graded &&
+      currentAttempt.selectedKeys.length > 0
+    ) {
+      e.preventDefault();
+      handleGradeMultiSelect(currentQuestion);
+      return;
+    }
+
+    if (currentAttempt.graded && safeIndex < filteredQuestions.length - 1) {
+      e.preventDefault();
+      goToNext();
+    }
+  }
+};
+
+useEffect(() => {
+  const onKeyDown = (e: KeyboardEvent) => keydownHandlerRef.current(e);
+  window.addEventListener('keydown', onKeyDown);
+  return () => window.removeEventListener('keydown', onKeyDown);
+}, []);
 
 const activeChapterMeta = chapters.find((c) => c.chapter === selectedChapter);
 const activeChapterStat = chapterStats.get(selectedChapter) ?? {
@@ -494,7 +498,8 @@ return (
   <>
     <div className="flex w-full flex-col items-start gap-6 lg:flex-row lg:gap-8 xl:gap-10">
       {/* Desktop Chapter & Question Grid Sidebar (>= 1024px) */}
-      <aside className="hidden w-full shrink-0 lg:sticky lg:top-20 lg:block lg:w-[360px] xl:w-[380px]">
+      {isDesktopLg && (
+      <aside className="w-full shrink-0 lg:sticky lg:top-20 lg:w-[360px] xl:w-[380px]">
         <div className="rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-4 dark:border-[#262925] dark:bg-[#161816] xl:p-5">
           {/* 2-Tab Switcher */}
           <div
@@ -571,7 +576,7 @@ return (
                       type="button"
                       data-native-enter="true"
                       onClick={() => handleSelectChapter(ch.chapter)}
-                      className={`relative w-full cursor-pointer rounded-xl border p-4 text-left transition-all ${active
+                      className={`relative w-full cursor-pointer rounded-xl border p-4 text-left transition-colors ${active
                           ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
                           : stat.pct >= 100
                             ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35 dark:hover:border-[#C4B5FD] dark:hover:bg-[#5B21B6]/20'
@@ -683,7 +688,7 @@ return (
                         type="button"
                         data-native-enter="true"
                         onClick={() => jumpToQuestion(idx)}
-                        className={`tabular-nums relative flex h-8 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold transition-all ${cellStyle} ${isActive
+                        className={`tabular-nums relative flex h-8 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold transition-colors ${cellStyle} ${isActive
                             ? 'ring-2 ring-[#4338CA] ring-offset-1 ring-offset-[#EAE6DD] dark:ring-[#818CF8] dark:ring-offset-[#161816]'
                             : ''
                           }`}
@@ -701,11 +706,13 @@ return (
           )}
         </div>
       </aside>
+      )}
 
       {/* Main Content Area */}
       <div className="w-full min-w-0 flex-1">
         {/* Mobile & Tablet Unified Interactive Progress & Filter Card (< 1024px) */}
-        <div ref={mobileProgressRef} className="mb-3.5 px-1 pt-1 sm:mb-4 lg:hidden">
+        {!isDesktopLg && (
+        <div ref={mobileProgressRef} className="mb-3.5 px-1 pt-1 sm:mb-4">
           <button
             type="button"
             onClick={() => setIsMobileSheetOpen(true)}
@@ -753,9 +760,11 @@ return (
             <SakugaProgressBar percent={activeChapterStat.pct} className="h-1.5 w-full" />
           </button>
         </div>
+        )}
 
         {/* Desktop Quick Filter Pills (>= 1024px) */}
-        <div className="mb-6 hidden flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-5 py-3.5 dark:border-[#262925] dark:bg-[#161816] lg:flex">
+        {isDesktopLg && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-5 py-3.5 dark:border-[#262925] dark:bg-[#161816]">
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="mr-1 inline-flex items-center gap-1.5 text-xs font-medium text-[#656058] dark:text-[#9CA39B]">
               <Filter className="h-3.5 w-3.5 text-[#4338CA] dark:text-[#A5B4FC]" />
@@ -823,6 +832,7 @@ return (
             </button>
           </div>
         </div>
+        )}
 
         {/* Empty Filtered State vs Question Card */}
         {!currentQuestion ? (
@@ -1023,7 +1033,7 @@ return (
                     type="button"
                     disabled={isGraded}
                     onClick={() => handleSelectOption(currentQuestion, opt.key)}
-                    className={`group relative flex w-full items-start gap-3 rounded-xl p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerClasses} ${isGraded ? 'cursor-default' : 'cursor-pointer'
+                    className={`group relative flex w-full items-start gap-3 rounded-xl p-3 px-3.5 text-left transition-[border-color,background-color,color,transform] duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerClasses} ${isGraded ? 'cursor-default' : 'cursor-pointer'
                       }`}
                   >
                     {isGraded && isCorrectOption && (
@@ -1176,7 +1186,7 @@ return (
     </div>
 
     {/* Mobile Sticky Bottom Navigation Bar (< 768px) */}
-    {currentQuestion && (
+    {!isDesktopLg && currentQuestion && (
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D5CFC2] bg-[#EAE6DD]/[0.97] px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(28,25,23,0.09)] dark:border-[#262925] dark:bg-[#161816]/[0.97] dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.6)] md:hidden">
         <div className="flex items-center gap-2">
           <button
@@ -1231,6 +1241,7 @@ return (
     )}
 
     {/* Mobile & Tablet Bottom Sheet Drawer (< 1024px): Chapters + Filter + Question Grid */}
+    {!isDesktopLg && (
     <AnimatePresence>
       {isMobileSheetOpen && (
         <>
@@ -1241,7 +1252,7 @@ return (
             exit={{ opacity: 0 }}
             transition={{ duration: 0.16 }}
             onClick={() => setIsMobileSheetOpen(false)}
-            className="fixed inset-0 z-50 bg-[#18181B]/50 backdrop-blur-[2px] dark:bg-[#0F100E]/75 lg:hidden"
+            className="fixed inset-0 z-50 bg-[#18181B]/60 dark:bg-[#0F100E]/82"
           />
           <motion.div
             key="chapter-sheet-drawer"
@@ -1430,6 +1441,9 @@ return (
         </>
       )}
     </AnimatePresence>
+    )}
   </>
 );
 };
+
+export default ChapterStudyView;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { BookOpen, Info } from 'lucide-react';
 import { QuestionItem } from '../types/quiz';
 
@@ -7,8 +7,14 @@ interface RichExplanationProps {
   className?: string;
 }
 
-export const RichExplanation: React.FC<RichExplanationProps> = ({ question, className = '' }) => {
-  const parts = question.explanation.split(/(\*\*[^*\n]+\*\*)/g);
+const RichExplanationComponent: React.FC<RichExplanationProps> = ({
+  question,
+  className = '',
+}) => {
+  const parts = useMemo(
+    () => question.explanation.split(/(\*\*[^*\n]+\*\*)/g),
+    [question.explanation]
+  );
 
   return (
     <div
@@ -44,3 +50,6 @@ export const RichExplanation: React.FC<RichExplanationProps> = ({ question, clas
     </div>
   );
 };
+
+export const RichExplanation = memo(RichExplanationComponent);
+RichExplanation.displayName = 'RichExplanation';

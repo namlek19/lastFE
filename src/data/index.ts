@@ -1,7 +1,4 @@
-import mln131Raw from './mln131.json';
-import vnr202Raw from './vnr202.json';
-import wdu203cRaw from './wdu203c.json';
-import { QuestionItem, StudyTier, SubjectId } from '../types/quiz';
+import { QuestionItem, QuestionProgress, StudyTier, SubjectId } from '../types/quiz';
 
 export interface ChapterMeta {
   chapter: number;
@@ -20,9 +17,11 @@ export interface SubjectMeta {
   chapters: ChapterMeta[];
 }
 
-const mln131Questions = mln131Raw as QuestionItem[];
-const vnr202Questions = vnr202Raw as QuestionItem[];
-const wdu203cQuestions = wdu203cRaw as QuestionItem[];
+export interface SubjectLoadedBundle {
+  subject: SubjectId;
+  questionsByTier: Record<StudyTier, QuestionItem[]>;
+  chaptersByTier: Record<StudyTier, ChapterMeta[]>;
+}
 
 const MLN131_LAZY_MAX_IDS = new Set<string>([
   // Chương 1 (22 câu trụ cột)
@@ -92,12 +91,6 @@ const MLN131_LAZY_EXTRA_IDS = [
 
 const MLN131_LAZY_IDS = new Set<string>([...MLN131_LAZY_MAX_IDS, ...MLN131_LAZY_EXTRA_IDS]);
 
-const mln131ByTier: Record<StudyTier, QuestionItem[]> = {
-  lazymax: mln131Questions.filter((q) => MLN131_LAZY_MAX_IDS.has(q.id)),
-  lazy: mln131Questions.filter((q) => MLN131_LAZY_IDS.has(q.id)),
-  hardcore: mln131Questions,
-};
-
 const VNR202_LAZY_MAX_IDS = new Set<string>([
   // Chương 1 (48 câu trụ cột)
   'vnr-033', 'vnr-036', 'vnr-037', 'vnr-038', 'vnr-057', 'vnr-059', 'vnr-060', 'vnr-061',
@@ -148,12 +141,6 @@ const VNR202_LAZY_EXTRA_IDS = [
 ];
 
 const VNR202_LAZY_IDS = new Set<string>([...VNR202_LAZY_MAX_IDS, ...VNR202_LAZY_EXTRA_IDS]);
-
-const vnr202ByTier: Record<StudyTier, QuestionItem[]> = {
-  lazymax: vnr202Questions.filter((q) => VNR202_LAZY_MAX_IDS.has(q.id)),
-  lazy: vnr202Questions.filter((q) => VNR202_LAZY_IDS.has(q.id)),
-  hardcore: vnr202Questions,
-};
 
 const WDU203C_LAZY_MAX_IDS = new Set<string>([
   // Course 1 (22 câu trụ cột)
@@ -208,15 +195,115 @@ const WDU203C_LAZY_EXTRA_IDS = [
 
 const WDU203C_LAZY_IDS = new Set<string>([...WDU203C_LAZY_MAX_IDS, ...WDU203C_LAZY_EXTRA_IDS]);
 
-const wdu203cByTier: Record<StudyTier, QuestionItem[]> = {
-  lazymax: wdu203cQuestions.filter((q) => WDU203C_LAZY_MAX_IDS.has(q.id)),
-  lazy: wdu203cQuestions.filter((q) => WDU203C_LAZY_IDS.has(q.id)),
-  hardcore: wdu203cQuestions,
+const LAZY_MAX_SETS: Record<SubjectId, Set<string>> = {
+  mln131: MLN131_LAZY_MAX_IDS,
+  vnr202: VNR202_LAZY_MAX_IDS,
+  wdu203c: WDU203C_LAZY_MAX_IDS,
+};
+
+const LAZY_SETS: Record<SubjectId, Set<string>> = {
+  mln131: MLN131_LAZY_IDS,
+  vnr202: VNR202_LAZY_IDS,
+  wdu203c: WDU203C_LAZY_IDS,
+};
+
+const SUBJECT_PREFIX_MAP: Record<SubjectId, { prefix: string; maxNum: number }> = {
+  vnr202: { prefix: 'vnr-', maxNum: 404 },
+  mln131: { prefix: 'mln-', maxNum: 432 },
+  wdu203c: { prefix: 'wdu-', maxNum: 274 },
+};
+
+export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
+  mln131: {
+    id: 'mln131',
+    code: 'MLN131',
+    name: 'Chủ nghĩa xã hội khoa học',
+    shortName: 'CNXH Khoa học',
+    totalQuestions: 432,
+    examTotal: 60,
+    examQuotas: {
+      1: 5,
+      2: 5,
+      3: 10,
+      4: 10,
+      5: 10,
+      6: 10,
+      7: 10,
+    },
+    chapters: [
+      { chapter: 1, title: 'Nhập môn Chủ nghĩa xã hội khoa học', count: 48 },
+      { chapter: 2, title: 'Sứ mệnh lịch sử của giai cấp công nhân', count: 57 },
+      { chapter: 3, title: 'Chủ nghĩa xã hội và thời kỳ quá độ lên chủ nghĩa xã hội', count: 73 },
+      { chapter: 4, title: 'Dân chủ xã hội chủ nghĩa và nhà nước xã hội chủ nghĩa', count: 62 },
+      {
+        chapter: 5,
+        title: 'Cơ cấu xã hội - giai cấp và liên minh giai cấp, tầng lớp trong thời kỳ quá độ lên chủ nghĩa xã hội',
+        count: 56,
+      },
+      { chapter: 6, title: 'Vấn đề dân tộc và tôn giáo trong thời kỳ quá độ lên chủ nghĩa xã hội', count: 71 },
+      { chapter: 7, title: 'Vấn đề gia đình trong thời kỳ quá độ lên chủ nghĩa xã hội', count: 65 },
+    ],
+  },
+  vnr202: {
+    id: 'vnr202',
+    code: 'VNR202',
+    name: 'Lịch sử Đảng Cộng sản Việt Nam',
+    shortName: 'Lịch sử Đảng',
+    totalQuestions: 404,
+    examTotal: 60,
+    examQuotas: {
+      1: 20,
+      2: 20,
+      3: 20,
+    },
+    chapters: [
+      {
+        chapter: 1,
+        title: 'Đảng Cộng sản Việt Nam ra đời và lãnh đạo đấu tranh giành chính quyền (1930 - 1945)',
+        count: 122,
+      },
+      {
+        chapter: 2,
+        title: 'Đảng lãnh đạo hai cuộc kháng chiến, hoàn thành giải phóng dân tộc, thống nhất đất nước (1945 - 1975)',
+        count: 130,
+      },
+      {
+        chapter: 3,
+        title: 'Đảng lãnh đạo cả nước quá độ lên chủ nghĩa xã hội và tiến hành công cuộc đổi mới (1975 - nay)',
+        count: 152,
+      },
+    ],
+  },
+  wdu203c: {
+    id: 'wdu203c',
+    code: 'WDU203c',
+    name: 'UI/UX Design & User Research',
+    shortName: 'UI/UX Design',
+    totalQuestions: 274,
+    examTotal: 60,
+    examQuotas: {
+      1: 10,
+      2: 11,
+      3: 9,
+      4: 13,
+      5: 4,
+      6: 13,
+    },
+    chapters: [
+      { chapter: 1, title: 'Course 1: Introduction to UX Principles & Processes', count: 48 },
+      { chapter: 2, title: 'Course 2: Understanding User Needs', count: 50 },
+      { chapter: 3, title: 'Course 3: Evaluating Designs with Users', count: 40 },
+      { chapter: 4, title: 'Course 4: UX Design: From Concept to Prototype', count: 60 },
+      { chapter: 5, title: 'Course 5: UX Design Concept & Capstone Case Studies', count: 15 },
+      { chapter: 6, title: 'Course 6: UX Research at Scale: Surveys, Analytics, Online Testing', count: 61 },
+    ],
+  },
 };
 
 function buildChapters(questions: QuestionItem[]): ChapterMeta[] {
   const map = new Map<number, ChapterMeta>();
-  for (const q of questions) {
+  for (let i = 0; i < questions.length; i++) {
+    const q = questions[i];
     const existing = map.get(q.chapter);
     if (existing) {
       existing.count += 1;
@@ -231,101 +318,117 @@ function buildChapters(questions: QuestionItem[]): ChapterMeta[] {
   return Array.from(map.values()).sort((a, b) => a.chapter - b.chapter);
 }
 
-const mln131ChaptersByTier: Record<StudyTier, ChapterMeta[]> = {
-  lazymax: buildChapters(mln131ByTier.lazymax),
-  lazy: buildChapters(mln131ByTier.lazy),
-  hardcore: buildChapters(mln131ByTier.hardcore),
-};
-const vnr202ChaptersByTier: Record<StudyTier, ChapterMeta[]> = {
-  lazymax: buildChapters(vnr202ByTier.lazymax),
-  lazy: buildChapters(vnr202ByTier.lazy),
-  hardcore: buildChapters(vnr202ByTier.hardcore),
-};
-const wdu203cChaptersByTier: Record<StudyTier, ChapterMeta[]> = {
-  lazymax: buildChapters(wdu203cByTier.lazymax),
-  lazy: buildChapters(wdu203cByTier.lazy),
-  hardcore: buildChapters(wdu203cByTier.hardcore),
-};
+const resolvedBundleCache = new Map<SubjectId, SubjectLoadedBundle>();
+const inflightBundleCache = new Map<SubjectId, Promise<SubjectLoadedBundle>>();
 
-const QUESTIONS_BY_SUBJECT: Record<SubjectId, Record<StudyTier, QuestionItem[]>> = {
-  mln131: mln131ByTier,
-  vnr202: vnr202ByTier,
-  wdu203c: wdu203cByTier,
-};
-
-const CHAPTERS_BY_SUBJECT: Record<SubjectId, Record<StudyTier, ChapterMeta[]>> = {
-  mln131: mln131ChaptersByTier,
-  vnr202: vnr202ChaptersByTier,
-  wdu203c: wdu203cChaptersByTier,
-};
-
-export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
-  mln131: {
-    id: 'mln131',
-    code: 'MLN131',
-    name: 'Chủ nghĩa xã hội khoa học',
-    shortName: 'CNXH Khoa học',
-    totalQuestions: mln131Questions.length,
-    examTotal: 60,
-    examQuotas: {
-      1: 5,
-      2: 5,
-      3: 10,
-      4: 10,
-      5: 10,
-      6: 10,
-      7: 10,
-    },
-    chapters: mln131ChaptersByTier.hardcore,
-  },
-  vnr202: {
-    id: 'vnr202',
-    code: 'VNR202',
-    name: 'Lịch sử Đảng Cộng sản Việt Nam',
-    shortName: 'Lịch sử Đảng',
-    totalQuestions: vnr202Questions.length,
-    examTotal: 60,
-    examQuotas: {
-      1: 20,
-      2: 20,
-      3: 20,
-    },
-    chapters: vnr202ChaptersByTier.hardcore,
-  },
-  wdu203c: {
-    id: 'wdu203c',
-    code: 'WDU203c',
-    name: 'UI/UX Design & User Research',
-    shortName: 'UI/UX Design',
-    totalQuestions: wdu203cQuestions.length,
-    examTotal: 60,
-    examQuotas: {
-      1: 10,
-      2: 11,
-      3: 9,
-      4: 13,
-      5: 4,
-      6: 13,
-    },
-    chapters: wdu203cChaptersByTier.hardcore,
-  },
-};
-
-export function getQuestionsBySubject(
-  subject: SubjectId,
-  tier: StudyTier = 'hardcore'
-): QuestionItem[] {
-  return QUESTIONS_BY_SUBJECT[subject][tier];
+function createSubjectBundle(subject: SubjectId, rawQuestions: QuestionItem[]): SubjectLoadedBundle {
+  const lazyMaxSet = LAZY_MAX_SETS[subject];
+  const lazySet = LAZY_SETS[subject];
+  const questionsByTier: Record<StudyTier, QuestionItem[]> = {
+    lazymax: rawQuestions.filter((q) => lazyMaxSet.has(q.id)),
+    lazy: rawQuestions.filter((q) => lazySet.has(q.id)),
+    hardcore: rawQuestions,
+  };
+  const chaptersByTier: Record<StudyTier, ChapterMeta[]> = {
+    lazymax: buildChapters(questionsByTier.lazymax),
+    lazy: buildChapters(questionsByTier.lazy),
+    hardcore: buildChapters(questionsByTier.hardcore),
+  };
+  return { subject, questionsByTier, chaptersByTier };
 }
 
-export function getChaptersBySubject(
+export function getCachedSubjectData(subject: SubjectId): SubjectLoadedBundle | null {
+  return resolvedBundleCache.get(subject) ?? null;
+}
+
+export function loadSubjectData(subject: SubjectId): Promise<SubjectLoadedBundle> {
+  const cached = resolvedBundleCache.get(subject);
+  if (cached) return Promise.resolve(cached);
+
+  const inflight = inflightBundleCache.get(subject);
+  if (inflight) return inflight;
+
+  const loader = (
+    subject === 'mln131'
+      ? import('./mln131.json')
+      : subject === 'wdu203c'
+        ? import('./wdu203c.json')
+        : import('./vnr202.json')
+  ).then((mod) => {
+    const bundle = createSubjectBundle(subject, mod.default as QuestionItem[]);
+    resolvedBundleCache.set(subject, bundle);
+    inflightBundleCache.delete(subject);
+    return bundle;
+  }).catch((err) => {
+    inflightBundleCache.delete(subject);
+    throw err;
+  });
+
+  inflightBundleCache.set(subject, loader);
+  return loader;
+}
+
+function parseValidSubjectQuestionNum(prefix: string, maxNum: number, id: string): number {
+  if (!id.startsWith(prefix)) return -1;
+  const num = Number.parseInt(id.slice(prefix.length), 10);
+  if (!Number.isFinite(num) || num < 1 || num > maxNum) return -1;
+  return id === `${prefix}${String(num).padStart(3, '0')}` ? num : -1;
+}
+
+export function getSubjectTotalCount(subject: SubjectId, tier: StudyTier = 'hardcore'): number {
+  if (tier === 'lazymax') return LAZY_MAX_SETS[subject].size;
+  if (tier === 'lazy') return LAZY_SETS[subject].size;
+  return SUBJECTS[subject].totalQuestions;
+}
+
+export function isQuestionInSubjectTier(
   subject: SubjectId,
-  tier: StudyTier = 'hardcore'
-): ChapterMeta[] {
-  return CHAPTERS_BY_SUBJECT[subject][tier];
+  tier: StudyTier,
+  questionId: string
+): boolean {
+  if (tier === 'lazymax') return LAZY_MAX_SETS[subject].has(questionId);
+  if (tier === 'lazy') return LAZY_SETS[subject].has(questionId);
+  const spec = SUBJECT_PREFIX_MAP[subject];
+  return parseValidSubjectQuestionNum(spec.prefix, spec.maxNum, questionId) > 0;
+}
+
+export function countSubjectMastered(
+  subject: SubjectId,
+  tier: StudyTier,
+  questionsMap: Record<string, QuestionProgress>
+): number {
+  let count = 0;
+  for (const [qId, qp] of Object.entries(questionsMap)) {
+    if (!qp.flagged && qp.streak >= 2 && isQuestionInSubjectTier(subject, tier, qId)) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+export function countCombinedProgressStats(
+  questionsMap: Record<string, QuestionProgress>
+): { mastered: number; hesitant: number } {
+  let mastered = 0;
+  let hesitant = 0;
+  for (const [qId, qp] of Object.entries(questionsMap)) {
+    const inMln = parseValidSubjectQuestionNum('mln-', 432, qId) > 0;
+    const inVnr = !inMln && parseValidSubjectQuestionNum('vnr-', 404, qId) > 0;
+    if (!inMln && !inVnr) continue;
+    if (qp.flagged) {
+      hesitant += 1;
+    } else if (qp.streak >= 2) {
+      mastered += 1;
+    }
+  }
+  return { mastered, hesitant };
 }
 
 export function isAnswerCorrect(selected: string[], correct: string[]): boolean {
+  if (selected.length === 0 || correct.length === 0) return false;
+  if (selected.length === 1 && correct.length === 1) {
+    return selected[0].toUpperCase() === correct[0].toUpperCase();
+  }
   const normSelected = Array.from(new Set(selected.map((s) => s.toUpperCase()))).sort();
   const normCorrect = Array.from(new Set(correct.map((c) => c.toUpperCase()))).sort();
   if (normSelected.length !== normCorrect.length) return false;

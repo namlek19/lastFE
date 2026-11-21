@@ -12,9 +12,9 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { getQuestionsBySubject } from '../data/index';
+import { countCombinedProgressStats } from '../data/index';
 import { UserProgressStore } from '../types/quiz';
-import { exportProgressCode, importProgressCode, isMastered, mergeProgressStores } from '../utils/storage';
+import { exportProgressCode, importProgressCode, mergeProgressStores } from '../utils/progressSync';
 
 export interface ProgressSyncModalProps {
   isOpen: boolean;
@@ -40,32 +40,14 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
   const exportTextareaRef = useRef<HTMLTextAreaElement>(null);
   const copyTimerRef = useRef<number | null>(null);
 
-  const allQuestions = useMemo(
-    () => [
-      ...getQuestionsBySubject('mln131'),
-      ...getQuestionsBySubject('vnr202'),
-    ],
-    []
-  );
-
   const summary = useMemo(() => {
-    let mastered = 0;
-    let hesitant = 0;
-    for (const q of allQuestions) {
-      const qProg = progress.questions[q.id];
-      if (isMastered(qProg)) {
-        mastered += 1;
-      }
-      if (qProg?.flagged) {
-        hesitant += 1;
-      }
-    }
+    const counts = countCombinedProgressStats(progress.questions);
     return {
-      mastered,
-      hesitant,
+      mastered: counts.mastered,
+      hesitant: counts.hesitant,
       exams: progress.examHistory.length,
     };
-  }, [allQuestions, progress.examHistory.length, progress.questions]);
+  }, [progress.examHistory.length, progress.questions]);
 
   const syncCode = useMemo(
     () => (isOpen ? exportProgressCode(progress) : ''),
@@ -144,21 +126,9 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
       return;
     }
 
-    let beforeMastered = 0;
-    for (const q of allQuestions) {
-      if (isMastered(progress.questions[q.id])) {
-        beforeMastered += 1;
-      }
-    }
-
+    const beforeMastered = countCombinedProgressStats(progress.questions).mastered;
     const merged = mergeProgressStores(progress, imported);
-
-    let afterMastered = 0;
-    for (const q of allQuestions) {
-      if (isMastered(merged.questions[q.id])) {
-        afterMastered += 1;
-      }
-    }
+    const afterMastered = countCombinedProgressStats(merged.questions).mastered;
 
     const addedMastered = Math.max(0, afterMastered - beforeMastered);
     const addedExams = Math.max(0, merged.examHistory.length - progress.examHistory.length);
@@ -194,7 +164,7 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
           onClick={onClose}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/50 p-3 backdrop-blur-xs dark:bg-[#0F100E]/80 sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/60 p-3 dark:bg-[#0F100E]/82 sm:p-6"
         >
           <motion.div
             key="sync-modal-dialog"
@@ -425,3 +395,5 @@ export const ProgressSyncModal: React.FC<ProgressSyncModalProps> = ({
     </AnimatePresence>
   );
 };
+
+export default ProgressSyncModal;

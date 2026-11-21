@@ -4,7 +4,15 @@ import namFlorkImg from '../assets/nam-flork-thumbsup.png';
 
 const WELCOME_SEEN_KEY = 'fpt_exam_nam_note_seen_v1';
 
-export const WelcomeNoteModal: React.FC = () => {
+export interface WelcomeNoteModalProps {
+  enabled?: boolean;
+  onDismiss?: () => void;
+}
+
+export const WelcomeNoteModal: React.FC<WelcomeNoteModalProps> = ({
+  enabled = true,
+  onDismiss,
+}) => {
   const [isOpen, setIsOpen] = useState<boolean>(() => {
     try {
       return localStorage.getItem(WELCOME_SEEN_KEY) !== '1';
@@ -23,7 +31,7 @@ export const WelcomeNoteModal: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!enabled || !isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -35,11 +43,11 @@ export const WelcomeNoteModal: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleClose, isOpen]);
+  }, [enabled, handleClose, isOpen]);
 
   return (
-    <AnimatePresence>
-      {isOpen && (
+    <AnimatePresence onExitComplete={onDismiss}>
+      {enabled && isOpen && (
         <motion.div
           key="welcome-note-backdrop"
           initial={{ opacity: 0 }}
@@ -47,7 +55,7 @@ export const WelcomeNoteModal: React.FC = () => {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
           onClick={handleClose}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/55 p-4 backdrop-blur-xs dark:bg-[#0F100E]/80"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/62 p-4 dark:bg-[#0F100E]/84"
         >
           <motion.div
             key="welcome-note-dialog"
@@ -66,6 +74,10 @@ export const WelcomeNoteModal: React.FC = () => {
                 <img
                   src={namFlorkImg}
                   alt="Flork giơ ngón cái chúc thi tốt"
+                  width={176}
+                  height={176}
+                  loading="lazy"
+                  decoding="async"
                   className="mx-auto h-40 w-40 object-contain sm:h-44 sm:w-44"
                 />
               </div>
@@ -96,3 +108,5 @@ export const WelcomeNoteModal: React.FC = () => {
     </AnimatePresence>
   );
 };
+
+export default WelcomeNoteModal;

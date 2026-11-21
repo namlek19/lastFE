@@ -16,9 +16,10 @@ import {
   Shuffle,
   X,
 } from 'lucide-react';
-import { getChaptersBySubject, getQuestionsBySubject, SUBJECTS } from '../data';
+import { ChapterMeta, SUBJECTS } from '../data';
 import { QuestionItem, QuestionProgress, StudyTier, SubjectId, UserProgressStore } from '../types/quiz';
 import { getDetailedMasteryState, isMastered } from '../utils/storage';
+import { useIsDesktopLg } from '../utils/useIsDesktopLg';
 import { RichExplanation } from './RichExplanation';
 import {
   getSakugaProgressBadgeClass,
@@ -32,6 +33,8 @@ import {
 export interface FlashcardViewProps {
   subject: SubjectId;
   tier: StudyTier;
+  questions: QuestionItem[];
+  chapters: ChapterMeta[];
   progress: UserProgressStore;
   onMarkStudied: (qId: string) => void;
   onToggleMastered: (qId: string) => void;
@@ -76,15 +79,15 @@ function findEarliestUnmasteredTarget(
 
 export const FlashcardView: React.FC<FlashcardViewProps> = ({
   subject,
-  tier,
+  questions: allSubjectQuestions,
+  chapters,
   progress,
   onMarkStudied,
   onToggleMastered,
   onToggleFlag,
 }) => {
+  const isDesktopLg = useIsDesktopLg();
   const subjectMeta = SUBJECTS[subject];
-  const chapters = useMemo(() => getChaptersBySubject(subject, tier), [subject, tier]);
-  const allSubjectQuestions = useMemo(() => getQuestionsBySubject(subject, tier), [subject, tier]);
 
   const [selectedChapter, setSelectedChapter] = useState<number>(
     () => findEarliestUnmasteredTarget(chapters, allSubjectQuestions, progress.questions).chapter
@@ -150,7 +153,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     setIsMobileSheetOpen(false);
     setSakugaEvent(null);
     setJustMasteredId(null);
-}, [subject, tier, chapters, allSubjectQuestions]);
+}, [subject, chapters, allSubjectQuestions]);
 
 const chapterQuestions = useMemo(
   () => allSubjectQuestions.filter((q) => q.chapter === selectedChapter),
@@ -574,7 +577,8 @@ return (
   <>
     <div className="flex w-full flex-col items-start gap-6 lg:flex-row lg:gap-8 xl:gap-10">
       {/* Desktop Sidebar (>= 1024px) with 2 Tabs: Chương | Bảng thẻ */}
-      <aside className="hidden w-full shrink-0 lg:sticky lg:top-20 lg:block lg:w-[360px] xl:w-[380px]">
+      {isDesktopLg && (
+      <aside className="w-full shrink-0 lg:sticky lg:top-20 lg:w-[360px] xl:w-[380px]">
         <div className="rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-5 shadow-xs dark:border-[#262925] dark:bg-[#161816] dark:shadow-none">
           <div className="mb-4 flex items-center justify-between gap-2 border-b border-[#D5CFC2] pb-3.5 dark:border-[#262925]">
             <div className="flex items-center gap-2.5">
@@ -635,7 +639,7 @@ return (
                     type="button"
                     data-no-keyflip="true"
                     onClick={() => handleSelectChapter(ch.chapter)}
-                    className={`relative w-full cursor-pointer rounded-xl border p-4 text-left transition-all ${active
+                    className={`relative w-full cursor-pointer rounded-xl border p-4 text-left transition-colors ${active
                         ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] shadow-xs dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
                         : stat.pct >= 100
                           ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35 dark:hover:border-[#C4B5FD] dark:hover:bg-[#5B21B6]/20'
@@ -734,7 +738,7 @@ return (
                         type="button"
                         data-no-keyflip="true"
                         onClick={() => jumpToCard(idx)}
-                        className={`tabular-nums relative flex h-8 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold transition-all ${cellStyle} ${isActive
+                        className={`tabular-nums relative flex h-8 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold transition-colors ${cellStyle} ${isActive
                             ? 'ring-2 ring-[#4338CA] ring-offset-1 ring-offset-[#EAE6DD] dark:ring-[#818CF8] dark:ring-offset-[#161816]'
                             : ''
                           }`}
@@ -752,11 +756,13 @@ return (
           )}
         </div>
       </aside>
+      )}
 
       {/* Main Flashcard Area */}
       <div className="w-full min-w-0 flex-1">
         {/* Mobile & Tablet Unified Interactive Progress & Filter Card (< 1024px) */}
-        <div ref={mobileProgressRef} className="mb-3.5 px-1 pt-1 lg:hidden">
+        {!isDesktopLg && (
+        <div ref={mobileProgressRef} className="mb-3.5 px-1 pt-1">
           <button
             type="button"
             onClick={() => setIsMobileSheetOpen(true)}
@@ -809,9 +815,11 @@ return (
             <SakugaProgressBar percent={activeChapterStat.pct} className="h-1.5 w-full" />
           </button>
         </div>
+        )}
 
         {/* Desktop Top Filter & Shuffle Bar (>= 1024px) */}
-        <div className="mb-5 hidden flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-5 py-3.5 shadow-xs dark:border-[#262925] dark:bg-[#161816] dark:shadow-none lg:flex">
+        {isDesktopLg && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] px-5 py-3.5 shadow-xs dark:border-[#262925] dark:bg-[#161816] dark:shadow-none">
           <div className="flex flex-wrap items-center gap-2">
             <span className="mr-1 inline-flex items-center gap-1.5 text-xs font-medium text-[#656058] dark:text-[#9CA39B]">
               <Filter className="h-3.5 w-3.5 text-[#4338CA] dark:text-[#818CF8]" />
@@ -869,6 +877,7 @@ return (
             </button>
           </div>
         </div>
+        )}
 
         {/* Empty Deck State vs 3D Flashcard */}
         {!currentQuestion ? (
@@ -1262,7 +1271,7 @@ return (
     </div>
 
     {/* Mobile Sticky Bottom Navigation Bar (< 768px): [ < Trước ] | [ ↻ Lật thẻ ] | [ Tiếp > ] */}
-    {currentQuestion && (
+    {!isDesktopLg && currentQuestion && (
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D5CFC2] bg-[#EAE6DD]/[0.97] px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(28,25,23,0.08)] dark:border-[#262925] dark:bg-[#161816]/[0.97] dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.65)] md:hidden">
         <div className="flex items-center justify-between gap-2">
           <button
@@ -1301,6 +1310,7 @@ return (
     )}
 
     {/* Mobile & Tablet Bottom Sheet Drawer (< 1024px): Chapters + Filter + Shuffle + Card Grid */}
+    {!isDesktopLg && (
     <AnimatePresence>
       {isMobileSheetOpen && (
         <>
@@ -1311,7 +1321,7 @@ return (
             exit={{ opacity: 0 }}
             transition={{ duration: 0.16 }}
             onClick={() => setIsMobileSheetOpen(false)}
-            className="fixed inset-0 z-50 bg-[#18181B]/50 backdrop-blur-[2px] dark:bg-[#0F100E]/75 lg:hidden"
+            className="fixed inset-0 z-50 bg-[#18181B]/60 dark:bg-[#0F100E]/82"
           />
           <motion.div
             key="flashcard-sheet-drawer"
@@ -1502,6 +1512,9 @@ return (
         </>
       )}
     </AnimatePresence>
+    )}
   </>
 );
 };
+
+export default FlashcardView;

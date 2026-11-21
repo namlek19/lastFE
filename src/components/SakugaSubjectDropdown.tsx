@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import { Check, ChevronDown, Sparkles } from 'lucide-react';
-import { SUBJECTS, getQuestionsBySubject } from '../data/index';
+import { SUBJECTS, countSubjectMastered, getSubjectTotalCount } from '../data/index';
 import { StudyTier, SubjectId, UserProgressStore } from '../types/quiz';
-import { isMastered } from '../utils/storage';
 
 export interface SakugaSubjectDropdownProps {
   subject: SubjectId;
@@ -136,27 +135,23 @@ const SpideyClawdMascot: React.FC<SpideyClawdMascotProps> = ({
       style={{ transformOrigin: '50% -10px' }}
       className="relative z-10"
     >
-      {/* Gentle continuous idle rock while hanging from web */}
-      <motion.div
-        animate={{ rotate: [-3.5, 3.5, -3.5], y: [0, -1.8, 0] }}
-        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+      {/* Gentle continuous idle rock while hanging from web (GPU CSS loop) */}
+      <div
         style={{ transformOrigin: '50% -8px' }}
+        className="spidey-pendulum-rock"
       >
         <svg
           viewBox="0 0 28 24"
           aria-hidden="true"
-          className="h-6 w-7 overflow-visible drop-shadow-[1px_2px_0_rgba(24,24,27,0.45)]"
+          className="h-6 w-7 overflow-visible"
         >
           {/* Left & right side Clawd-spider arms waving alternately */}
-          <motion.g
-            animate={{ y: [0, -1.4, 0] }}
-            transition={{ duration: 0.7, repeat: Infinity, ease: 'easeInOut' }}
-          >
+          <g className="spidey-arm-idle">
             <rect x="0" y="9" width="3" height="2" fill="#18181B" />
             <rect x="1" y="11" width="3" height="3" fill="#2563EB" />
             <rect x="25" y="9" width="3" height="2" fill="#18181B" />
             <rect x="24" y="11" width="3" height="3" fill="#2563EB" />
-          </motion.g>
+          </g>
 
           {/* Outer manga ink pixel shell */}
           <rect x="4" y="2" width="20" height="15" rx="2" fill="#18181B" />
@@ -176,16 +171,7 @@ const SpideyClawdMascot: React.FC<SpideyClawdMascotProps> = ({
           <rect x="13" y="11.5" width="2" height="1.2" fill="#EF4444" />
 
           {/* Blinking expressive white Spider-Man pixel eyes */}
-          <motion.g
-            animate={{ scaleY: [1, 1, 0.14, 1] }}
-            transition={{
-              duration: 0.22,
-              repeat: Infinity,
-              repeatDelay: 3.1,
-              times: [0, 0.4, 0.7, 1],
-            }}
-            style={{ transformOrigin: '14px 8.5px' }}
-          >
+          <g className="spidey-eye-blink">
             {/* Left eye */}
             <rect x="7" y="6" width="5" height="4" fill="#18181B" />
             <rect x="7.8" y="6.8" width="3.4" height="2.4" fill="#FFFFFF" />
@@ -194,34 +180,28 @@ const SpideyClawdMascot: React.FC<SpideyClawdMascotProps> = ({
             <rect x="16" y="6" width="5" height="4" fill="#18181B" />
             <rect x="16.8" y="6.8" width="3.4" height="2.4" fill="#FFFFFF" />
             <rect x="16.8" y="7" width="1.2" height="2.2" fill="#FFFFFF" />
-          </motion.g>
+          </g>
 
           {/* 4 stubby Clawd pixel spider legs kicking in pairs */}
-          <motion.g
-            animate={{ y: [0, 1.3, 0] }}
-            transition={{ duration: 0.48, repeat: Infinity, ease: 'easeInOut' }}
-          >
+          <g className="spidey-leg-a-idle">
             <rect x="5" y="17" width="3" height="4" fill="#18181B" />
             <rect x="5.5" y="17" width="2" height="3.2" fill="#EF4444" />
             <rect x="15" y="17" width="3" height="4" fill="#18181B" />
             <rect x="15.5" y="17" width="2" height="3.2" fill="#2563EB" />
-          </motion.g>
-          <motion.g
-            animate={{ y: [1.3, 0, 1.3] }}
-            transition={{ duration: 0.48, repeat: Infinity, ease: 'easeInOut' }}
-          >
+          </g>
+          <g className="spidey-leg-b-idle">
             <rect x="10" y="17" width="3" height="4" fill="#18181B" />
             <rect x="10.5" y="17" width="2" height="3.2" fill="#2563EB" />
             <rect x="20" y="17" width="3" height="4" fill="#18181B" />
             <rect x="20.5" y="17" width="2" height="3.2" fill="#EF4444" />
-          </motion.g>
+          </g>
         </svg>
-      </motion.div>
+      </div>
     </motion.div>
   </div>
 );
 
-export const SakugaSubjectDropdown: React.FC<SakugaSubjectDropdownProps> = ({
+const SakugaSubjectDropdownComponent: React.FC<SakugaSubjectDropdownProps> = ({
   subject,
   tier,
   progress,
@@ -244,19 +224,16 @@ export const SakugaSubjectDropdown: React.FC<SakugaSubjectDropdownProps> = ({
   const activeSpec = SUBJECT_SPEC_MAP[subject] ?? SUBJECT_DROPDOWN_ITEMS[0];
 
   const statsBySubject = useMemo(() => {
+    if (!isOpen) return null;
     const map = {} as Record<SubjectId, { mastered: number; total: number }>;
     for (const item of SUBJECT_DROPDOWN_ITEMS) {
-      const qs = getQuestionsBySubject(item.id, tier);
-      let mastered = 0;
-      for (const q of qs) {
-        if (isMastered(progress.questions[q.id])) {
-          mastered += 1;
-        }
-      }
-      map[item.id] = { mastered, total: qs.length };
+      map[item.id] = {
+        mastered: countSubjectMastered(item.id, tier, progress.questions),
+        total: getSubjectTotalCount(item.id, tier),
+      };
     }
     return map;
-  }, [progress.questions, tier]);
+  }, [isOpen, progress.questions, tier]);
 
   useEffect(() => {
     setFocusedSubject(subject);
@@ -457,7 +434,7 @@ export const SakugaSubjectDropdown: React.FC<SakugaSubjectDropdownProps> = ({
               {SUBJECT_DROPDOWN_ITEMS.map((item, idx) => {
                 const isSelected = subject === item.id;
                 const isTargeted = focusedSubject === item.id;
-                const stats = statsBySubject[item.id];
+                const stats = statsBySubject?.[item.id] ?? { mastered: 0, total: 0 };
                 const chapterCount = SUBJECTS[item.id].chapters.length;
 
                 return (
@@ -555,3 +532,6 @@ export const SakugaSubjectDropdown: React.FC<SakugaSubjectDropdownProps> = ({
     </div>
   );
 };
+
+export const SakugaSubjectDropdown = memo(SakugaSubjectDropdownComponent);
+SakugaSubjectDropdown.displayName = 'SakugaSubjectDropdown';

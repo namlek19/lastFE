@@ -17,9 +17,10 @@ import {
   Trophy,
   X,
 } from 'lucide-react';
-import { getChaptersBySubject, getQuestionsBySubject, isAnswerCorrect, SUBJECTS } from '../data';
-import { QuestionItem, StudyTier, SubjectId, UserProgressStore } from '../types/quiz';
+import { ChapterMeta, isAnswerCorrect, SUBJECTS } from '../data';
+import { QuestionItem, QuestionProgress, StudyTier, SubjectId, UserProgressStore } from '../types/quiz';
 import { getMasteryState, isMastered } from '../utils/storage';
+import { useIsDesktopLg } from '../utils/useIsDesktopLg';
 import { RichExplanation } from './RichExplanation';
 import {
   getSakugaProgressBadgeClass,
@@ -34,6 +35,8 @@ import {
 export interface RollingStudyViewProps {
   subject: SubjectId;
   tier: StudyTier;
+  questions: QuestionItem[];
+  chapters: ChapterMeta[];
   progress: UserProgressStore;
   onRecordAttempt: (qId: string, isCorrect: boolean, flagged?: boolean) => void;
   onToggleFlag: (qId: string) => void;
@@ -100,13 +103,13 @@ function splitIntoStages(questions: QuestionItem[]): StageGroup[] {
   return stages;
 }
 
-function getStageStats(questions: QuestionItem[], progress: UserProgressStore) {
+function getStageStats(questions: QuestionItem[], questionsMap: Record<string, QuestionProgress>) {
   let mastered = 0;
   let hesitant = 0;
   let unlearned = 0;
 
   for (const q of questions) {
-    const state = getMasteryState(progress.questions[q.id]);
+    const state = getMasteryState(questionsMap[q.id]);
     if (state === 'mastered') mastered += 1;
     else if (state === 'hesitant') hesitant += 1;
     else unlearned += 1;
@@ -118,17 +121,19 @@ function getStageStats(questions: QuestionItem[], progress: UserProgressStore) {
   return { mastered, hesitant, unlearned, total, percent };
 }
 
+const EMPTY_STAGE_STATS = { mastered: 0, hesitant: 0, unlearned: 0, total: 0, percent: 0 };
+
 export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
   subject,
-  tier,
+  questions: allSubjectQuestions,
+  chapters,
   progress,
   onRecordAttempt,
   onToggleFlag,
   onResetStage,
 }) => {
+  const isDesktopLg = useIsDesktopLg();
   const subjectMeta = SUBJECTS[subject];
-  const chapters = useMemo(() => getChaptersBySubject(subject, tier), [subject, tier]);
-  const allSubjectQuestions = useMemo(() => getQuestionsBySubject(subject, tier), [subject, tier]);
 
   const [selectedChapter, setSelectedChapter] = useState<number>(() => chapters[0]?.chapter ?? 1);
   const [activeStageIndex, setActiveStageIndex] = useState<number | null>(null);
@@ -241,7 +246,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
     clearShake();
     setIsChapterSheetOpen(false);
     setIsStageSheetOpen(false);
-}, [subject, tier, chapters, clearShake]);
+}, [subject, chapters, clearShake]);
 
 const chapterQuestions = useMemo(
   () => allSubjectQuestions.filter(q => q.chapter === selectedChapter),
@@ -250,9 +255,37 @@ const chapterQuestions = useMemo(
 
 const stages = useMemo(() => splitIntoStages(chapterQuestions), [chapterQuestions]);
 
-const chapterStats = useMemo(
-  () => getStageStats(chapterQuestions, progress),
-  [chapterQuestions, progress]
+const chapterStatsMap = useMemo(() => {
+  const stats = new Map<
+    number,
+    { mastered: number; hesitant: number; unlearned: number; total: number; percent: number }
+  >();
+  for (const ch of chapters) {
+    stats.set(ch.chapter, { mastered: 0, hesitant: 0, unlearned: 0, total: 0, percent: 0 });
+  }
+  for (const q of allSubjectQuestions) {
+    let entry = stats.get(q.chapter);
+    if (!entry) {
+      entry = { mastered: 0, hesitant: 0, unlearned: 0, total: 0, percent: 0 };
+      stats.set(q.chapter, entry);
+    }
+    entry.total += 1;
+    const state = getMasteryState(progress.questions[q.id]);
+    if (state === 'mastered') entry.mastered += 1;
+    else if (state === 'hesitant') entry.hesitant += 1;
+    else entry.unlearned += 1;
+  }
+  for (const entry of stats.values()) {
+    entry.percent = entry.total > 0 ? Math.round((entry.mastered / entry.total) * 100) : 0;
+  }
+  return stats;
+}, [chapters, allSubjectQuestions, progress.questions]);
+
+const chapterStats = chapterStatsMap.get(selectedChapter) ?? EMPTY_STAGE_STATS;
+
+const stageStatsList = useMemo(
+  () => stages.map(stage => getStageStats(stage.questions, progress.questions)),
+  [stages, progress.questions]
 );
 
 const currentChapterMeta = useMemo(
@@ -470,14 +503,15 @@ useEffect(() => {
 
 // Active Practice Session View
 if (activeStage !== null) {
-  const stageStats = getStageStats(activeStage.questions, progress);
+  const stageStats = stageStatsList[activeStage.index] ?? EMPTY_STAGE_STATS;
   const hasNextStage = activeStage.index + 1 < stages.length;
 
   return (
     <>
       <div className="flex w-full flex-col items-start gap-6 pb-20 lg:flex-row lg:gap-8 xl:gap-10 lg:pb-0">
         {/* Desktop Session Sidebar (>= 1024px) */}
-        <aside className="hidden w-full shrink-0 lg:sticky lg:top-20 lg:block lg:w-[360px] xl:w-[380px]">
+        {isDesktopLg && (
+        <aside className="w-full shrink-0 lg:sticky lg:top-20 lg:w-[360px] xl:w-[380px]">
           <div className="rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD] p-5 shadow-xs dark:border-[#262925] dark:bg-[#161816] dark:shadow-none">
             <div className="flex items-center justify-between gap-2 border-b border-[#D5CFC2] pb-3.5 dark:border-[#262925]">
               <button
@@ -559,7 +593,7 @@ if (activeStage !== null) {
 
               <div className="max-h-[calc(100vh-450px)] min-h-[140px] space-y-3.5 overflow-y-auto px-2.5 py-2.5">
                 {stages.map(stage => {
-                  const stats = getStageStats(stage.questions, progress);
+                  const stats = stageStatsList[stage.index] ?? EMPTY_STAGE_STATS;
                   const isCurrentStage = stage.index === activeStage.index;
                   return (
                     <button
@@ -591,11 +625,13 @@ if (activeStage !== null) {
             </div>
           </div>
         </aside>
+        )}
 
         {/* Main Practice Area */}
         <div className="w-full min-w-0 flex-1 space-y-3 sm:space-y-5">
           {/* Mobile & Tablet Unified Interactive Progress Card (< 1024px) */}
-          <div ref={mobileProgressRef} className="px-1 pt-1 lg:hidden">
+          {!isDesktopLg && (
+          <div ref={mobileProgressRef} className="px-1 pt-1">
             <button
               type="button"
               onClick={() => setIsStageSheetOpen(true)}
@@ -638,6 +674,7 @@ if (activeStage !== null) {
               <SakugaProgressBar percent={stageStats.percent} className="h-1.5 w-full" />
             </button>
           </div>
+          )}
 
           {/* Stage Completion Card */}
           {!currentQuestion ? (
@@ -898,7 +935,7 @@ if (activeStage !== null) {
                       type="button"
                       disabled={isGraded}
                       onClick={() => handleOptionClick(opt.key)}
-                      className={`group relative flex w-full items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-all duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerCls} ${isGraded ? 'cursor-default' : 'cursor-pointer'
+                      className={`group relative flex w-full items-start gap-3 rounded-xl border p-3 px-3.5 text-left transition-[border-color,background-color,color,transform] duration-150 sm:gap-3.5 sm:p-4 sm:px-5 ${containerCls} ${isGraded ? 'cursor-default' : 'cursor-pointer'
                         }`}
                     >
                       {isGraded && isCorrectOption && (
@@ -1032,8 +1069,8 @@ if (activeStage !== null) {
       </div>
 
       {/* Mobile & Tablet Sticky Bottom Action Bar (< 1024px) */}
-      {currentQuestion && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D5CFC2] bg-[#EAE6DD]/[0.97] px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(28,25,23,0.08)] dark:border-[#262925] dark:bg-[#161816]/[0.97] dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.65)] lg:hidden">
+      {!isDesktopLg && currentQuestion && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D5CFC2] bg-[#EAE6DD]/[0.97] px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(28,25,23,0.08)] dark:border-[#262925] dark:bg-[#161816]/[0.97] dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.65)]">
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"
@@ -1086,6 +1123,7 @@ if (activeStage !== null) {
       )}
 
       {/* Mobile & Tablet Stage Switcher Bottom Sheet (< 1024px) */}
+      {!isDesktopLg && (
       <AnimatePresence>
         {isStageSheetOpen && (
           <>
@@ -1096,7 +1134,7 @@ if (activeStage !== null) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.16 }}
               onClick={() => setIsStageSheetOpen(false)}
-              className="fixed inset-0 z-50 bg-[#18181B]/50 backdrop-blur-[2px] dark:bg-[#0F100E]/75 lg:hidden"
+              className="fixed inset-0 z-50 bg-[#18181B]/60 dark:bg-[#0F100E]/82"
             />
             <motion.div
               key="rolling-stage-sheet-drawer"
@@ -1133,7 +1171,7 @@ if (activeStage !== null) {
 
               <div className="space-y-3.5 overflow-y-auto px-4 pb-6 pt-4">
                 {stages.map(stage => {
-                  const stats = getStageStats(stage.questions, progress);
+                  const stats = stageStatsList[stage.index] ?? EMPTY_STAGE_STATS;
                   const isCurrentStage = stage.index === activeStage.index;
                   return (
                     <button
@@ -1181,6 +1219,7 @@ if (activeStage !== null) {
           </>
         )}
       </AnimatePresence>
+      )}
     </>
   );
 }
@@ -1244,8 +1283,7 @@ return (
         <div className="mt-5 hidden flex-wrap items-center justify-between gap-2.5 md:flex">
           {chapters.map(ch => {
             const isSelected = ch.chapter === selectedChapter;
-            const chQuestions = allSubjectQuestions.filter(q => q.chapter === ch.chapter);
-            const stats = getStageStats(chQuestions, progress);
+            const stats = chapterStatsMap.get(ch.chapter) ?? EMPTY_STAGE_STATS;
 
             return (
               <button
@@ -1311,7 +1349,7 @@ return (
       {/* Stage Cards Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
         {stages.map(stage => {
-          const stats = getStageStats(stage.questions, progress);
+          const stats = stageStatsList[stage.index] ?? EMPTY_STAGE_STATS;
           const isCompleted = stats.mastered === stats.total && stats.total > 0;
 
           return (
@@ -1429,7 +1467,7 @@ return (
             exit={{ opacity: 0 }}
             transition={{ duration: 0.16 }}
             onClick={() => setIsChapterSheetOpen(false)}
-            className="fixed inset-0 z-50 bg-[#18181B]/50 backdrop-blur-[2px] dark:bg-[#0F100E]/75 md:hidden"
+            className="fixed inset-0 z-50 bg-[#18181B]/60 dark:bg-[#0F100E]/82 md:hidden"
           />
           <motion.div
             key="rolling-chapter-sheet-drawer"
@@ -1467,8 +1505,7 @@ return (
             <div className="space-y-2 overflow-y-auto px-4 pb-6 pt-4">
               {chapters.map(ch => {
                 const isSelected = ch.chapter === selectedChapter;
-                const chQuestions = allSubjectQuestions.filter(q => q.chapter === ch.chapter);
-                const stats = getStageStats(chQuestions, progress);
+                const stats = chapterStatsMap.get(ch.chapter) ?? EMPTY_STAGE_STATS;
                 return (
                   <button
                     key={ch.chapter}
@@ -1505,3 +1542,5 @@ return (
   </>
 );
 };
+
+export default RollingStudyView;
