@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { memo, useEffect, useRef } from 'react';
+import { isLowPowerDevice } from '../utils/perfTier';
 
 export interface SakugaBorderFireProps {
   /** Mastery/completion percentage (0..100). Mounts and animates only at >= 50%. */
@@ -16,6 +17,25 @@ interface PerimeterPoint {
   py: number;
   nx: number;
   ny: number;
+  u: number;
+  dispX: number;
+  dispY: number;
+  curlX: number;
+  curlY: number;
+  u4: number;
+  u7: number;
+  u11: number;
+  u19: number;
+  u9: number;
+}
+
+interface RawPerimeterSample {
+  px: number;
+  py: number;
+  nx: number;
+  ny: number;
+  buoyWeight: number;
+  curlWeight: number;
 }
 
 interface Point2D {
@@ -32,100 +52,493 @@ interface BurstShard {
   jitter: number;
 }
 
-const FRAME_MS = 1000 / 45;
+interface FireLayerSpec {
+  heightScale: number;
+  phaseOffset: number;
+  fillStyle: string;
+}
+
+interface FireClient {
+  host: Element;
+  isVisible: boolean;
+  lastDraw: number;
+  draw: (now: number, visibleCount: number, isDark: boolean) => void;
+  hasBurst: () => boolean;
+}
+
+type PathTarget = Pick<
+  CanvasRenderingContext2D,
+  'moveTo' | 'lineTo' | 'arcTo' | 'closePath'
+>;
+
 const BURST_DURATION_MS = 850;
 const TAU = Math.PI * 2;
+const STAR_STEP = Math.PI / 4;
 
+const NORMAL_LAYERS: readonly FireLayerSpec[] = [
+  { heightScale: 1.12, phaseOffset: 0, fillStyle: 'rgba(234, 88, 12, 0.36)' },
+  { heightScale: 0.9, phaseOffset: 0.42, fillStyle: '#F97316' },
+  { heightScale: 0.61, phaseOffset: -0.55, fillStyle: '#FACC15' },
+  { heightScale: 0.35, phaseOffset: 0.9, fillStyle: '#FEF9C3' },
+];
+
+const MINI_LAYERS: readonly FireLayerSpec[] = [
+  { heightScale: 1.1, phaseOffset: 0, fillStyle: 'rgba(234, 88, 12, 0.42)' },
+  { heightScale: 0.85, phaseOffset: 0.42, fillStyle: '#F97316' },
+  { heightScale: 0.5, phaseOffset: -0.55, fillStyle: '#FEF08A' },
+];
+
+const MAX_VIOLET_LAYERS_LIGHT: readonly FireLayerSpec[] = [
+  { heightScale: 1.12, phaseOffset: 0, fillStyle: 'rgba(124, 58, 237, 0.30)' },
+  { heightScale: 0.9, phaseOffset: 0.42, fillStyle: '#5B21B6' },
+  { heightScale: 0.62, phaseOffset: -0.55, fillStyle: '#7C3AED' },
+  { heightScale: 0.34, phaseOffset: 0.9, fillStyle: '#C4B5FD' },
+];
+
+const MAX_VIOLET_LAYERS_DARK: readonly FireLayerSpec[] = [
+  { heightScale: 1.12, phaseOffset: 0, fillStyle: 'rgba(139, 92, 246, 0.38)' },
+  { heightScale: 0.9, phaseOffset: 0.42, fillStyle: '#7C3AED' },
+  { heightScale: 0.62, phaseOffset: -0.55, fillStyle: '#C084FC' },
+  { heightScale: 0.34, phaseOffset: 0.9, fillStyle: '#F5F3FF' },
+];
+
+const MAX_MINI_VIOLET_LAYERS_LIGHT: readonly FireLayerSpec[] = [
+  { heightScale: 1.1, phaseOffset: 0, fillStyle: 'rgba(124, 58, 237, 0.36)' },
+  { heightScale: 0.85, phaseOffset: 0.42, fillStyle: '#5B21B6' },
+  { heightScale: 0.5, phaseOffset: -0.55, fillStyle: '#A78BFA' },
+];
+
+const MAX_MINI_VIOLET_LAYERS_DARK: readonly FireLayerSpec[] = [
+  { heightScale: 1.1, phaseOffset: 0, fillStyle: 'rgba(139, 92, 246, 0.44)' },
+  { heightScale: 0.85, phaseOffset: 0.42, fillStyle: '#7C3AED' },
+  { heightScale: 0.5, phaseOffset: -0.55, fillStyle: '#DDD6FE' },
+];
+
+function isDarkModeActive(): boolean {
+  return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+}
+
+// ---- Module-level shared RAF & IntersectionObserver coordinator ----
+const allClients = new Set<FireClient>();
+const visibleClients = new Set<FireClient>();
+const elementToClient = new WeakMap<Element, FireClient>();
+
+let sharedIo: IntersectionObserver | null = null;
+let sharedMotionQuery: MediaQueryList | null = null;
+let prefersReducedMotion = false;
+let sharedListenersBound = false;
+let coordinatorRafId = 0;
+
+function stopCoordinatorLoop(): void {
+  if (coordinatorRafId !== 0) {
+    cancelAnimationFrame(coordinatorRafId);
+    coordinatorRafId = 0;
+  }
+}
+
+function getTargetIntervalMs(visibleCount: number, lowPower: boolean, isBursting: boolean): number {
+  if (isBursting) return 33;
+  if (lowPower) {
+    if (visibleCount <= 2) return 42;
+    if (visibleCount <= 5) return 56;
+    return 72;
+  }
+  if (visibleCount <= 2) return 33;
+  if (visibleCount <= 5) return 42;
+  if (visibleCount <= 9) return 50;
+  return 62;
+}
+
+function coordinatorTick(now: number): void {
+  coordinatorRafId = 0;
+  if (prefersReducedMotion || document.hidden || visibleClients.size === 0) {
+    return;
+  }
+
+  const visibleCount = visibleClients.size;
+  const lowPower = isLowPowerDevice();
+  const isDark = isDarkModeActive();
+  const maxNonBurstDraws = visibleCount >= 5 ? Math.max(2, Math.ceil(visibleCount / 3)) : visibleCount;
+
+  let nonBurstDrawn = 0;
+  const drawnClients: FireClient[] = [];
+
+  for (const client of visibleClients) {
+    const bursting = client.hasBurst();
+    if (!bursting && nonBurstDrawn >= maxNonBurstDraws) {
+      continue;
+    }
+
+    const interval = getTargetIntervalMs(visibleCount, lowPower, bursting);
+    if (client.lastDraw === 0 || now - client.lastDraw >= interval) {
+      client.lastDraw = now;
+      client.draw(now, visibleCount, isDark);
+      drawnClients.push(client);
+      if (!bursting) {
+        nonBurstDrawn += 1;
+      }
+    }
+  }
+
+  // Rotate drawn entries to the tail of the Set so next frame services oldest entries first
+  for (const client of drawnClients) {
+    if (visibleClients.has(client)) {
+      visibleClients.delete(client);
+      visibleClients.add(client);
+    }
+  }
+
+  coordinatorRafId = requestAnimationFrame(coordinatorTick);
+}
+
+function ensureCoordinatorLoop(): void {
+  if (
+    prefersReducedMotion ||
+    typeof document === 'undefined' ||
+    document.hidden ||
+    visibleClients.size === 0 ||
+    coordinatorRafId !== 0
+  ) {
+    return;
+  }
+  coordinatorRafId = requestAnimationFrame(coordinatorTick);
+}
+
+function ensureSharedObservers(): void {
+  if (typeof window === 'undefined') return;
+
+  if (!sharedIo && typeof IntersectionObserver !== 'undefined') {
+    sharedIo = new IntersectionObserver(
+      (entries) => {
+        const isDark = isDarkModeActive();
+        for (const entry of entries) {
+          const client = elementToClient.get(entry.target);
+          if (!client) continue;
+
+          if (entry.isIntersecting) {
+            if (!client.isVisible) {
+              client.isVisible = true;
+              visibleClients.add(client);
+              client.lastDraw = 0;
+              client.draw(performance.now(), visibleClients.size, isDark);
+            }
+          } else if (client.isVisible) {
+            client.isVisible = false;
+            visibleClients.delete(client);
+          }
+        }
+
+        if (visibleClients.size > 0) {
+          ensureCoordinatorLoop();
+        } else {
+          stopCoordinatorLoop();
+        }
+      },
+      { threshold: 0.01 }
+    );
+  }
+
+  if (!sharedListenersBound && typeof document !== 'undefined') {
+    sharedListenersBound = true;
+    sharedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    prefersReducedMotion = sharedMotionQuery.matches;
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopCoordinatorLoop();
+      } else {
+        const now = performance.now();
+        const count = Math.max(1, visibleClients.size);
+        const isDark = isDarkModeActive();
+        for (const client of visibleClients) {
+          client.lastDraw = now;
+          client.draw(now, count, isDark);
+        }
+        ensureCoordinatorLoop();
+      }
+    });
+
+    const handleMotionChange = () => {
+      prefersReducedMotion = Boolean(sharedMotionQuery?.matches);
+      if (prefersReducedMotion) {
+        stopCoordinatorLoop();
+      }
+      const now = performance.now();
+      const count = Math.max(1, visibleClients.size);
+      const isDark = isDarkModeActive();
+      for (const client of allClients) {
+        if (client.isVisible) {
+          client.lastDraw = now;
+          client.draw(now, count, isDark);
+        }
+      }
+      if (!prefersReducedMotion) {
+        ensureCoordinatorLoop();
+      }
+    };
+
+    sharedMotionQuery.addEventListener('change', handleMotionChange);
+  }
+}
+
+function registerFireClient(client: FireClient): void {
+  ensureSharedObservers();
+  allClients.add(client);
+  elementToClient.set(client.host, client);
+  visibleClients.add(client);
+  client.isVisible = true;
+  sharedIo?.observe(client.host);
+  ensureCoordinatorLoop();
+}
+
+function unregisterFireClient(client: FireClient): void {
+  sharedIo?.unobserve(client.host);
+  elementToClient.delete(client.host);
+  allClients.delete(client);
+  visibleClients.delete(client);
+  client.isVisible = false;
+  if (visibleClients.size === 0) {
+    stopCoordinatorLoop();
+  }
+}
+
+// ---- Corner-aware geometry & wave helpers ----
 function clampPercent(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, Math.min(100, value));
 }
 
-function sampleRoundedRectPerimeter(
-  uRaw: number,
+function pushUniqueRawSample(list: RawPerimeterSample[], next: RawPerimeterSample): void {
+  if (list.length > 0) {
+    const prev = list[list.length - 1];
+    const dx = next.px - prev.px;
+    const dy = next.py - prev.py;
+    if (dx * dx + dy * dy < 0.0625) return;
+  }
+  list.push(next);
+}
+
+/**
+ * Generates clockwise perimeter samples around the card border box with guaranteed
+ * dense vertices along each rounded corner arc and proportional segments along straight edges.
+ */
+function buildRoundedRectSamples(
   x: number,
   y: number,
   w: number,
   h: number,
-  rRaw: number
-): PerimeterPoint {
-  const u = ((uRaw % 1) + 1) % 1;
+  rRaw: number,
+  compact: boolean,
+  mini: boolean
+): PerimeterPoint[] {
+  if (w <= 0 || h <= 0) return [];
+
   const r = Math.max(0, Math.min(rRaw, w / 2, h / 2));
   const topLen = Math.max(0, w - 2 * r);
   const sideLen = Math.max(0, h - 2 * r);
-  const arcLen = (Math.PI / 2) * r;
-  const totalLen = 2 * topLen + 2 * sideLen + 4 * arcLen;
 
-  if (totalLen <= 0) {
-    return { px: x, py: y, nx: 0, ny: -1 };
+  const topSegs =
+    topLen > 0.5
+      ? Math.max(4, Math.min(mini ? 16 : compact ? 28 : 44, Math.round(topLen / (mini ? 12 : 24))))
+      : 0;
+  const sideSegs =
+    sideLen > 0.5
+      ? Math.max(2, Math.min(mini ? 6 : 14, Math.round(sideLen / (mini ? 12 : 20))))
+      : 0;
+  const cornerSegs = r > 0.5 ? (mini ? 3 : 5) : 0;
+
+  const raw: RawPerimeterSample[] = [];
+
+  const addCorner = (cx: number, cy: number, startAngle: number) => {
+    if (cornerSegs > 0) {
+      for (let i = 0; i <= cornerSegs; i++) {
+        const a = startAngle + (i / cornerSegs) * (Math.PI / 2);
+        const nx = Math.cos(a);
+        const ny = Math.sin(a);
+        const isEndpoint = i === 0 || i === cornerSegs;
+        pushUniqueRawSample(raw, {
+          px: cx + nx * r,
+          py: cy + ny * r,
+          nx,
+          ny,
+          buoyWeight: isEndpoint ? 0.16 : 0.1,
+          curlWeight: isEndpoint ? 0.62 : 0.28,
+        });
+      }
+    } else {
+      const midA = startAngle + Math.PI / 4;
+      pushUniqueRawSample(raw, {
+        px: cx,
+        py: cy,
+        nx: Math.cos(midA),
+        ny: Math.sin(midA),
+        buoyWeight: 0.12,
+        curlWeight: 0.35,
+      });
+    }
+  };
+
+  // 1. Top edge interior (left -> right)
+  for (let i = 1; i < topSegs; i++) {
+    const t = i / topSegs;
+    pushUniqueRawSample(raw, {
+      px: x + r + t * topLen,
+      py: y,
+      nx: 0,
+      ny: -1,
+      buoyWeight: 0.24,
+      curlWeight: 1,
+    });
   }
 
-  let d = u * totalLen;
+  // 2. Top-right rounded corner
+  addCorner(x + w - r, y + r, -Math.PI / 2);
 
-  // 1. Top edge (left -> right)
-  if (d <= topLen) {
-    return { px: x + r + d, py: y, nx: 0, ny: -1 };
-  }
-  d -= topLen;
-
-  // 2. Top-right arc
-  if (d <= arcLen && r > 0) {
-    const a = -Math.PI / 2 + (d / arcLen) * (Math.PI / 2);
-    const nx = Math.cos(a);
-    const ny = Math.sin(a);
-    return { px: x + w - r + nx * r, py: y + r + ny * r, nx, ny };
-  }
-  d -= arcLen;
-
-  // 3. Right edge (top -> bottom)
-  if (d <= sideLen) {
-    return { px: x + w, py: y + r + d, nx: 1, ny: 0 };
-  }
-  d -= sideLen;
-
-  // 4. Bottom-right arc
-  if (d <= arcLen && r > 0) {
-    const a = (d / arcLen) * (Math.PI / 2);
-    const nx = Math.cos(a);
-    const ny = Math.sin(a);
-    return { px: x + w - r + nx * r, py: y + h - r + ny * r, nx, ny };
-  }
-  d -= arcLen;
-
-  // 5. Bottom edge (right -> left)
-  if (d <= topLen) {
-    return { px: x + w - r - d, py: y + h, nx: 0, ny: 1 };
-  }
-  d -= topLen;
-
-  // 6. Bottom-left arc
-  if (d <= arcLen && r > 0) {
-    const a = Math.PI / 2 + (d / arcLen) * (Math.PI / 2);
-    const nx = Math.cos(a);
-    const ny = Math.sin(a);
-    return { px: x + r + nx * r, py: y + h - r + ny * r, nx, ny };
-  }
-  d -= arcLen;
-
-  // 7. Left edge (bottom -> top)
-  if (d <= sideLen) {
-    return { px: x, py: y + h - r - d, nx: -1, ny: 0 };
-  }
-  d -= sideLen;
-
-  // 8. Top-left arc
-  if (r > 0) {
-    const a = Math.PI + Math.min(1, d / arcLen) * (Math.PI / 2);
-    const nx = Math.cos(a);
-    const ny = Math.sin(a);
-    return { px: x + r + nx * r, py: y + r + ny * r, nx, ny };
+  // 3. Right edge interior (top -> bottom)
+  for (let i = 1; i < sideSegs; i++) {
+    const t = i / sideSegs;
+    pushUniqueRawSample(raw, {
+      px: x + w,
+      py: y + r + t * sideLen,
+      nx: 1,
+      ny: 0,
+      buoyWeight: 0.24,
+      curlWeight: 1,
+    });
   }
 
-  return { px: x, py: y, nx: 0, ny: -1 };
+  // 4. Bottom-right rounded corner
+  addCorner(x + w - r, y + h - r, 0);
+
+  // 5. Bottom edge interior (right -> left)
+  for (let i = 1; i < topSegs; i++) {
+    const t = i / topSegs;
+    pushUniqueRawSample(raw, {
+      px: x + w - r - t * topLen,
+      py: y + h,
+      nx: 0,
+      ny: 1,
+      buoyWeight: 0.24,
+      curlWeight: 1,
+    });
+  }
+
+  // 6. Bottom-left rounded corner
+  addCorner(x + r, y + h - r, Math.PI / 2);
+
+  // 7. Left edge interior (bottom -> top)
+  for (let i = 1; i < sideSegs; i++) {
+    const t = i / sideSegs;
+    pushUniqueRawSample(raw, {
+      px: x,
+      py: y + h - r - t * sideLen,
+      nx: -1,
+      ny: 0,
+      buoyWeight: 0.24,
+      curlWeight: 1,
+    });
+  }
+
+  // 8. Top-left rounded corner
+  addCorner(x + r, y + r, Math.PI);
+
+  if (raw.length > 2) {
+    const first = raw[0];
+    const last = raw[raw.length - 1];
+    const dx = first.px - last.px;
+    const dy = first.py - last.py;
+    if (dx * dx + dy * dy < 0.0625) {
+      raw.pop();
+    }
+  }
+
+  const n = raw.length;
+  if (n < 3) return [];
+
+  const segLens = new Array<number>(n);
+  let totalLen = 0;
+  for (let i = 0; i < n; i++) {
+    const cur = raw[i];
+    const next = raw[(i + 1) % n];
+    const segLen = Math.hypot(next.px - cur.px, next.py - cur.py);
+    segLens[i] = segLen;
+    totalLen += segLen;
+  }
+
+  if (totalLen <= 0) return [];
+
+  const freqMul = Math.max(1, Math.round(totalLen / 950));
+  const result: PerimeterPoint[] = new Array(n);
+  let cumDist = 0;
+
+  for (let i = 0; i < n; i++) {
+    const s = raw[i];
+    const u = cumDist / totalLen;
+    cumDist += segLens[i];
+
+    const buoyX = s.nx;
+    const buoyY = s.ny - s.buoyWeight * (1 - Math.max(0, s.ny) * 0.78);
+    const invNorm = 1 / (Math.hypot(buoyX, buoyY) || 1);
+    const edgeWeight = 0.62 + 0.38 * (1 - Math.max(0, s.ny));
+    const uScaled = u * TAU * freqMul;
+
+    result[i] = {
+      px: s.px,
+      py: s.py,
+      nx: s.nx,
+      ny: s.ny,
+      u,
+      dispX: buoyX * invNorm * edgeWeight,
+      dispY: buoyY * invNorm * edgeWeight,
+      curlX: -s.ny * s.curlWeight,
+      curlY: s.nx * s.curlWeight,
+      u4: uScaled * 4,
+      u7: uScaled * 7,
+      u11: uScaled * 11,
+      u19: uScaled * 19,
+      u9: uScaled * 9,
+    };
+  }
+
+  return result;
+}
+
+function lookupPerimeterByU(samples: readonly PerimeterPoint[], uRaw: number): PerimeterPoint {
+  const n = samples.length;
+  if (n === 0) {
+    return {
+      px: 0,
+      py: 0,
+      nx: 0,
+      ny: -1,
+      u: 0,
+      dispX: 0,
+      dispY: -1,
+      curlX: 1,
+      curlY: 0,
+      u4: 0,
+      u7: 0,
+      u11: 0,
+      u19: 0,
+      u9: 0,
+    };
+  }
+  const u = ((uRaw % 1) + 1) % 1;
+  let lo = 0;
+  let hi = n - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (samples[mid].u <= u) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return samples[lo];
 }
 
 function appendRoundedRectSubPath(
-  ctx: CanvasRenderingContext2D,
+  target: PathTarget,
   x: number,
   y: number,
   w: number,
@@ -133,16 +546,16 @@ function appendRoundedRectSubPath(
   rRaw: number
 ): void {
   const r = Math.max(0, Math.min(rRaw, w / 2, h / 2));
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.arcTo(x + w, y, x + w, y + r, r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-  ctx.lineTo(x + r, y + h);
-  ctx.arcTo(x, y + h, x, y + h - r, r);
-  ctx.lineTo(x, y + r);
-  ctx.arcTo(x, y, x + r, y, r);
-  ctx.closePath();
+  target.moveTo(x + r, y);
+  target.lineTo(x + w - r, y);
+  target.arcTo(x + w, y, x + w, y + r, r);
+  target.lineTo(x + w, y + h - r);
+  target.arcTo(x + w, y + h, x + w - r, y + h, r);
+  target.lineTo(x + r, y + h);
+  target.arcTo(x, y + h, x, y + h - r, r);
+  target.lineTo(x, y + r);
+  target.arcTo(x, y, x + r, y, r);
+  target.closePath();
 }
 
 function drawRoundedRectStroke(
@@ -167,15 +580,12 @@ function drawStarSpark(
   rotation: number
 ): void {
   const innerR = outerR * 0.34;
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(rotation);
   ctx.beginPath();
   for (let i = 0; i < 8; i++) {
-    const radius = i % 2 === 0 ? outerR : innerR;
-    const angle = (i * Math.PI) / 4;
-    const px = Math.cos(angle) * radius;
-    const py = Math.sin(angle) * radius;
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = rotation + i * STAR_STEP;
+    const px = cx + Math.cos(angle) * r;
+    const py = cy + Math.sin(angle) * r;
     if (i === 0) ctx.moveTo(px, py);
     else ctx.lineTo(px, py);
   }
@@ -185,23 +595,26 @@ function drawStarSpark(
   ctx.strokeStyle = strokeColor;
   ctx.lineWidth = 0.75;
   ctx.stroke();
-  ctx.restore();
 }
 
 /**
- * Multi-octave periodic wave height in [0.18, 1.0].
- * Uses integer multiples of TAU across u so the closed perimeter loop has zero seam.
+ * Multi-octave periodic wave height in [0.18, 1.0] using arc-length-cached coordinates
+ * and algebraic crest shaping (zero Math.pow per point per frame).
  */
-function computeWaveHeight(u: number, t: number, phaseOffset: number): number {
-  const theta1 = u * TAU * 4 - t * 2.1 + phaseOffset;
-  const theta2 = u * TAU * 7 + t * 1.5 - phaseOffset * 0.7;
-  const theta3 = u * TAU * 11 + t * 3.4 + phaseOffset * 1.3;
-  const theta4 = u * TAU * 23 - t * 5.6 + phaseOffset * 0.8;
-
-  const billow = 0.5 + 0.5 * Math.sin(theta1);
-  const swell = 0.5 + 0.5 * Math.sin(theta2);
-  const crest = Math.pow(1 - Math.abs(Math.sin(theta3)), 1.4);
-  const lick = Math.pow(1 - Math.abs(Math.cos(theta4)), 1.65);
+function computeWaveHeightCached(
+  pt: PerimeterPoint,
+  t21: number,
+  t15: number,
+  t34: number,
+  t56: number,
+  phaseOffset: number
+): number {
+  const billow = 0.5 + 0.5 * Math.sin(pt.u4 - t21 + phaseOffset);
+  const swell = 0.5 + 0.5 * Math.sin(pt.u7 + t15 - phaseOffset * 0.7);
+  const cRaw = 1 - Math.abs(Math.sin(pt.u11 + t34 + phaseOffset * 1.3));
+  const crest = cRaw * (0.35 + 0.65 * cRaw);
+  const lRaw = 1 - Math.abs(Math.cos(pt.u19 - t56 + phaseOffset * 0.8));
+  const lick = lRaw * lRaw;
 
   return Math.min(1, 0.18 + 0.24 * billow + 0.2 * swell + 0.24 * crest + 0.14 * lick);
 }
@@ -226,7 +639,7 @@ function drawSmoothClosedWave(ctx: CanvasRenderingContext2D, points: readonly Po
 
 function buildBurstShards(compact: boolean): BurstShard[] {
   const count = compact ? 14 : 22;
-  const palette = ['#F97316', '#FACC15', '#FEF08A', '#C4B5FD'];
+  const palette = ['#7C3AED', '#C084FC', '#F5F3FF', '#F472B6'];
   return Array.from({ length: count }, (_, idx) => ({
     u: (idx + 0.35) / count,
     speed: compact ? 8 + (idx % 3) * 2.5 : 10 + (idx % 3) * 3,
@@ -237,15 +650,7 @@ function buildBurstShards(compact: boolean): BurstShard[] {
   }));
 }
 
-interface FireLayerSpec {
-  heightScale: number;
-  phaseOffset: number;
-  fillStyle: string;
-  shadowColor?: string;
-  shadowBlur?: number;
-}
-
-export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
+const SakugaBorderFireComponent: React.FC<SakugaBorderFireProps> = ({
   percent,
   radius = 16,
   compact = false,
@@ -259,6 +664,7 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
   const prevPercentRef = useRef<number>(clampedPct);
   const burstStartRef = useRef<number | null>(null);
   const burstShardsRef = useRef<BurstShard[]>(buildBurstShards(compact));
+  const redrawClientRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const prev = prevPercentRef.current;
@@ -269,6 +675,7 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
     }
     prevPercentRef.current = clampedPct;
     percentRef.current = clampedPct;
+    redrawClientRef.current?.();
   }, [clampedPct]);
 
   useEffect(() => {
@@ -286,46 +693,69 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
     if (!ctx) return;
 
     const pad = mini ? 7 : compact ? 12 : 16;
-    const sampleCount = mini ? 84 : compact ? 140 : 190;
 
     let width = host.clientWidth;
     let height = host.clientHeight;
-    let dpr = Math.min(window.devicePixelRatio || 1, 2);
-    let isVisible = true;
-    let rafId = 0;
-    let lastDraw = 0;
+    let borderX = Math.max(0, Math.round((host.offsetWidth - width) / 2));
+    let borderY = Math.max(0, Math.round((host.offsetHeight - height) / 2));
+    let clipPath: Path2D | null = null;
 
-    const perimeterSamples: PerimeterPoint[] = [];
-    const layerPoints: Point2D[] = Array.from({ length: sampleCount }, () => ({ x: 0, y: 0 }));
-
-    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let prefersReduced = motionQuery.matches;
+    let perimeterSamples: PerimeterPoint[] = [];
+    const layerPoints: Point2D[] = [];
 
     const rebuildPerimeterCache = () => {
-      perimeterSamples.length = 0;
-      if (width <= 0 || height <= 0) return;
-      for (let i = 0; i < sampleCount; i++) {
-        const u = i / sampleCount;
-        perimeterSamples.push(sampleRoundedRectPerimeter(u, pad, pad, width, height, radius));
+      const boxX = pad - borderX;
+      const boxY = pad - borderY;
+      const boxW = width + borderX * 2;
+      const boxH = height + borderY * 2;
+      perimeterSamples = buildRoundedRectSamples(boxX, boxY, boxW, boxH, radius, compact, mini);
+
+      if (layerPoints.length !== perimeterSamples.length) {
+        layerPoints.length = 0;
+        for (let i = 0; i < perimeterSamples.length; i++) {
+          layerPoints.push({ x: 0, y: 0 });
+        }
       }
     };
 
     const syncSize = () => {
       width = host.clientWidth;
       height = host.clientHeight;
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const cw = Math.max(1, Math.round((width + pad * 2) * dpr));
-      const ch = Math.max(1, Math.round((height + pad * 2) * dpr));
+      borderX = Math.max(0, Math.round((host.offsetWidth - width) / 2));
+      borderY = Math.max(0, Math.round((host.offsetHeight - height) / 2));
+
+      const rawDpr = window.devicePixelRatio || 1;
+      const dpr = isLowPowerDevice() ? 1 : mini ? Math.min(rawDpr, 1.25) : Math.min(rawDpr, 1.35);
+      const canvasW = width + pad * 2;
+      const canvasH = height + pad * 2;
+      const cw = Math.max(1, Math.round(canvasW * dpr));
+      const ch = Math.max(1, Math.round(canvasH * dpr));
       if (canvas.width !== cw || canvas.height !== ch) {
         canvas.width = cw;
         canvas.height = ch;
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const boxX = pad - borderX;
+      const boxY = pad - borderY;
+      const boxW = width + borderX * 2;
+      const boxH = height + borderY * 2;
+
+      if (typeof Path2D !== 'undefined' && boxW > 0 && boxH > 0) {
+        const nextClip = new Path2D();
+        nextClip.rect(0, 0, canvasW, canvasH);
+        appendRoundedRectSubPath(nextClip, boxX, boxY, boxW, boxH, radius);
+        clipPath = nextClip;
+      } else {
+        clipPath = null;
+      }
+
       rebuildPerimeterCache();
     };
 
-    const drawFrame = (now: number) => {
-      if (width <= 0 || height <= 0 || perimeterSamples.length === 0) return;
+    const drawFrame = (now: number, visibleCount: number, isDark: boolean) => {
+      const ptCount = perimeterSamples.length;
+      if (width <= 0 || height <= 0 || ptCount === 0) return;
 
       const curPct = percentRef.current;
       const canvasW = width + pad * 2;
@@ -338,14 +768,14 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
 
       const ratio = (curPct - 50) / 50; // 0 at 50%, 1 at 100%
       const isMax = curPct >= 100;
-      const t = prefersReduced ? 1.2 : now * 0.001;
+      const t = prefersReducedMotion ? 1.2 : now * 0.001;
 
       ctx.clearRect(0, 0, canvasW, canvasH);
 
       // Compute one-shot 100% explosion surge progress if active
       let burstP = -1;
       let surgeBoost = 1;
-      if (burstStartRef.current !== null && !prefersReduced) {
+      if (burstStartRef.current !== null && !prefersReducedMotion) {
         const elapsed = now - burstStartRef.current;
         if (elapsed >= BURST_DURATION_MS) {
           burstStartRef.current = null;
@@ -355,108 +785,82 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
         }
       }
 
-      // Curtain thickness scales smoothly with % while keeping comfortable margin inside pad
       const baseMaxH = mini
         ? 2.4 + ratio * 2.0
         : compact
           ? 5.2 + ratio * 4.4
           : 6.4 + ratio * 5.8;
-      const maxWaveH = Math.min(pad - (mini ? 1.5 : 2.5), baseMaxH * surgeBoost);
+      const edgeHeadroom = Math.max(2, pad - Math.max(borderX, borderY) - (mini ? 0.8 : 1.5));
+      // Divide by 1.12 so the outer halo layer fits strictly within canvas headroom
+      const maxWaveH = Math.min(edgeHeadroom / 1.12, baseMaxH * surgeBoost);
 
-      // Clip interior of the card using evenodd rule so the fire sheet hugs flush outside border
+      const t21 = t * 2.1;
+      const t15 = t * 1.5;
+      const t34 = t * 3.4;
+      const t56 = t * 5.6;
+      const t39 = t * 3.9;
+      const curlAmp = (0.45 + ratio * 0.55) * (mini ? 0.55 : 1) * 1.85;
+
+      const boxX = pad - borderX;
+      const boxY = pad - borderY;
+      const boxW = width + borderX * 2;
+      const boxH = height + borderY * 2;
+
+      // Clip interior of the card using cached border-box Path2D evenodd rule so fire erupts flush outside border
       ctx.save();
-      ctx.beginPath();
-      ctx.rect(0, 0, canvasW, canvasH);
-      appendRoundedRectSubPath(
-        ctx,
-        pad + 1,
-        pad + 1,
-        Math.max(0, width - 2),
-        Math.max(0, height - 2),
-        Math.max(0, radius - 1)
-      );
-      ctx.clip('evenodd');
+      if (clipPath) {
+        ctx.clip(clipPath, 'evenodd');
+      } else {
+        ctx.beginPath();
+        ctx.rect(0, 0, canvasW, canvasH);
+        appendRoundedRectSubPath(ctx, boxX, boxY, boxW, boxH, radius);
+        ctx.clip('evenodd');
+      }
 
-      const layers: FireLayerSpec[] = [
-        {
-          heightScale: 1.04,
-          phaseOffset: 0,
-          fillStyle: 'rgba(194, 65, 12, 0.62)',
-          shadowColor: 'rgba(234, 88, 12, 0.7)',
-          shadowBlur: mini ? 3.5 : compact ? 5 : 8,
-        },
-        {
-          heightScale: 0.86,
-          phaseOffset: 0.42,
-          fillStyle: '#F97316',
-        },
-        {
-          heightScale: 0.6,
-          phaseOffset: -0.55,
-          fillStyle: '#FACC15',
-        },
-        {
-          heightScale: 0.34,
-          phaseOffset: 0.9,
-          fillStyle: '#FEF9C3',
-        },
-      ];
+      const activeLayers = mini
+        ? isMax
+          ? isDark
+            ? MAX_MINI_VIOLET_LAYERS_DARK
+            : MAX_MINI_VIOLET_LAYERS_LIGHT
+          : MINI_LAYERS
+        : isMax
+          ? isDark
+            ? MAX_VIOLET_LAYERS_DARK
+            : MAX_VIOLET_LAYERS_LIGHT
+          : NORMAL_LAYERS;
 
-      for (const layer of layers) {
-        for (let i = 0; i < sampleCount; i++) {
-          const u = i / sampleCount;
+      for (let lIdx = 0; lIdx < activeLayers.length; lIdx++) {
+        const layer = activeLayers[lIdx];
+        const heightScaleMul = maxWaveH * layer.heightScale;
+
+        for (let i = 0; i < ptCount; i++) {
           const pt = perimeterSamples[i];
-          const wave = computeWaveHeight(u, t, layer.phaseOffset);
+          const wave = computeWaveHeightCached(pt, t21, t15, t34, t56, layer.phaseOffset);
+          const disp = wave * heightScaleMul;
+          const curl = Math.sin(pt.u9 - t39 + layer.phaseOffset) * wave * curlAmp;
 
-          // Blend outward normal with upward fire buoyancy while guaranteeing outward clearance
-          const buoyX = pt.nx;
-          const buoyY = pt.ny - 0.34 * (1 - Math.max(0, pt.ny) * 0.78);
-          const norm = Math.hypot(buoyX, buoyY) || 1;
-          const dirX = buoyX / norm;
-          const dirY = buoyY / norm;
-
-          // Lush billowing crests along top & sides; compact simmering fire rim on bottom
-          const edgeWeight = 0.6 + 0.4 * (1 - Math.max(0, pt.ny));
-          const disp = wave * maxWaveH * layer.heightScale * edgeWeight;
-
-          // Subtle tangential wind curl on tall wave crests
-          const tanX = -pt.ny;
-          const tanY = pt.nx;
-          const curlScale = mini ? 0.55 : 1;
-          const curl =
-            (Math.sin(u * TAU * 9 - t * 3.9 + layer.phaseOffset) * 1.7 +
-              Math.cos(u * TAU * 17 + t * 4.8) * 0.8) *
-            wave *
-            (0.45 + ratio * 0.55) *
-            curlScale;
-
-          layerPoints[i].x = pt.px + dirX * disp + tanX * curl;
-          layerPoints[i].y = pt.py + dirY * disp + tanY * curl;
+          layerPoints[i].x = pt.px + pt.dispX * disp + pt.curlX * curl;
+          layerPoints[i].y = pt.py + pt.dispY * disp + pt.curlY * curl;
         }
 
-        ctx.save();
-        if (layer.shadowBlur && layer.shadowColor) {
-          ctx.shadowBlur = layer.shadowBlur;
-          ctx.shadowColor = layer.shadowColor;
-        }
         drawSmoothClosedWave(ctx, layerPoints);
         ctx.fillStyle = layer.fillStyle;
         ctx.fill();
-        ctx.restore();
       }
 
-      // Floating warm ember sparks drifting off the highest flame crests
-      if (!prefersReduced && ratio > 0.1) {
-        const emberCount = mini
-          ? Math.round(2 + ratio * 3)
-          : compact
-            ? Math.round(5 + ratio * 5)
-            : Math.round(8 + ratio * 9);
+      // Floating ember sparks drifting off flame crests
+      if (!prefersReducedMotion && ratio > 0.1) {
+        const rawEmbers = mini ? 2 + ratio * 3 : compact ? 5 + ratio * 5 : 8 + ratio * 9;
+        const emberScale = visibleCount >= 6 ? 0.65 : 1;
+        const emberCount = Math.max(1, Math.round(rawEmbers * emberScale));
         for (let e = 0; e < emberCount; e++) {
           const cycle = (t * 1.15 + e * 0.27) % 1;
           const u = (e + 0.5) / emberCount + Math.sin(e * 4.1) * 0.02;
-          const pt = sampleRoundedRectPerimeter(u, pad, pad, width, height, radius);
-          const crestH = computeWaveHeight(u, t - cycle * 0.25, 0.42) * maxWaveH;
+          const pt = lookupPerimeterByU(perimeterSamples, u);
+          const tEmber = t - cycle * 0.25;
+          const crestH =
+            computeWaveHeightCached(pt, tEmber * 2.1, tEmber * 1.5, tEmber * 3.4, tEmber * 5.6, 0.42) *
+            maxWaveH;
           const dist = crestH * 0.8 + (mini ? 0.8 : 1.2) + cycle * (mini ? 2.5 : compact ? 4 : 5.5);
           const ex = pt.px + pt.nx * dist + Math.sin(cycle * 7 + e * 2.3) * (mini ? 1.1 : 2);
           const ey = pt.py + pt.ny * dist - cycle * (mini ? 2.5 : compact ? 2.8 : 4);
@@ -464,7 +868,21 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
           const er = Math.max(mini ? 0.5 : 0.65, (1 - cycle) * maxEr);
           ctx.beginPath();
           ctx.arc(ex, ey, er, 0, TAU);
-          ctx.fillStyle = cycle < 0.42 ? '#FEF08A' : isMax && e % 4 === 0 ? '#C4B5FD' : '#FB923C';
+          ctx.fillStyle = isMax
+            ? isDark
+              ? cycle < 0.42
+                ? '#F5F3FF'
+                : e % 4 === 0
+                  ? '#F472B6'
+                  : '#A855F7'
+              : cycle < 0.42
+                ? '#EDE9FE'
+                : e % 4 === 0
+                  ? '#DB2777'
+                  : '#7C3AED'
+            : cycle < 0.42
+              ? '#FEF08A'
+              : '#FB923C';
           ctx.fill();
         }
       }
@@ -472,44 +890,55 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
       // Crisp 4-point anime star sparkles at >= 80% & 100% (disabled on mini button outlines)
       if (!mini && curPct >= 80) {
         const starCount = isMax ? (compact ? 5 : 8) : compact ? 2 : 4;
+        const offset = maxWaveH * 0.82 + (compact ? 2.2 : 3.2);
         for (let s = 0; s < starCount; s++) {
           const u = (s + 0.22) / starCount;
-          const pt = sampleRoundedRectPerimeter(u, pad, pad, width, height, radius);
-          const pulse = prefersReduced ? 0.85 : 0.55 + 0.45 * Math.sin(t * 4.8 + s * 1.9);
+          const pt = lookupPerimeterByU(perimeterSamples, u);
+          const pulse = prefersReducedMotion ? 0.85 : 0.55 + 0.45 * Math.sin(t * 4.8 + s * 1.9);
           if (pulse < 0.34) continue;
-          const offset = maxWaveH * 0.82 + (compact ? 2.2 : 3.2);
           const sx = pt.px + pt.nx * offset;
           const sy = pt.py + pt.ny * offset - 1;
           const outerR = (compact ? 2.6 : 3.4) * pulse;
-          const fill = s % 2 === 0 ? '#FEF08A' : isMax ? '#C4B5FD' : '#FDE047';
-          const stroke = s % 2 === 0 ? 'rgba(120, 53, 15, 0.7)' : 'rgba(91, 33, 182, 0.8)';
+          const fill = isMax
+            ? s % 3 === 0
+              ? '#FFFFFF'
+              : s % 3 === 1
+                ? '#DDD6FE'
+                : '#F9A8D4'
+            : s % 2 === 0
+              ? '#FEF08A'
+              : '#FDE047';
+          const stroke = isMax ? 'rgba(76, 29, 149, 0.85)' : 'rgba(120, 53, 15, 0.7)';
           drawStarSpark(ctx, sx, sy, outerR, fill, stroke, t * 1.6 + s);
         }
       }
 
       // One-shot 100% Sakuga perimeter explosion burst
       if (burstP >= 0) {
-        const ease = 1 - Math.pow(1 - burstP, 3);
-        const alpha = 1 - Math.pow(burstP, 1.4);
+        const invP = 1 - burstP;
+        const ease = 1 - invP * invP * invP;
+        const alpha = Math.max(0, 1 - burstP * Math.sqrt(burstP));
 
         ctx.save();
-        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.globalAlpha = alpha;
 
         const ringExpand = ease * (compact ? 9 : 12);
         drawRoundedRectStroke(
           ctx,
-          pad - ringExpand,
-          pad - ringExpand,
-          width + ringExpand * 2,
-          height + ringExpand * 2,
+          boxX - ringExpand,
+          boxY - ringExpand,
+          boxW + ringExpand * 2,
+          boxH + ringExpand * 2,
           radius + ringExpand * 0.65
         );
-        ctx.strokeStyle = burstP < 0.45 ? '#FEF08A' : '#A78BFA';
-        ctx.lineWidth = Math.max(0.9, (1 - burstP) * 2.8);
+        ctx.strokeStyle = burstP < 0.45 ? '#DDD6FE' : '#7C3AED';
+        ctx.lineWidth = Math.max(0.9, invP * 2.8);
         ctx.stroke();
 
-        for (const shard of burstShardsRef.current) {
-          const pt = sampleRoundedRectPerimeter(shard.u, pad, pad, width, height, radius);
+        const shards = burstShardsRef.current;
+        for (let i = 0; i < shards.length; i++) {
+          const shard = shards[i];
+          const pt = lookupPerimeterByU(perimeterSamples, shard.u);
           const dist = ease * shard.speed;
           const px = pt.px + pt.nx * dist + shard.jitter * 4 * ease;
           const py = pt.py + pt.ny * dist + shard.jitter * 4 * ease;
@@ -533,79 +962,41 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
       ctx.restore(); // End interior card evenodd clip
     };
 
-    const tick = (now: number) => {
-      if (prefersReduced || document.hidden || !isVisible) {
-        rafId = 0;
-        return;
-      }
-      if (now - lastDraw >= FRAME_MS) {
-        lastDraw = now;
-        drawFrame(now);
-      }
-      rafId = requestAnimationFrame(tick);
+    const client: FireClient = {
+      host,
+      isVisible: true,
+      lastDraw: 0,
+      draw: drawFrame,
+      hasBurst: () => burstStartRef.current !== null && !prefersReducedMotion,
     };
 
-    const startLoop = () => {
-      if (prefersReduced || document.hidden || !isVisible || rafId !== 0) return;
-      lastDraw = 0;
-      rafId = requestAnimationFrame(tick);
-    };
-
-    const stopLoop = () => {
-      if (rafId !== 0) {
-        cancelAnimationFrame(rafId);
-        rafId = 0;
+    redrawClientRef.current = () => {
+      const now = performance.now();
+      client.lastDraw = now;
+      drawFrame(now, Math.max(1, visibleClients.size), isDarkModeActive());
+      if (client.hasBurst()) {
+        ensureCoordinatorLoop();
       }
     };
 
     const ro = new ResizeObserver(() => {
       syncSize();
-      drawFrame(performance.now());
+      if (client.isVisible) {
+        const now = performance.now();
+        client.lastDraw = now;
+        drawFrame(now, Math.max(1, visibleClients.size), isDarkModeActive());
+      }
     });
     ro.observe(host);
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        isVisible = entries.some((entry) => entry.isIntersecting);
-        if (isVisible) {
-          drawFrame(performance.now());
-          startLoop();
-        } else {
-          stopLoop();
-        }
-      },
-      { threshold: 0.01 }
-    );
-    io.observe(host);
-
-    const handleVisibility = () => {
-      if (document.hidden) {
-        stopLoop();
-      } else {
-        drawFrame(performance.now());
-        startLoop();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-
-    const handleMotionChange = () => {
-      prefersReduced = motionQuery.matches;
-      stopLoop();
-      drawFrame(performance.now());
-      if (!prefersReduced) startLoop();
-    };
-    motionQuery.addEventListener('change', handleMotionChange);
-
     syncSize();
-    drawFrame(performance.now());
-    startLoop();
+    registerFireClient(client);
+    drawFrame(performance.now(), Math.max(1, visibleClients.size), isDarkModeActive());
 
     return () => {
-      stopLoop();
+      redrawClientRef.current = null;
+      unregisterFireClient(client);
       ro.disconnect();
-      io.disconnect();
-      document.removeEventListener('visibilitychange', handleVisibility);
-      motionQuery.removeEventListener('change', handleMotionChange);
     };
   }, [active, compact, mini, radius]);
 
@@ -629,3 +1020,6 @@ export const SakugaBorderFire: React.FC<SakugaBorderFireProps> = ({
     />
   );
 };
+
+export const SakugaBorderFire = memo(SakugaBorderFireComponent);
+SakugaBorderFire.displayName = 'SakugaBorderFire';

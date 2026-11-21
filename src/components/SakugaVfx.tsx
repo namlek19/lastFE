@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Info, X } from 'lucide-react';
@@ -441,7 +441,35 @@ export interface SakugaProgressBarProps {
   className?: string;
 }
 
-export const SakugaProgressBar: React.FC<SakugaProgressBarProps> = ({
+const progressVisibilityMap = new WeakMap<Element, (visible: boolean) => void>();
+let progressIo: IntersectionObserver | null = null;
+
+function observeProgressVisibility(
+  el: Element,
+  onChange: (visible: boolean) => void
+): () => void {
+  if (typeof IntersectionObserver === 'undefined') {
+    return () => {};
+  }
+  if (!progressIo) {
+    progressIo = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          progressVisibilityMap.get(entry.target)?.(entry.isIntersecting);
+        }
+      },
+      { threshold: 0.01 }
+    );
+  }
+  progressVisibilityMap.set(el, onChange);
+  progressIo.observe(el);
+  return () => {
+    progressIo?.unobserve(el);
+    progressVisibilityMap.delete(el);
+  };
+}
+
+const SakugaProgressBarComponent: React.FC<SakugaProgressBarProps> = ({
   percent,
   className = 'h-2 w-full',
 }) => {
@@ -449,8 +477,26 @@ export const SakugaProgressBar: React.FC<SakugaProgressBarProps> = ({
   const fillColor = getSakugaProgressColor(clampedPct);
   const isMax = clampedPct >= 100;
 
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    if (!isMax) {
+      setIsVisible(true);
+      return;
+    }
+    const el = rootRef.current;
+    if (!el) return;
+    return observeProgressVisibility(el, setIsVisible);
+  }, [isMax]);
+
   return (
-    <div className={`relative overflow-visible ${className}`}>
+    <div
+      ref={rootRef}
+      className={`relative overflow-visible ${
+        isMax && !isVisible ? 'sakuga-anim-paused' : ''
+      } ${className}`}
+    >
       <div
         className={`sakuga-progress-track relative h-full w-full overflow-hidden rounded-full bg-[#D5CFC2] transition-shadow duration-300 dark:bg-[#0F100E] ${
           isMax
@@ -498,7 +544,7 @@ export const SakugaProgressBar: React.FC<SakugaProgressBarProps> = ({
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-20 overflow-visible">
           <svg
             viewBox="0 0 16 16"
-            className="sakuga-flame-star absolute -top-2 left-[18%] h-3 w-3 -translate-x-1/2 drop-shadow-[0_0_4px_rgba(167,139,250,0.9)]"
+            className="sakuga-flame-star absolute -top-2 left-[18%] h-3 w-3 -translate-x-1/2"
           >
             <path
               d="M8 1 L9.7 6.3 L15 8 L9.7 9.7 L8 15 L6.3 9.7 L1 8 L6.3 6.3 Z"
@@ -510,8 +556,8 @@ export const SakugaProgressBar: React.FC<SakugaProgressBarProps> = ({
           </svg>
           <svg
             viewBox="0 0 16 16"
-            style={{ animationDelay: '220ms' }}
-            className="sakuga-flame-star absolute -bottom-2 left-[54%] h-3.5 w-3.5 -translate-x-1/2 drop-shadow-[0_0_5px_rgba(244,114,182,0.85)]"
+            style={{ animationDelay: '340ms' }}
+            className="sakuga-flame-star absolute -bottom-2 left-[54%] h-3.5 w-3.5 -translate-x-1/2"
           >
             <path
               d="M8 1 L9.7 6.3 L15 8 L9.7 9.7 L8 15 L6.3 9.7 L1 8 L6.3 6.3 Z"
@@ -523,8 +569,8 @@ export const SakugaProgressBar: React.FC<SakugaProgressBarProps> = ({
           </svg>
           <svg
             viewBox="0 0 16 16"
-            style={{ animationDelay: '440ms' }}
-            className="sakuga-flame-star absolute -top-2 right-0 h-3.5 w-3.5 translate-x-1/3 drop-shadow-[0_0_5px_rgba(196,181,253,0.95)]"
+            style={{ animationDelay: '680ms' }}
+            className="sakuga-flame-star absolute -top-2 right-0 h-3.5 w-3.5 translate-x-1/3"
           >
             <path
               d="M8 1 L9.7 6.3 L15 8 L9.7 9.7 L8 15 L6.3 9.7 L1 8 L6.3 6.3 Z"
@@ -539,6 +585,9 @@ export const SakugaProgressBar: React.FC<SakugaProgressBarProps> = ({
     </div>
   );
 };
+
+export const SakugaProgressBar = memo(SakugaProgressBarComponent);
+SakugaProgressBar.displayName = 'SakugaProgressBar';
 
 interface TierStampConfig {
   id: StudyTier;

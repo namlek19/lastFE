@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { StudyMode } from '../types/quiz';
+import { isLowPowerDevice } from '../utils/perfTier';
 
 export interface SakugaOrigamiPetalsProps {
   mode: StudyMode;
@@ -73,8 +74,9 @@ function getHeaderSafeTop(vw: number, vh: number): number {
 function buildPetalShower(showerId: number): PetalShowerState {
   const { w: vw, h: vh } = getViewportSize();
   const isMobile = vw < 768;
-  const petalCount = isMobile ? 9 : 13;
-  const sparkCount = isMobile ? 4 : 6;
+  const lowPower = isMobile || isLowPowerDevice();
+  const petalCount = lowPower ? 8 : 13;
+  const sparkCount = lowPower ? 3 : 6;
   const totalCount = petalCount + sparkCount;
   const windDir = Math.random() < 0.5 ? 1 : -1;
   const headerSafeTop = getHeaderSafeTop(vw, vh);
@@ -131,16 +133,10 @@ const OrigamiPetalSvg: React.FC<{ variant: PetalVariant; sizeClass?: string }> =
   ({ variant, sizeClass = 'h-6 w-[22px]' }) => {
     const strokeClass = 'stroke-[#E0E7FF]/55 dark:[stroke:none]';
     const glowClass =
-      'h-full w-full overflow-visible drop-shadow-[0_0_4px_rgba(79,70,229,0.5)] drop-shadow-[0_0_9px_rgba(219,39,119,0.28)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_10px_rgba(196,181,253,0.85)] dark:drop-shadow-[0_0_16px_rgba(244,114,182,0.48)]';
+      'h-full w-full overflow-visible drop-shadow-[0_0_5px_rgba(124,58,237,0.48)] dark:drop-shadow-[0_0_8px_rgba(196,181,253,0.88)]';
 
     return (
       <div className={`relative flex ${sizeClass} items-center justify-center`}>
-        {/* Subtle pinpoint core aura */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute h-2.5 w-2.5 rounded-full bg-[#6366F1]/25 blur-[3px] dark:bg-[#F5D0FE]/45"
-        />
-
         <svg viewBox="0 0 28 32" aria-hidden="true" className={glowClass}>
           {variant === 0 && (
             <>
@@ -273,7 +269,7 @@ const OrigamiStarGlintSvg: React.FC<{ variant: PetalVariant }> = memo(({ variant
   <svg
     viewBox="0 0 16 16"
     aria-hidden="true"
-    className="h-3 w-3 overflow-visible drop-shadow-[0_0_4px_rgba(124,58,237,0.75)] dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.95)]"
+    className="h-3 w-3 overflow-visible sm:drop-shadow-[0_0_4px_rgba(124,58,237,0.65)] sm:dark:drop-shadow-[0_0_5px_rgba(255,255,255,0.9)]"
   >
     <polygon
       points="8,1 9.6,6.4 15,8 9.6,9.6 8,15 6.4,9.6 1,8 6.4,6.4"
@@ -384,11 +380,28 @@ export const SakugaOrigamiPetals: React.FC<SakugaOrigamiPetalsProps> = ({ mode }
       blessingTimersRef.current.push(showTimer, hideTimer);
 
       const startTime = performance.now();
+      const minStepMs = isLowPowerDevice() ? 27 : 16;
+      let lastDrawNow = 0;
+      const wasHidden = new Array<boolean>(nextShower.petals.length).fill(true);
 
       const step = (now: number) => {
         if (unmounted || !isActiveRef.current) return;
 
         const elapsed = now - startTime;
+        if (elapsed >= nextShower.maxEndMs) {
+          rafRef.current = null;
+          isActiveRef.current = false;
+          setShowBlessing(false);
+          setShower(null);
+          scheduleVisit(false);
+          return;
+        }
+
+        if (lastDrawNow !== 0 && now - lastDrawNow < minStepMs) {
+          rafRef.current = window.requestAnimationFrame(step);
+          return;
+        }
+        lastDrawNow = now;
 
         for (let i = 0; i < nextShower.petals.length; i++) {
           const el = petalElRefs.current[i];
@@ -397,9 +410,13 @@ export const SakugaOrigamiPetals: React.FC<SakugaOrigamiPetalsProps> = ({ mode }
           const petal = nextShower.petals[i];
           const petalElapsed = elapsed - petal.delayMs;
           if (petalElapsed <= 0 || petalElapsed >= petal.durationMs) {
-            el.style.opacity = '0';
+            if (!wasHidden[i]) {
+              el.style.opacity = '0';
+              wasHidden[i] = true;
+            }
             continue;
           }
+          wasHidden[i] = false;
 
           const p = petalElapsed / petal.durationMs;
           const y = petal.startY + p * (petal.endY - petal.startY);
@@ -419,15 +436,6 @@ export const SakugaOrigamiPetals: React.FC<SakugaOrigamiPetalsProps> = ({ mode }
 
           el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) perspective(95px) rotateX(${rx.toFixed(1)}deg) rotateY(${ry.toFixed(1)}deg) rotateZ(${rz.toFixed(1)}deg) scale(${petal.scale.toFixed(2)})`;
           el.style.opacity = opacity.toFixed(3);
-        }
-
-        if (elapsed >= nextShower.maxEndMs) {
-          rafRef.current = null;
-          isActiveRef.current = false;
-          setShowBlessing(false);
-          setShower(null);
-          scheduleVisit(false);
-          return;
         }
 
         rafRef.current = window.requestAnimationFrame(step);

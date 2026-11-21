@@ -254,9 +254,16 @@ button:active .sakuga-option-badge {
 @keyframes sakuga-bar-sweep {
   0% {
     transform: translateX(-140%) skewX(-24deg);
+    opacity: 1;
   }
+  58% {
+    transform: translateX(420%) skewX(-24deg);
+    opacity: 1;
+  }
+  59%,
   100% {
     transform: translateX(420%) skewX(-24deg);
+    opacity: 0;
   }
 }
 
@@ -273,12 +280,263 @@ button:active .sakuga-option-badge {
 }
 
 .sakuga-bar-radiant-sweep {
-  animation: sakuga-bar-sweep 1800ms cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation: sakuga-bar-sweep 2600ms cubic-bezier(0.22, 1, 0.36, 1) infinite;
 }
 
 .sakuga-flame-star {
   transform-origin: center center;
-  animation: sakuga-star-twinkle 760ms ease-in-out infinite;
+  animation: sakuga-star-twinkle 1350ms ease-in-out infinite;
+}
+
+.sakuga-anim-paused,
+.sakuga-anim-paused * {
+  animation-play-state: paused !important;
+}
+
+/* Lightweight GPU-only CSS loops for Spidey-Clawd & Mini Origami Wings (zero JS RAF overhead) */
+@keyframes spidey-idle-bob {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+@keyframes spidey-nap-breathe {
+  0%,
+  100% {
+    transform: scaleX(1) scaleY(1);
+  }
+  50% {
+    transform: scaleX(1.04) scaleY(0.94);
+  }
+}
+
+@keyframes spidey-crawl-bob {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scaleY(0.96);
+  }
+  50% {
+    transform: translate3d(0, -2.5px, 0) scaleY(1.04);
+  }
+}
+
+@keyframes spidey-rappel-bob {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 3px, 0);
+  }
+}
+
+@keyframes spidey-hop-bob {
+  0%,
+  100% {
+    transform: scaleX(0.95) scaleY(1.07);
+  }
+  50% {
+    transform: scaleX(1.06) scaleY(0.94);
+  }
+}
+
+@keyframes spidey-fall-bob {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scaleX(0.9) scaleY(1.14);
+  }
+  50% {
+    transform: translate3d(0, -1px, 0) scaleX(0.9) scaleY(1.14);
+  }
+}
+
+@keyframes spidey-eye-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.14);
+  }
+}
+
+@keyframes spidey-arm-idle {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -1px, 0);
+  }
+}
+
+@keyframes spidey-arm-fast {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -2.2px, 0);
+  }
+}
+
+@keyframes spidey-leg-a-idle {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 1.1px, 0);
+  }
+}
+
+@keyframes spidey-leg-b-idle {
+  0%,
+  100% {
+    transform: translate3d(0, 1.1px, 0);
+  }
+  50% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes spidey-leg-a-fast {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+@keyframes spidey-leg-b-fast {
+  0%,
+  100% {
+    transform: translate3d(0, -2px, 0);
+  }
+  50% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes spidey-zzz-left {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(-4px, -9px, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes spidey-zzz-right {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(4px, -9px, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes bf-mini-wing-l {
+  0%,
+  100% {
+    transform: perspective(75px) rotateY(-12deg);
+  }
+  50% {
+    transform: perspective(75px) rotateY(72deg);
+  }
+}
+
+@keyframes bf-mini-wing-r {
+  0%,
+  100% {
+    transform: perspective(75px) rotateY(12deg);
+  }
+  50% {
+    transform: perspective(75px) rotateY(-72deg);
+  }
+}
+
+.spidey-anim-idle {
+  animation: spidey-idle-bob 1.9s ease-in-out infinite;
+}
+
+.spidey-anim-nap {
+  animation: spidey-nap-breathe 2.6s ease-in-out infinite;
+}
+
+.spidey-anim-crawl {
+  animation: spidey-crawl-bob 0.24s ease-in-out infinite;
+}
+
+.spidey-anim-rappel {
+  animation: spidey-rappel-bob 1.4s ease-in-out infinite;
+}
+
+.spidey-anim-hop {
+  animation: spidey-hop-bob 0.48s ease-in-out infinite;
+}
+
+.spidey-anim-fall {
+  animation: spidey-fall-bob 0.2s ease-in-out infinite;
+}
+
+.spidey-eye-blink {
+  transform-box: view-box;
+  transform-origin: 14px 8.5px;
+  animation: spidey-eye-blink 3.7s linear infinite;
+}
+
+.spidey-arm-idle {
+  animation: spidey-arm-idle 1.5s ease-in-out infinite;
+}
+
+.spidey-arm-fast {
+  animation: spidey-arm-fast 0.22s ease-in-out infinite;
+}
+
+.spidey-leg-a-idle {
+  animation: spidey-leg-a-idle 0.78s ease-in-out infinite;
+}
+
+.spidey-leg-b-idle {
+  animation: spidey-leg-b-idle 0.78s ease-in-out infinite;
+}
+
+.spidey-leg-a-fast {
+  animation: spidey-leg-a-fast 0.22s ease-in-out infinite;
+}
+
+.spidey-leg-b-fast {
+  animation: spidey-leg-b-fast 0.22s ease-in-out infinite;
+}
+
+.spidey-zzz-left {
+  animation: spidey-zzz-left 2.1s ease-out infinite;
+}
+
+.spidey-zzz-right {
+  animation: spidey-zzz-right 2.1s ease-out infinite;
+}
+
+.bf-mini-wing-l {
+  transform-origin: 50% 50%;
+  animation: bf-mini-wing-l 0.28s ease-in-out infinite;
+}
+
+.bf-mini-wing-r {
+  transform-origin: 50% 50%;
+  animation: bf-mini-wing-r 0.28s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -294,7 +552,24 @@ button:active .sakuga-option-badge {
   .sakuga-purple-to-green-arrival,
   .dark .sakuga-purple-to-green-arrival,
   .sakuga-bar-radiant-sweep,
-  .sakuga-flame-star {
+  .sakuga-flame-star,
+  .spidey-anim-idle,
+  .spidey-anim-nap,
+  .spidey-anim-crawl,
+  .spidey-anim-rappel,
+  .spidey-anim-hop,
+  .spidey-anim-fall,
+  .spidey-eye-blink,
+  .spidey-arm-idle,
+  .spidey-arm-fast,
+  .spidey-leg-a-idle,
+  .spidey-leg-b-idle,
+  .spidey-leg-a-fast,
+  .spidey-leg-b-fast,
+  .spidey-zzz-left,
+  .spidey-zzz-right,
+  .bf-mini-wing-l,
+  .bf-mini-wing-r {
     animation: none;
     transform: none;
   }

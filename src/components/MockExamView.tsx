@@ -962,7 +962,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
             </div>
 
             {/* Desktop Sticky Top Bar (>= 1024px) */}
-            <div className="sticky top-20 z-20 hidden w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD]/95 px-5 py-3.5 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] backdrop-blur dark:border-[#262925] dark:bg-[#161816]/95 dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.6)] lg:flex">
+            <div className="sticky top-20 z-20 hidden w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D5CFC2] bg-[#EAE6DD]/[0.97] px-5 py-3.5 shadow-[0_8px_24px_-4px_rgba(28,25,23,0.06)] dark:border-[#262925] dark:bg-[#161816]/[0.97] dark:shadow-[0_10px_28px_-6px_rgba(0,0,0,0.6)] lg:flex">
               <div className="flex flex-wrap items-center gap-3">
                 {/* Countdown Timer + Toggle */}
                 <div className="flex items-center gap-2">
@@ -1159,7 +1159,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
         </div>
 
         {/* Mobile Sticky Bottom Navigation Bar */}
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D5CFC2] bg-[#EAE6DD]/95 px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(28,25,23,0.08)] backdrop-blur dark:border-[#262925] dark:bg-[#161816]/95 dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.5)] md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D5CFC2] bg-[#EAE6DD]/[0.97] px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(28,25,23,0.08)] dark:border-[#262925] dark:bg-[#161816]/[0.97] dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.5)] md:hidden">
           <div className="flex w-full items-center justify-between gap-2">
             <button
               type="button"

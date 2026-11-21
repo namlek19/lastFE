@@ -1263,7 +1263,7 @@ return (
 
     {/* Mobile Sticky Bottom Navigation Bar (< 768px): [ < Trước ] | [ ↻ Lật thẻ ] | [ Tiếp > ] */}
     {currentQuestion && (
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D5CFC2] bg-[#EAE6DD]/95 px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(28,25,23,0.08)] backdrop-blur dark:border-[#262925] dark:bg-[#161816]/95 dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.65)] md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D5CFC2] bg-[#EAE6DD]/[0.97] px-3.5 pt-2.5 pb-safe shadow-[0_-6px_20px_-4px_rgba(28,25,23,0.08)] dark:border-[#262925] dark:bg-[#161816]/[0.97] dark:shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.65)] md:hidden">
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"

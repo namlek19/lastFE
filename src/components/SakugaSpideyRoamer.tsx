@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   animate,
   AnimatePresence,
@@ -282,7 +282,7 @@ interface SpideyClawdSpriteProps {
  * Stays cleanly upright (no 2D spin rotations), using lively bouncing, hopping,
  * squash-and-stretch, and expressive pixel animation.
  */
-const SpideyClawdSprite: React.FC<SpideyClawdSpriteProps> = ({
+const SpideyClawdSprite: React.FC<SpideyClawdSpriteProps> = memo(({
   pose,
   facing,
   sparkSeq,
@@ -296,6 +296,125 @@ const SpideyClawdSprite: React.FC<SpideyClawdSpriteProps> = ({
   const isPopping = pose === 'pop';
   const isConfused = pose === 'confused';
   const isPouting = pose === 'pout';
+
+  const isOneShot = isCheer || isPopping || isConfused || isPouting;
+  const bodyAnimClass = isFalling
+    ? 'spidey-anim-fall'
+    : isHopping
+      ? 'spidey-anim-hop'
+      : isCrawling
+        ? 'spidey-anim-crawl'
+        : isRappel
+          ? 'spidey-anim-rappel'
+          : isSleeping
+            ? 'spidey-anim-nap'
+            : 'spidey-anim-idle';
+
+  const armClass =
+    isCrawling || isHopping || isCheer
+      ? 'spidey-arm-fast'
+      : pose === 'idle'
+        ? 'spidey-arm-idle'
+        : '';
+  const armTransform = isFalling
+    ? 'translateY(-3.5px)'
+    : isPouting
+      ? 'translateY(1.5px)'
+      : undefined;
+
+  const legFast = isCrawling || isHopping || isRappel;
+  const legStatic = isSleeping || isPouting;
+  const legAClass = legStatic ? '' : legFast ? 'spidey-leg-a-fast' : 'spidey-leg-a-idle';
+  const legBClass = legStatic ? '' : legFast ? 'spidey-leg-b-fast' : 'spidey-leg-b-idle';
+
+  const svgBody = (
+    <svg viewBox="0 0 28 24" aria-hidden="true" className="h-7 w-8 overflow-visible">
+      {/* Crisp flat pixel contact shadow (zero SVG filter cost) */}
+      <rect x="5" y="21.2" width="18" height="1.8" rx="0.9" fill="#18181B" opacity="0.22" />
+
+      {/* Side Clawd-spider arms */}
+      <g
+        className={armClass || undefined}
+        style={armTransform ? { transform: armTransform } : undefined}
+      >
+        <rect x="0" y="9" width="3" height="2" fill="#18181B" />
+        <rect x="1" y="11" width="3" height="3" fill="#2563EB" />
+        <rect x="25" y="9" width="3" height="2" fill="#18181B" />
+        <rect x="24" y="11" width="3" height="3" fill="#2563EB" />
+      </g>
+
+      {/* Chunky pixel shell border */}
+      <rect x="4" y="2" width="20" height="15" rx="2" fill="#18181B" />
+
+      {/* Spider-Man Crimson Red head */}
+      <rect x="6" y="4" width="16" height="8" fill="#EF4444" />
+      <rect x="20" y="4" width="2" height="8" fill="#DC2626" />
+      {/* Forehead web ticks */}
+      <rect x="13" y="4" width="2" height="2" fill="#991B1B" />
+      <rect x="9" y="4" width="1.5" height="1.5" fill="#B91C1C" />
+      <rect x="17.5" y="4" width="1.5" height="1.5" fill="#B91C1C" />
+
+      {/* Cobalt Blue lower suit + pixel chest spider badge */}
+      <rect x="6" y="12" width="16" height="3" fill="#2563EB" />
+      <rect x="20" y="12" width="2" height="3" fill="#1D4ED8" />
+      <rect x="12" y="11" width="4" height="2" fill="#18181B" />
+      <rect x="13" y="11.5" width="2" height="1.2" fill="#EF4444" />
+
+      {/* Eyes driven by current mood / action */}
+      {isSleeping ? (
+        <>
+          <rect x="7.5" y="8" width="4.5" height="1.5" fill="#18181B" />
+          <rect x="16" y="8" width="4.5" height="1.5" fill="#18181B" />
+        </>
+      ) : isFalling ? (
+        <>
+          <rect x="7" y="5.5" width="5" height="5" fill="#18181B" />
+          <rect x="8" y="6.5" width="3" height="3" fill="#FFFFFF" />
+          <rect x="16" y="5.5" width="5" height="5" fill="#18181B" />
+          <rect x="17" y="6.5" width="3" height="3" fill="#FFFFFF" />
+        </>
+      ) : isConfused ? (
+        <>
+          <rect x="7" y="7" width="5" height="3" fill="#18181B" />
+          <rect x="8" y="7.8" width="3" height="1.4" fill="#FFFFFF" />
+          <rect x="16" y="5.5" width="5" height="4.8" fill="#18181B" />
+          <rect x="16.8" y="6.3" width="3.4" height="3.2" fill="#FFFFFF" />
+        </>
+      ) : isPouting ? (
+        <>
+          <rect x="7" y="7.5" width="5" height="2.6" fill="#18181B" />
+          <rect x="8" y="8.2" width="3.2" height="1.2" fill="#FFFFFF" />
+          <rect x="16" y="7.5" width="5" height="2.6" fill="#18181B" />
+          <rect x="16.8" y="8.2" width="3.2" height="1.2" fill="#FFFFFF" />
+          <rect x="21" y="1" width="1.5" height="4" fill="#FDE047" />
+          <rect x="19.8" y="2.2" width="4" height="1.5" fill="#FDE047" />
+        </>
+      ) : (
+        <g className="spidey-eye-blink">
+          <rect x="7" y="6" width="5" height="4" fill="#18181B" />
+          <rect x="7.8" y="6.8" width="3.4" height="2.4" fill="#FFFFFF" />
+          <rect x="10" y="7" width="1.2" height="2.2" fill="#FFFFFF" />
+          <rect x="16" y="6" width="5" height="4" fill="#18181B" />
+          <rect x="16.8" y="6.8" width="3.4" height="2.4" fill="#FFFFFF" />
+          <rect x="16.8" y="7" width="1.2" height="2.2" fill="#FFFFFF" />
+        </g>
+      )}
+
+      {/* 4 stubby Clawd bottom legs scuttling/kicking cleanly via pure CSS */}
+      <g className={legAClass || undefined}>
+        <rect x="5" y="17" width="3" height="4" fill="#18181B" />
+        <rect x="5.5" y="17" width="2" height="3.2" fill="#EF4444" />
+        <rect x="15" y="17" width="3" height="4" fill="#18181B" />
+        <rect x="15.5" y="17" width="2" height="3.2" fill="#2563EB" />
+      </g>
+      <g className={legBClass || undefined}>
+        <rect x="10" y="17" width="3" height="4" fill="#18181B" />
+        <rect x="10.5" y="17" width="2" height="3.2" fill="#2563EB" />
+        <rect x="20" y="17" width="3" height="4" fill="#18181B" />
+        <rect x="20.5" y="17" width="2" height="3.2" fill="#EF4444" />
+      </g>
+    </svg>
+  );
 
   return (
     <div className="relative flex h-7 w-8 items-center justify-center">
@@ -317,198 +436,47 @@ const SpideyClawdSprite: React.FC<SpideyClawdSpriteProps> = ({
       )}
 
       <div style={{ transform: facing < 0 ? 'scaleX(-1)' : undefined }}>
-        <motion.div
-          key={isCheer ? `cheer-hop-${sparkSeq}` : isPopping ? `pop-hop-${sparkSeq}` : 'roam-body'}
-          animate={
-            isCheer
-              ? {
-                  y: [0, -14, 0, -9, 0],
-                  scaleX: [1.14, 0.9, 1.18, 0.94, 1],
-                  scaleY: [0.86, 1.14, 0.82, 1.08, 1],
-                }
-              : isPopping
+        {isOneShot ? (
+          <motion.div
+            key={isCheer ? `cheer-hop-${sparkSeq}` : isPopping ? `pop-hop-${sparkSeq}` : pose}
+            animate={
+              isCheer
                 ? {
-                    scaleX: [1.28, 0.88, 1.08, 1],
-                    scaleY: [0.74, 1.18, 0.92, 1],
-                    y: [2, -6, 0],
+                    y: [0, -14, 0, -9, 0],
+                    scaleX: [1.14, 0.9, 1.18, 0.94, 1],
+                    scaleY: [0.86, 1.14, 0.82, 1.08, 1],
                   }
-                : isFalling
-                  ? { scaleX: 0.9, scaleY: 1.14, y: [0, -1, 0] }
+                : isPopping
+                  ? {
+                      scaleX: [1.28, 0.88, 1.08, 1],
+                      scaleY: [0.74, 1.18, 0.92, 1],
+                      y: [2, -6, 0],
+                    }
                   : isConfused
                     ? { y: [0, -5, 0], scaleY: [1, 1.08, 1] }
-                    : isPouting
-                      ? { y: [0, -3, 0, -2, 0], scaleX: [1, 1.06, 1] }
-                      : isHopping
-                        ? { scaleX: [0.94, 1.06, 1], scaleY: [1.08, 0.94, 1] }
-                        : isCrawling
-                          ? { y: [0, -2.5, 0], scaleY: [0.96, 1.04, 0.96] }
-                          : isRappel
-                            ? { y: [0, 3, 0] }
-                            : isSleeping
-                              ? { scaleY: [1, 0.94, 1], scaleX: [1, 1.04, 1] }
-                              : { y: [0, -2, 0] }
-          }
-          transition={
-            isCheer
-              ? { duration: 0.56, times: [0, 0.28, 0.52, 0.78, 1], ease: [0.22, 1, 0.36, 1] }
-              : isPopping
-                ? { duration: 0.36, times: [0, 0.38, 0.72, 1], ease: [0.22, 1, 0.36, 1] }
-                : isConfused
-                  ? { duration: 0.42, repeat: 1, ease: 'easeOut' }
-                  : isPouting
-                    ? { duration: 0.48, repeat: 1, ease: 'easeInOut' }
-                    : isFalling
-                      ? { duration: 0.2, repeat: Infinity }
-                      : isHopping
-                        ? { duration: 0.48, repeat: Infinity, ease: 'easeInOut' }
-                        : {
-                            duration: isCrawling ? 0.24 : isSleeping ? 2.6 : 1.75,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                          }
-          }
-        >
-          <svg
-            viewBox="0 0 28 24"
-            aria-hidden="true"
-            className="h-7 w-8 overflow-visible drop-shadow-[1px_2px_0_rgba(24,24,27,0.38)]"
+                    : { y: [0, -3, 0, -2, 0], scaleX: [1, 1.06, 1] }
+            }
+            transition={
+              isCheer
+                ? { duration: 0.56, times: [0, 0.28, 0.52, 0.78, 1], ease: [0.22, 1, 0.36, 1] }
+                : isPopping
+                  ? { duration: 0.36, times: [0, 0.38, 0.72, 1], ease: [0.22, 1, 0.36, 1] }
+                  : isConfused
+                    ? { duration: 0.42, repeat: 1, ease: 'easeOut' }
+                    : { duration: 0.48, repeat: 1, ease: 'easeInOut' }
+            }
           >
-            {/* Side Clawd-spider arms */}
-            <motion.g
-              animate={
-                isCrawling || isHopping
-                  ? { y: [0, -2.2, 0] }
-                  : isFalling
-                    ? { y: -3.5 }
-                    : isCheer
-                      ? { y: [0, -3, 0] }
-                      : isPouting
-                        ? { y: 1.5 }
-                        : { y: [0, -1, 0] }
-              }
-              transition={{
-                duration: isCrawling || isHopping ? 0.2 : isCheer ? 0.26 : 1.35,
-                repeat: isFalling || isPouting ? 0 : Infinity,
-                ease: 'easeInOut',
-              }}
-            >
-              <rect x="0" y="9" width="3" height="2" fill="#18181B" />
-              <rect x="1" y="11" width="3" height="3" fill="#2563EB" />
-              <rect x="25" y="9" width="3" height="2" fill="#18181B" />
-              <rect x="24" y="11" width="3" height="3" fill="#2563EB" />
-            </motion.g>
-
-            {/* Chunky pixel shell border */}
-            <rect x="4" y="2" width="20" height="15" rx="2" fill="#18181B" />
-
-            {/* Spider-Man Crimson Red head */}
-            <rect x="6" y="4" width="16" height="8" fill="#EF4444" />
-            <rect x="20" y="4" width="2" height="8" fill="#DC2626" />
-            {/* Forehead web ticks */}
-            <rect x="13" y="4" width="2" height="2" fill="#991B1B" />
-            <rect x="9" y="4" width="1.5" height="1.5" fill="#B91C1C" />
-            <rect x="17.5" y="4" width="1.5" height="1.5" fill="#B91C1C" />
-
-            {/* Cobalt Blue lower suit + pixel chest spider badge */}
-            <rect x="6" y="12" width="16" height="3" fill="#2563EB" />
-            <rect x="20" y="12" width="2" height="3" fill="#1D4ED8" />
-            <rect x="12" y="11" width="4" height="2" fill="#18181B" />
-            <rect x="13" y="11.5" width="2" height="1.2" fill="#EF4444" />
-
-            {/* Eyes driven by current mood / action */}
-            {isSleeping ? (
-              <>
-                <rect x="7.5" y="8" width="4.5" height="1.5" fill="#18181B" />
-                <rect x="16" y="8" width="4.5" height="1.5" fill="#18181B" />
-              </>
-            ) : isFalling ? (
-              <>
-                <rect x="7" y="5.5" width="5" height="5" fill="#18181B" />
-                <rect x="8" y="6.5" width="3" height="3" fill="#FFFFFF" />
-                <rect x="16" y="5.5" width="5" height="5" fill="#18181B" />
-                <rect x="17" y="6.5" width="3" height="3" fill="#FFFFFF" />
-              </>
-            ) : isConfused ? (
-              <>
-                <rect x="7" y="7" width="5" height="3" fill="#18181B" />
-                <rect x="8" y="7.8" width="3" height="1.4" fill="#FFFFFF" />
-                <rect x="16" y="5.5" width="5" height="4.8" fill="#18181B" />
-                <rect x="16.8" y="6.3" width="3.4" height="3.2" fill="#FFFFFF" />
-              </>
-            ) : isPouting ? (
-              <>
-                <rect x="7" y="7.5" width="5" height="2.6" fill="#18181B" />
-                <rect x="8" y="8.2" width="3.2" height="1.2" fill="#FFFFFF" />
-                <rect x="16" y="7.5" width="5" height="2.6" fill="#18181B" />
-                <rect x="16.8" y="8.2" width="3.2" height="1.2" fill="#FFFFFF" />
-                <rect x="21" y="1" width="1.5" height="4" fill="#FDE047" />
-                <rect x="19.8" y="2.2" width="4" height="1.5" fill="#FDE047" />
-              </>
-            ) : (
-              <motion.g
-                animate={{ scaleY: [1, 1, 0.14, 1] }}
-                transition={{
-                  duration: 0.22,
-                  repeat: Infinity,
-                  repeatDelay: 3.4,
-                  times: [0, 0.4, 0.7, 1],
-                }}
-                style={{ transformOrigin: '14px 8.5px' }}
-              >
-                <rect x="7" y="6" width="5" height="4" fill="#18181B" />
-                <rect x="7.8" y="6.8" width="3.4" height="2.4" fill="#FFFFFF" />
-                <rect x="10" y="7" width="1.2" height="2.2" fill="#FFFFFF" />
-                <rect x="16" y="6" width="5" height="4" fill="#18181B" />
-                <rect x="16.8" y="6.8" width="3.4" height="2.4" fill="#FFFFFF" />
-                <rect x="16.8" y="7" width="1.2" height="2.2" fill="#FFFFFF" />
-              </motion.g>
-            )}
-
-            {/* 4 stubby Clawd bottom legs scuttling/kicking cleanly */}
-            <motion.g
-              animate={
-                isCrawling || isHopping || isRappel
-                  ? { y: [0, -2, 0] }
-                  : isSleeping || isPouting
-                    ? { y: 0 }
-                    : { y: [0, 1.2, 0] }
-              }
-              transition={{
-                duration: isCrawling || isHopping ? 0.2 : 0.65,
-                repeat: isSleeping || isPouting ? 0 : Infinity,
-                ease: 'easeInOut',
-              }}
-            >
-              <rect x="5" y="17" width="3" height="4" fill="#18181B" />
-              <rect x="5.5" y="17" width="2" height="3.2" fill="#EF4444" />
-              <rect x="15" y="17" width="3" height="4" fill="#18181B" />
-              <rect x="15.5" y="17" width="2" height="3.2" fill="#2563EB" />
-            </motion.g>
-            <motion.g
-              animate={
-                isCrawling || isHopping || isRappel
-                  ? { y: [-2, 0, -2] }
-                  : isSleeping || isPouting
-                    ? { y: 0 }
-                    : { y: [1.2, 0, 1.2] }
-              }
-              transition={{
-                duration: isCrawling || isHopping ? 0.2 : 0.65,
-                repeat: isSleeping || isPouting ? 0 : Infinity,
-                ease: 'easeInOut',
-              }}
-            >
-              <rect x="10" y="17" width="3" height="4" fill="#18181B" />
-              <rect x="10.5" y="17" width="2" height="3.2" fill="#2563EB" />
-              <rect x="20" y="17" width="3" height="4" fill="#18181B" />
-              <rect x="20.5" y="17" width="2" height="3.2" fill="#EF4444" />
-            </motion.g>
-          </svg>
-        </motion.div>
+            {svgBody}
+          </motion.div>
+        ) : (
+          <div className={bodyAnimClass}>{svgBody}</div>
+        )}
       </div>
     </div>
   );
-};
+});
+
+SpideyClawdSprite.displayName = 'SpideyClawdSprite';
 
 export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) => {
   const prefersReducedMotion = useReducedMotion();
@@ -623,9 +591,12 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
     };
   }, []);
 
-  // Synchronous zero-lag scroll lockstep using MotionValues
+  // RAF-throttled scroll lockstep using MotionValues (avoids repeated layout reads during fast scroll)
   useEffect(() => {
-    const onScroll = () => {
+    let scrollRafId = 0;
+
+    const runScrollSync = () => {
+      scrollRafId = 0;
       if (isFallingRef.current) return;
 
       const { w: vw, h: vh } = getViewportSize();
@@ -690,9 +661,17 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
       }, Math.round(glideDur * 1000) + 30);
     };
 
+    const onScroll = () => {
+      if (scrollRafId !== 0) return;
+      scrollRafId = window.requestAnimationFrame(runScrollSync);
+    };
+
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', onScroll);
+      if (scrollRafId !== 0) {
+        window.cancelAnimationFrame(scrollRafId);
+      }
     };
   }, [clearScheduledTimer, getSafeFallbackSpot, isPausedQuietly, mvX, mvY, setPoseVisual, stopMotion]);
 
@@ -1447,7 +1426,7 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
           </motion.svg>
         )}
 
-        {/* Cozy floating Zzz pixels while napping */}
+        {/* Cozy floating Zzz pixels while napping (pure CSS compositor loop) */}
         {isSleepingVisual && (
           <div
             aria-hidden="true"
@@ -1455,28 +1434,21 @@ export const SakugaSpideyRoamer: React.FC<SakugaSpideyRoamerProps> = ({ mode }) 
               visual.wallCling === 'right' ? 'left-0' : 'right-0'
             }`}
           >
-            <motion.span
-              animate={{
-                y: [0, -8],
-                x: visual.wallCling === 'right' ? [0, -3] : [0, 3],
-                opacity: [0.85, 0],
-              }}
-              transition={{ duration: 2.1, repeat: Infinity, ease: 'easeOut' }}
-              className="block font-mono text-[9px] font-black text-[#4338CA] dark:text-[#A5B4FC]"
+            <span
+              className={`block font-mono text-[9px] font-black text-[#4338CA] dark:text-[#A5B4FC] ${
+                visual.wallCling === 'right' ? 'spidey-zzz-left' : 'spidey-zzz-right'
+              }`}
             >
               z
-            </motion.span>
-            <motion.span
-              animate={{
-                y: [0, -10],
-                x: visual.wallCling === 'right' ? [-2, -6] : [2, 6],
-                opacity: [0, 0.8, 0],
-              }}
-              transition={{ duration: 2.1, delay: 0.9, repeat: Infinity, ease: 'easeOut' }}
-              className="block font-mono text-[10px] font-black text-[#0284C7] dark:text-[#7DD3FC]"
+            </span>
+            <span
+              style={{ animationDelay: '0.95s' }}
+              className={`block font-mono text-[10px] font-black text-[#0284C7] dark:text-[#7DD3FC] ${
+                visual.wallCling === 'right' ? 'spidey-zzz-left' : 'spidey-zzz-right'
+              }`}
             >
               Z
-            </motion.span>
+            </span>
           </div>
         )}
 

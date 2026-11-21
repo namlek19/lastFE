@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { motion, useMotionValue, useReducedMotion } from 'framer-motion';
 import { StudyMode } from '../types/quiz';
+import { isLowPowerDevice } from '../utils/perfTier';
 
 export interface SakugaLuminousButterflyProps {
   mode: StudyMode;
@@ -354,194 +355,190 @@ interface OrigamiButterflySvgProps {
 const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
   ({ leftWingRef, rightWingRef, coreGlowRef }) => {
     const wingGlowClass =
-    'h-full w-full overflow-visible drop-shadow-[0_0_4px_rgba(79,70,229,0.55)] drop-shadow-[0_0_10px_rgba(124,58,237,0.42)] drop-shadow-[0_0_16px_rgba(219,39,119,0.28)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_11px_rgba(196,181,253,0.9)] dark:drop-shadow-[0_0_22px_rgba(103,232,249,0.65)]';
+      'h-full w-full overflow-visible drop-shadow-[0_0_6px_rgba(79,70,229,0.58)] dark:drop-shadow-[0_0_9px_rgba(196,181,253,0.92)]';
 
     return (
-        <div className="relative flex h-[36px] w-[38px] scale-90 items-center justify-center md:scale-100">
-          {/* Pinpoint luminous core aura pulsing smoothly in sync with wingbeat */}
-          <span
-            ref={coreGlowRef}
-            aria-hidden="true"
-            className="pointer-events-none absolute h-[18px] w-[18px] rounded-full bg-[#6366F1]/45 blur-[5px] dark:bg-[#E0F2FE]/70"
-          />
+      <div className="relative flex h-[36px] w-[38px] scale-90 items-center justify-center md:scale-100">
+        {/* Pinpoint luminous core aura using cheap box-shadow (zero filter blur pass) */}
+        <span
+          ref={coreGlowRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute h-[14px] w-[14px] rounded-full bg-[#6366F1]/45 shadow-[0_0_14px_4px_rgba(124,58,237,0.38)] dark:bg-[#E0F2FE]/80 dark:shadow-[0_0_16px_5px_rgba(103,232,249,0.55)]"
+        />
 
-          {/* Left 3D origami wing layer */}
-          <div
-            ref={leftWingRef}
-            style={{ transformOrigin: '50% 47%' }}
-            className="pointer-events-none absolute inset-0 will-change-transform"
-          >
-            <svg viewBox="0 0 36 34" aria-hidden="true" className={wingGlowClass}>
-              <polygon
-                points="18,14 1.5,5 12,18"
-                className="fill-[#312E81] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
-                strokeWidth="0.45"
-                strokeLinejoin="round"
-              />
-              <polygon
-                points="18,14 12,18 17.4,19"
-                className="fill-[#4F46E5] stroke-[#E0E7FF]/55 dark:fill-[#DDD6FE] dark:[stroke:none]"
-                strokeWidth="0.45"
-                strokeLinejoin="round"
-              />
-              <polygon
-                points="17.6,18 8.5,20 12.2,31.5"
-                className="fill-[#1E1B4B] stroke-[#E0E7FF]/55 dark:fill-[#F5F3FF] dark:[stroke:none]"
-                strokeWidth="0.45"
-                strokeLinejoin="round"
-              />
-              <polygon
-                points="17.6,18 12.2,31.5 16.2,24.5"
-                className="fill-[#DB2777] stroke-[#E0E7FF]/55 dark:fill-[#F472B6] dark:[stroke:none]"
-                strokeWidth="0.45"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-
-          {/* Right 3D origami wing layer */}
-          <div
-            ref={rightWingRef}
-            style={{ transformOrigin: '50% 47%' }}
-            className="pointer-events-none absolute inset-0 will-change-transform"
-          >
-            <svg viewBox="0 0 36 34" aria-hidden="true" className={wingGlowClass}>
-              <polygon
-                points="18,14 34.5,5 24,18"
-                className="fill-[#3730A3] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
-                strokeWidth="0.45"
-                strokeLinejoin="round"
-              />
-              <polygon
-                points="18,14 24,18 18.6,19"
-                className="fill-[#6D28D9] stroke-[#E0E7FF]/55 dark:fill-[#E0E7FF] dark:[stroke:none]"
-                strokeWidth="0.45"
-                strokeLinejoin="round"
-              />
-              <polygon
-                points="18.4,18 27.5,20 23.8,31.5"
-                className="fill-[#1E1B4B] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
-                strokeWidth="0.45"
-                strokeLinejoin="round"
-              />
-              <polygon
-                points="18.4,18 23.8,31.5 19.8,24.5"
-                className="fill-[#0284C7] stroke-[#E0E7FF]/55 dark:fill-[#C4B5FD] dark:[stroke:none]"
-                strokeWidth="0.45"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-
-          {/* Pinpoint origami spine */}
-          <svg
-            viewBox="0 0 36 34"
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
-          >
+        {/* Left 3D origami wing layer */}
+        <div
+          ref={leftWingRef}
+          style={{ transformOrigin: '50% 47%' }}
+          className="pointer-events-none absolute inset-0 will-change-transform"
+        >
+          <svg viewBox="0 0 36 34" aria-hidden="true" className={wingGlowClass}>
             <polygon
-              points="18,11.5 18.8,17 18,22 17.2,17"
-              className="fill-[#0F172A] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
-              strokeWidth="0.4"
+              points="18,14 1.5,5 12,18"
+              className="fill-[#312E81] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="18,14 12,18 17.4,19"
+              className="fill-[#4F46E5] stroke-[#E0E7FF]/55 dark:fill-[#DDD6FE] dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="17.6,18 8.5,20 12.2,31.5"
+              className="fill-[#1E1B4B] stroke-[#E0E7FF]/55 dark:fill-[#F5F3FF] dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="17.6,18 12.2,31.5 16.2,24.5"
+              className="fill-[#DB2777] stroke-[#E0E7FF]/55 dark:fill-[#F472B6] dark:[stroke:none]"
+              strokeWidth="0.45"
               strokeLinejoin="round"
             />
           </svg>
         </div>
-        );
+
+        {/* Right 3D origami wing layer */}
+        <div
+          ref={rightWingRef}
+          style={{ transformOrigin: '50% 47%' }}
+          className="pointer-events-none absolute inset-0 will-change-transform"
+        >
+          <svg viewBox="0 0 36 34" aria-hidden="true" className={wingGlowClass}>
+            <polygon
+              points="18,14 34.5,5 24,18"
+              className="fill-[#3730A3] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="18,14 24,18 18.6,19"
+              className="fill-[#6D28D9] stroke-[#E0E7FF]/55 dark:fill-[#E0E7FF] dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="18.4,18 27.5,20 23.8,31.5"
+              className="fill-[#1E1B4B] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="18.4,18 23.8,31.5 19.8,24.5"
+              className="fill-[#0284C7] stroke-[#E0E7FF]/55 dark:fill-[#C4B5FD] dark:[stroke:none]"
+              strokeWidth="0.45"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+
+        {/* Pinpoint origami spine */}
+        <svg
+          viewBox="0 0 36 34"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+        >
+          <polygon
+            points="18,11.5 18.8,17 18,22 17.2,17"
+            className="fill-[#0F172A] stroke-[#E0E7FF]/55 dark:fill-[#FFFFFF] dark:[stroke:none]"
+            strokeWidth="0.4"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+    );
   }
-        );
+);
 
-        OrigamiButterflySvg.displayName = 'OrigamiButterflySvg';
+OrigamiButterflySvg.displayName = 'OrigamiButterflySvg';
 
-        const MINI_VARIANT_CLASSES: Record<
+const MINI_VARIANT_CLASSES: Record<
   0 | 1 | 2,
-        {leftTop: string; leftBottom: string; rightTop: string; rightBottom: string }
+  { leftTop: string; leftBottom: string; rightTop: string; rightBottom: string }
 > = {
-          0: {
-          leftTop: 'fill-[#312E81] dark:fill-[#FFFFFF]',
-        leftBottom: 'fill-[#0284C7] dark:fill-[#E0F2FE]',
-        rightTop: 'fill-[#1E1B4B] dark:fill-[#E0F2FE]',
-        rightBottom: 'fill-[#4F46E5] dark:fill-[#A5F3FC]',
+  0: {
+    leftTop: 'fill-[#312E81] dark:fill-[#FFFFFF]',
+    leftBottom: 'fill-[#0284C7] dark:fill-[#E0F2FE]',
+    rightTop: 'fill-[#1E1B4B] dark:fill-[#E0F2FE]',
+    rightBottom: 'fill-[#4F46E5] dark:fill-[#A5F3FC]',
   },
-        1: {
-          leftTop: 'fill-[#3730A3] dark:fill-[#FFFFFF]',
-        leftBottom: 'fill-[#6D28D9] dark:fill-[#EDE9FE]',
-        rightTop: 'fill-[#312E81] dark:fill-[#EDE9FE]',
-        rightBottom: 'fill-[#7C3AED] dark:fill-[#DDD6FE]',
+  1: {
+    leftTop: 'fill-[#3730A3] dark:fill-[#FFFFFF]',
+    leftBottom: 'fill-[#6D28D9] dark:fill-[#EDE9FE]',
+    rightTop: 'fill-[#312E81] dark:fill-[#EDE9FE]',
+    rightBottom: 'fill-[#7C3AED] dark:fill-[#DDD6FE]',
   },
-        2: {
-          leftTop: 'fill-[#4C1D95] dark:fill-[#FFFFFF]',
-        leftBottom: 'fill-[#DB2777] dark:fill-[#FCE7F3]',
-        rightTop: 'fill-[#312E81] dark:fill-[#FCE7F3]',
-        rightBottom: 'fill-[#BE185D] dark:fill-[#FBCFE8]',
+  2: {
+    leftTop: 'fill-[#4C1D95] dark:fill-[#FFFFFF]',
+    leftBottom: 'fill-[#DB2777] dark:fill-[#FCE7F3]',
+    rightTop: 'fill-[#312E81] dark:fill-[#FCE7F3]',
+    rightBottom: 'fill-[#BE185D] dark:fill-[#FBCFE8]',
   },
 };
 
-        const MiniOrigamiButterflySvg: React.FC<{ variant: 0 | 1 | 2; flapDuration: number }> = ({
-          variant,
-          flapDuration,
-}) => {
-        const palette = MINI_VARIANT_CLASSES[variant];
-        const glowClass =
-        'pointer-events-none absolute inset-0 h-full w-full overflow-visible drop-shadow-[0_0_4px_rgba(79,70,229,0.55)] drop-shadow-[0_0_9px_rgba(124,58,237,0.4)] dark:drop-shadow-[0_0_3px_rgba(255,255,255,0.92)] dark:drop-shadow-[0_0_8px_rgba(196,181,253,0.75)] dark:drop-shadow-[0_0_14px_rgba(103,232,249,0.5)]';
+const MiniOrigamiButterflySvg: React.FC<{ variant: 0 | 1 | 2; flapDuration: number }> = memo(
+  ({ variant, flapDuration }) => {
+    const palette = MINI_VARIANT_CLASSES[variant];
+    const animStyle = { animationDuration: `${flapDuration}s` };
 
-        return (
-          <div className="relative h-6 w-6">
-            <motion.svg
-              viewBox="0 0 28 26"
-              aria-hidden="true"
-              style={{ transformOrigin: '50% 50%', transformPerspective: 75 }}
-              animate={{ rotateY: [-12, 72, -12] }}
-              transition={{ duration: flapDuration, repeat: Infinity, ease: 'easeInOut' }}
-              className={glowClass}
-            >
-              <polygon
-                points="14,11 1.5,4 9.5,14.5"
-                className={`${palette.leftTop} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
-                strokeWidth="0.4"
-                strokeLinejoin="round"
-              />
-              <polygon
-                points="13.7,14 6.5,15.5 9.5,24.5"
-                className={`${palette.leftBottom} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
-                strokeWidth="0.4"
-                strokeLinejoin="round"
-              />
-            </motion.svg>
-            <motion.svg
-              viewBox="0 0 28 26"
-              aria-hidden="true"
-              style={{ transformOrigin: '50% 50%', transformPerspective: 75 }}
-              animate={{ rotateY: [12, -72, 12] }}
-              transition={{ duration: flapDuration, repeat: Infinity, ease: 'easeInOut' }}
-              className={glowClass}
-            >
-              <polygon
-                points="14,11 26.5,4 18.5,14.5"
-                className={`${palette.rightTop} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
-                strokeWidth="0.4"
-                strokeLinejoin="round"
-              />
-              <polygon
-                points="14.3,14 21.5,15.5 18.5,24.5"
-                className={`${palette.rightBottom} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
-                strokeWidth="0.4"
-                strokeLinejoin="round"
-              />
-            </motion.svg>
-            <svg
-              viewBox="0 0 28 26"
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
-            >
-              <polygon
-                points="14,9 14.7,13.5 14,18 13.3,13.5"
-                className="fill-[#0F172A] dark:fill-[#FFFFFF]"
-              />
-            </svg>
-          </div>
-          );
-};
+    return (
+      <div className="relative h-6 w-6 drop-shadow-[0_0_5px_rgba(124,58,237,0.5)] dark:drop-shadow-[0_0_7px_rgba(196,181,253,0.85)]">
+        <svg
+          viewBox="0 0 28 26"
+          aria-hidden="true"
+          style={animStyle}
+          className="bf-mini-wing-l pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+        >
+          <polygon
+            points="14,11 1.5,4 9.5,14.5"
+            className={`${palette.leftTop} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
+            strokeWidth="0.4"
+            strokeLinejoin="round"
+          />
+          <polygon
+            points="13.7,14 6.5,15.5 9.5,24.5"
+            className={`${palette.leftBottom} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
+            strokeWidth="0.4"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <svg
+          viewBox="0 0 28 26"
+          aria-hidden="true"
+          style={animStyle}
+          className="bf-mini-wing-r pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+        >
+          <polygon
+            points="14,11 26.5,4 18.5,14.5"
+            className={`${palette.rightTop} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
+            strokeWidth="0.4"
+            strokeLinejoin="round"
+          />
+          <polygon
+            points="14.3,14 21.5,15.5 18.5,24.5"
+            className={`${palette.rightBottom} stroke-[#E0E7FF]/45 dark:[stroke:none]`}
+            strokeWidth="0.4"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <svg
+          viewBox="0 0 28 26"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+        >
+          <polygon
+            points="14,9 14.7,13.5 14,18 13.3,13.5"
+            className="fill-[#0F172A] dark:fill-[#FFFFFF]"
+          />
+        </svg>
+      </div>
+    );
+  }
+);
+
+MiniOrigamiButterflySvg.displayName = 'MiniOrigamiButterflySvg';
 
           export const SakugaLuminousButterfly: React.FC<SakugaLuminousButterflyProps> = ({mode}) => {
   const prefersReducedMotion = Boolean(useReducedMotion());
@@ -659,28 +656,36 @@ const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
                     const speedPxPerSec = randBetween(92, 118);
                     const durationMs = clamp((lut.totalLen / speedPxPerSec) * 1000, 7500, 18000);
 
-                    const startTime = performance.now();
-                    let prevNow = startTime;
-                    let lastTrailSpawn = startTime;
+      const startTime = performance.now();
+      let prevNow = startTime;
+      let lastDrawNow = 0;
+      let lastTrailSpawn = startTime;
+      const minStepMs = isLowPowerDevice() ? 24 : 0;
 
-                    const initSample = sampleByArcLength(lut, 0);
-                    let curAngle = Math.atan2(initSample.ty, initSample.tx) * (180 / Math.PI) + 90;
+      const initSample = sampleByArcLength(lut, 0);
+      let curAngle = Math.atan2(initSample.ty, initSample.tx) * (180 / Math.PI) + 90;
 
-                    mvX.set(initSample.x);
-                    mvY.set(initSample.y);
-                    mvRotate.set(curAngle);
-                    mvOpacity.set(0);
+      mvX.set(initSample.x);
+      mvY.set(initSample.y);
+      mvRotate.set(curAngle);
+      mvOpacity.set(0);
 
-                    isVisibleRef.current = true;
-                    hasVisitedOnceRef.current = true;
-                    setIsVisible(true);
+      isVisibleRef.current = true;
+      hasVisitedOnceRef.current = true;
+      setIsVisible(true);
 
       const step = (now: number) => {
         if (unmounted || !isVisibleRef.current) return;
 
-                    const elapsed = now - startTime;
-                    const dt = Math.min(0.05, Math.max(0.001, (now - prevNow) / 1000));
-                    prevNow = now;
+        if (minStepMs > 0 && lastDrawNow !== 0 && now - lastDrawNow < minStepMs) {
+          rafRef.current = window.requestAnimationFrame(step);
+          return;
+        }
+        lastDrawNow = now;
+
+        const elapsed = now - startTime;
+        const dt = Math.min(0.05, Math.max(0.001, (now - prevNow) / 1000));
+        prevNow = now;
 
                     const s = Math.min(1, elapsed / durationMs);
                     const sample = sampleByArcLength(lut, s);
@@ -879,7 +884,7 @@ const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
             trailElRefs.current[i] = el;
           }}
           style={{ opacity: 0, width: 3, height: 3, backgroundColor: '#FFFFFF' }}
-          className="pointer-events-none fixed left-0 top-0 rounded-full drop-shadow-[0_0_4px_rgba(79,70,229,0.75)] dark:drop-shadow-[0_0_4px_rgba(196,181,253,0.9)]"
+          className="pointer-events-none fixed left-0 top-0 rounded-full shadow-[0_0_5px_1px_rgba(79,70,229,0.65)] dark:shadow-[0_0_6px_1px_rgba(196,181,253,0.9)]"
         />
       ))}
 
@@ -963,7 +968,7 @@ const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
                             initial={{ scale: 0.3, opacity: 0.9 }}
                             animate={{ scale: 2.7, opacity: 0 }}
                             transition={{ duration: 0.58, ease: 'easeOut' }}
-                            className="pointer-events-none absolute -left-6 -top-6 h-12 w-12 rounded-full border-2 border-[#4F46E5] drop-shadow-[0_0_8px_rgba(124,58,237,0.75)] dark:border-[#67E8F9] dark:drop-shadow-[0_0_10px_rgba(167,139,250,0.85)]"
+                            className="pointer-events-none absolute -left-6 -top-6 h-12 w-12 rounded-full border-2 border-[#4F46E5] shadow-[0_0_10px_rgba(124,58,237,0.65)] dark:border-[#67E8F9] dark:shadow-[0_0_12px_rgba(167,139,250,0.85)]"
                           />
 
                           {/* Scattered flock of 6 glowing mini origami butterflies */}
@@ -1018,7 +1023,7 @@ const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
                                 delay: shard.delay,
                                 ease: 'easeOut',
                               }}
-                              className="pointer-events-none absolute h-4 w-4 overflow-visible drop-shadow-[0_0_5px_rgba(79,70,229,0.65)] dark:drop-shadow-[0_0_6px_rgba(103,232,249,0.85)]"
+                              className="pointer-events-none absolute h-4 w-4 overflow-visible sm:drop-shadow-[0_0_4px_rgba(79,70,229,0.55)] sm:dark:drop-shadow-[0_0_5px_rgba(103,232,249,0.8)]"
                             >
                               <polygon
                                 points={shard.points}
@@ -1051,7 +1056,7 @@ const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
                                   delay: mote.delay,
                                   ease: 'easeOut',
                                 }}
-                                className="pointer-events-none absolute h-3 w-3 overflow-visible drop-shadow-[0_0_5px_rgba(79,70,229,0.75)] dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.95)]"
+                                className="pointer-events-none absolute h-3 w-3 overflow-visible sm:drop-shadow-[0_0_4px_rgba(79,70,229,0.55)] sm:dark:drop-shadow-[0_0_5px_rgba(103,232,249,0.8)]"
                               >
                                 <polygon points="8,1 9.5,6.5 15,8 9.5,9.5 8,15 6.5,9.5 1,8 6.5,6.5" fill={mote.color} />
                               </motion.svg>
@@ -1075,7 +1080,7 @@ const OrigamiButterflySvg: React.FC<OrigamiButterflySvgProps> = memo(
                                   height: mote.size,
                                   backgroundColor: mote.color,
                                 }}
-                                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full drop-shadow-[0_0_5px_rgba(79,70,229,0.75)] dark:drop-shadow-[0_0_6px_rgba(103,232,249,0.95)]"
+                                className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_5px_1px_rgba(79,70,229,0.7)] dark:shadow-[0_0_6px_1px_rgba(103,232,249,0.9)]"
                               />
                             )
                           )}
