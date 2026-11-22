@@ -22,7 +22,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { ChapterMeta, isAnswerCorrect, SUBJECTS } from '../data';
+import { ChapterMeta, getQuestionsForExamPaper, isAnswerCorrect, SUBJECTS } from '../data';
 import {
   ExamHistoryItem,
   ExamType,
@@ -229,6 +229,10 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     const [phase, setPhase] = useState<ExamPhase>('lobby');
     const [examType, setExamType] = useState<ExamType>('standard');
     const [activeExamType, setActiveExamType] = useState<ExamType>('standard');
+    const [selectedExamCode, setSelectedExamCode] = useState<string>(
+      () => SUBJECTS[subject].examPapers?.[0]?.code ?? ''
+    );
+    const [activeExamCode, setActiveExamCode] = useState<string>('');
     const [timerEnabled, setTimerEnabled] = useState<boolean>(true);
     const [examQuestions, setExamQuestions] = useState<QuestionItem[]>([]);
     const [answers, setAnswers] = useState<Record<string, string[]>>({});
@@ -280,6 +284,9 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
       submittedRef.current = false;
       elapsedSecondsRef.current = 0;
       setPhase('lobby');
+      setExamType('standard');
+      setSelectedExamCode(SUBJECTS[subject].examPapers?.[0]?.code ?? '');
+      setActiveExamCode('');
       setExamQuestions([]);
       setAnswers({});
       setCurrentIndex(0);
@@ -302,18 +309,26 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     const startNewExam = useCallback(() => {
       let generated: QuestionItem[] = [];
       let durationSec = EXAM_DURATION_SECONDS;
+      let chosenCode = '';
 
       if (examType === 'mastered') {
         const currentMastered = allSubjectQuestions.filter(q =>
           isMastered(progress.questions[q.id])
         );
         if (currentMastered.length === 0) return;
-        generated = fisherYatesShuffle(currentMastered).slice(0, 60);
+        generated = fisherYatesShuffle(currentMastered).slice(0, subjectMeta.examTotal);
         const mins =
-          currentMastered.length >= 60
+          currentMastered.length >= subjectMeta.examTotal
             ? 45
             : Math.max(5, Math.round(currentMastered.length * 0.75));
         durationSec = mins * 60;
+      } else if (examType === 'past_exam' && selectedExamCode) {
+        generated = getQuestionsForExamPaper(allSubjectQuestions, selectedExamCode);
+        if (generated.length === 0) {
+          generated = generateMockExam(allSubjectQuestions, subject);
+        }
+        chosenCode = selectedExamCode;
+        durationSec = EXAM_DURATION_SECONDS;
       } else {
         generated = generateMockExam(allSubjectQuestions, subject);
         durationSec = EXAM_DURATION_SECONDS;
@@ -322,6 +337,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
       submittedRef.current = false;
       elapsedSecondsRef.current = 0;
       setActiveExamType(examType);
+      setActiveExamCode(chosenCode);
       setExamQuestions(generated);
       setAnswers({});
       setCurrentIndex(0);
@@ -334,7 +350,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
       setIsMobileResultsSheetOpen(false);
       setBulkFlaggedConfirm(null);
       setPhase('active');
-  }, [allSubjectQuestions, examType, progress.questions, subject]);
+  }, [allSubjectQuestions, examType, progress.questions, selectedExamCode, subject, subjectMeta.examTotal]);
 
   const handleSubmitExam = useCallback(() => {
     if (submittedRef.current || examQuestions.length === 0) return;
@@ -363,7 +379,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
         chapterBreakdown[q.chapter].correct += 1;
       }
 
-      if (activeExamType === 'standard' && selected.length > 0) {
+      if ((activeExamType === 'standard' || activeExamType === 'past_exam') && selected.length > 0) {
         batchAttempts.push({ questionId: q.id, isCorrect: correct });
       } else if (activeExamType === 'mastered' && correct && selected.length > 0) {
         batchAttempts.push({ questionId: q.id, isCorrect: true });
@@ -387,6 +403,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
       id: `exam_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       subject,
       examType: activeExamType,
+      ...(activeExamCode ? { examCode: activeExamCode } : {}),
       timestamp: Date.now(),
       totalQuestions,
       correctCount,
@@ -604,9 +621,15 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
   // =========================
   if (phase === 'lobby') {
     const isMasteredMode = examType === 'mastered';
+    const isPastExamMode = examType === 'past_exam';
+    const hasPastExams = Boolean(subjectMeta.examPapers && subjectMeta.examPapers.length > 0);
+    const unitLabel = subjectMeta.chapterUnitLabel ?? 'Chương';
+    const selectedPaperMeta = subjectMeta.examPapers?.find(p => p.code === selectedExamCode);
     const currentPlannedQuestions = isMasteredMode
       ? masteredExamMeta.questionCount
-      : subjectMeta.examTotal;
+      : isPastExamMode && selectedPaperMeta
+        ? selectedPaperMeta.questionCount
+        : subjectMeta.examTotal;
     const currentPlannedMinutes = isMasteredMode ? masteredExamMeta.durationMinutes : 60;
     const isStartDisabled = isMasteredMode && masteredCount === 0;
 
@@ -632,7 +655,9 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                     ? currentPlannedQuestions > 0
                       ? `Đề thi thử ${currentPlannedQuestions} câu`
                       : 'Ôn các câu đã học'
-                    : `Đề thi thử ${subjectMeta.examTotal} câu`}
+                    : isPastExamMode && selectedPaperMeta
+                      ? `Đề gốc ${selectedPaperMeta.code} • ${selectedPaperMeta.questionCount} câu`
+                      : `Đề thi thử ${subjectMeta.examTotal} câu`}
                 </span>
                 <h2 className="mt-2.5 text-lg font-bold text-[#18181B] dark:text-[#F5F5F4] sm:text-xl">
                   Thi thử trộn đề — {subjectMeta.code}
@@ -649,13 +674,13 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
               </div>
             </div>
 
-            {/* 2-Mode Exam Selector Cards (Mobile-First grid-cols-1 sm:grid-cols-2 gap-3) */}
+            {/* Exam Mode Selector Cards */}
             <div className="mt-4 sm:mt-5">
               <div className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
                 Chọn chế độ đề thi
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className={`grid grid-cols-1 gap-3 ${hasPastExams ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
                 {/* Mode 1: Standard Curriculum Exam */}
                 <button
                   type="button"
@@ -687,12 +712,50 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                   </div>
                   <div className="mt-3 flex items-center gap-2">
                     <span className="rounded-md border border-[#A5B4FC] bg-[#EEF2FF] px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-[#3730A3] tabular-nums dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
-                      60 câu • 60 phút
+                      {subjectMeta.examTotal} câu • 60 phút
                     </span>
                   </div>
                 </button>
 
-                {/* Mode 2: Mastered Pool Review Exam */}
+                {/* Mode 2 (Optional): Official Past Exam Paper */}
+                {hasPastExams && (
+                  <button
+                    type="button"
+                    onClick={() => setExamType('past_exam')}
+                    className={`flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 text-left transition sm:p-4 ${examType === 'past_exam'
+                      ? 'border-[#D97706] bg-[#FEF3C7] ring-1 ring-[#D97706] dark:border-[#FBBF24] dark:bg-[#78350F]/45 dark:ring-[#FBBF24]'
+                      : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#D97706] hover:bg-[#FEF3C7]/65 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#FBBF24] dark:hover:bg-[#78350F]/30'
+                      }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`text-sm font-bold ${examType === 'past_exam'
+                          ? 'text-[#92400E] dark:text-[#FDE68A]'
+                          : 'text-[#18181B] dark:text-[#F5F5F4]'
+                          }`}
+                      >
+                        Thi theo mã đề cũ
+                      </span>
+                      <span
+                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${examType === 'past_exam'
+                          ? 'border-[#D97706] bg-[#D97706] text-white dark:border-[#FBBF24] dark:bg-[#FBBF24] dark:text-[#451A03]'
+                          : 'border-[#C6BEB0] dark:border-[#323833]'
+                          }`}
+                      >
+                        {examType === 'past_exam' && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                        )}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className="rounded-md border border-[#F59E0B] bg-[#FEF3C7] px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-[#92400E] tabular-nums dark:border-[#FBBF24]/60 dark:bg-[#78350F]/55 dark:text-[#FDE68A]">
+                        {subjectMeta.examPapers!.length} đề gốc • {subjectMeta.examTotal} câu
+                      </span>
+                    </div>
+                  </button>
+                )}
+
+                {/* Mode 3: Mastered Pool Review Exam */}
                 <button
                   type="button"
                   onClick={() => setExamType('mastered')}
@@ -730,11 +793,16 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
               </div>
             </div>
 
-            {/* Mode Details: Standard Chapter Quota Matrix vs Mastered Pool Summary */}
-            {!isMasteredMode ? (
+            {/* Mode Details: Standard Chapter Quota Matrix vs Past Exam Picker vs Mastered Pool Summary */}
+            {examType === 'standard' ? (
               <div className="mt-5 sm:mt-6">
-                <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
-                  <span>Cấu trúc phân bổ câu hỏi</span>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
+                  <span>
+                    Cấu trúc phân bổ câu hỏi
+                    {subjectMeta.hasUnspecifiedChapterQuotas
+                      ? ` (Phủ đều cả ${subjectMeta.chapters.length} ${unitLabel}s)`
+                      : ''}
+                  </span>
                   <span className="tabular-nums text-[#4338CA] dark:text-[#A5B4FC]">
                     Tổng {subjectMeta.examTotal} câu
                   </span>
@@ -748,13 +816,64 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                         key={ch.chapter}
                         className="flex items-center justify-between gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-3 py-2.5 dark:border-[#2C302B] dark:bg-[#1C1F1C] sm:px-4 sm:py-3"
                       >
-                        <span className="text-xs font-semibold text-[#44403C] dark:text-[#D4D4D8]">
-                          Chương {ch.chapter}
-                        </span>
+                        <div className="min-w-0">
+                          <span className="block text-xs font-bold text-[#44403C] dark:text-[#D4D4D8]">
+                            {unitLabel} {ch.chapter}
+                          </span>
+                          <span className="block truncate text-[11px] text-[#656058] dark:text-[#9CA39B]">
+                            {ch.title}
+                          </span>
+                        </div>
                         <span className="shrink-0 rounded-lg border border-[#A5B4FC] bg-[#EEF2FF] px-2.5 py-0.5 text-xs font-bold text-[#3730A3] tabular-nums dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
-                          {quota} câu
+                          {subjectMeta.hasUnspecifiedChapterQuotas ? 'Có trong đề' : `${quota} câu`}
                         </span>
                       </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : isPastExamMode && hasPastExams ? (
+              <div className="mt-5 sm:mt-6">
+                <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
+                  <span>Chọn mã đề thi gốc muốn làm</span>
+                  <span className="tabular-nums text-[#92400E] dark:text-[#FDE68A]">
+                    {subjectMeta.examPapers!.length} đề chính thức
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                  {subjectMeta.examPapers!.map(paper => {
+                    const isSelected = paper.code === selectedExamCode;
+                    const paperQuestions = getQuestionsForExamPaper(allSubjectQuestions, paper.code);
+                    const paperMastered = paperQuestions.filter(q =>
+                      isMastered(progress.questions[q.id])
+                    ).length;
+
+                    return (
+                      <button
+                        key={paper.code}
+                        type="button"
+                        onClick={() => setSelectedExamCode(paper.code)}
+                        className={`flex cursor-pointer flex-col justify-between gap-2 rounded-xl border p-3 text-left transition ${isSelected
+                          ? 'border-[#D97706] bg-[#FEF3C7] ring-1 ring-[#D97706] dark:border-[#FBBF24] dark:bg-[#78350F]/45 dark:ring-[#FBBF24]'
+                          : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#D97706] hover:bg-[#FEF3C7]/60 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#FBBF24] dark:hover:bg-[#78350F]/25'
+                          }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-black tracking-wide text-[#18181B] dark:text-[#F5F5F4]">
+                            {paper.code}
+                          </span>
+                          <span className="rounded-md border border-[#F59E0B] bg-white px-2 py-0.5 text-[10.5px] font-bold text-[#92400E] tabular-nums dark:border-[#FBBF24]/50 dark:bg-[#161816] dark:text-[#FDE68A]">
+                            {paper.questionCount} câu
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 text-[11px] text-[#656058] dark:text-[#9CA39B]">
+                          <span className="truncate">{paper.label}</span>
+                          <span className="shrink-0 font-semibold text-[#047857] tabular-nums dark:text-[#34D399]">
+                            Thuộc {paperMastered}/{paperQuestions.length}
+                          </span>
+                        </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -785,7 +904,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                             key={ch.chapter}
                             className="rounded-md border border-[#10B981] bg-white px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-[#064E3B] tabular-nums dark:border-[#10B981]/60 dark:bg-[#1C1F1C] dark:text-[#34D399]"
                           >
-                            Chương {ch.chapter}: {chMastered} câu
+                            {unitLabel} {ch.chapter}: {chMastered} câu
                           </span>
                         );
                       })}
@@ -878,6 +997,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                 {subjectHistory.map(item => {
                   const passed = item.scoreOn10 >= 5;
                   const isItemMasteredMode = item.examType === 'mastered';
+                  const isItemPastExamMode = item.examType === 'past_exam';
                   return (
                     <div
                       key={item.id}
@@ -901,10 +1021,16 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                               <span
                                 className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${isItemMasteredMode
                                   ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
-                                  : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                                  : isItemPastExamMode
+                                    ? 'border-[#F59E0B] bg-[#FEF3C7] text-[#92400E] dark:border-[#FBBF24]/60 dark:bg-[#78350F]/55 dark:text-[#FDE68A]'
+                                    : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
                                   }`}
                               >
-                                {isItemMasteredMode ? 'Ôn đã thuộc' : 'Đề đề cương'}
+                                {isItemMasteredMode
+                                  ? 'Ôn đã thuộc'
+                                  : isItemPastExamMode && item.examCode
+                                    ? `Đề ${item.examCode}`
+                                    : 'Đề đề cương'}
                               </span>
                             </div>
                             <div className="mt-0.5 text-xs text-[#656058] dark:text-[#9CA39B]">

@@ -31,7 +31,9 @@ interface SubjectPredictionSpec {
   tiers: readonly TierPredictionSpec[];
 }
 
-const TIER_SCORE_PREDICTIONS: Record<SubjectId, SubjectPredictionSpec> = {
+type LazyCapableSubjectId = 'vnr202' | 'mln131' | 'wdu203c';
+
+const TIER_SCORE_PREDICTIONS: Record<LazyCapableSubjectId, SubjectPredictionSpec> = {
   vnr202: {
     code: 'VNR202',
     examRule: '20-20-20',
@@ -171,8 +173,8 @@ export const TierInfoModal: React.FC<TierInfoModalProps> = ({
   onSelectTier,
   onClose,
 }) => {
-  const safeSubject: SubjectId = subject === 'mln131' ? 'mln131' : 'vnr202';
-  const [previewSubject, setPreviewSubject] = useState<SubjectId>(safeSubject);
+  const safeSubject: LazyCapableSubjectId = subject === 'mln131' ? 'mln131' : 'vnr202';
+  const [previewSubject, setPreviewSubject] = useState<LazyCapableSubjectId>(safeSubject);
 
   useEffect(() => {
     if (isOpen) {

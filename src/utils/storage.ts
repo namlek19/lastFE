@@ -50,7 +50,16 @@ export function normalizeTier(raw: unknown): StudyTier {
 }
 
 export function normalizeSubject(raw: unknown): SubjectId {
-  return raw === 'mln131' ? 'mln131' : 'vnr202';
+  if (
+    raw === 'mln131' ||
+    raw === 'vnr202' ||
+    raw === 'mln122' ||
+    raw === 'wdu202c' ||
+    raw === 'wdu203c'
+  ) {
+    return raw;
+  }
+  return 'vnr202';
 }
 
 export function loadStore(): UserProgressStore {

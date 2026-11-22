@@ -6,6 +6,12 @@ export interface ChapterMeta {
   count: number;
 }
 
+export interface ExamPaperMeta {
+  code: string;
+  label: string;
+  questionCount: number;
+}
+
 export interface SubjectMeta {
   id: SubjectId;
   code: string;
@@ -15,6 +21,10 @@ export interface SubjectMeta {
   examTotal: number;
   examQuotas: Record<number, number>;
   chapters: ChapterMeta[];
+  supportsLazyTiers?: boolean;
+  chapterUnitLabel?: string;
+  hasUnspecifiedChapterQuotas?: boolean;
+  examPapers?: ExamPaperMeta[];
 }
 
 export interface SubjectLoadedBundle {
@@ -195,23 +205,55 @@ const WDU203C_LAZY_EXTRA_IDS = [
 
 const WDU203C_LAZY_IDS = new Set<string>([...WDU203C_LAZY_MAX_IDS, ...WDU203C_LAZY_EXTRA_IDS]);
 
+const EMPTY_ID_SET = new Set<string>();
+
 const LAZY_MAX_SETS: Record<SubjectId, Set<string>> = {
   mln131: MLN131_LAZY_MAX_IDS,
   vnr202: VNR202_LAZY_MAX_IDS,
   wdu203c: WDU203C_LAZY_MAX_IDS,
+  mln122: EMPTY_ID_SET,
+  wdu202c: EMPTY_ID_SET,
 };
 
 const LAZY_SETS: Record<SubjectId, Set<string>> = {
   mln131: MLN131_LAZY_IDS,
   vnr202: VNR202_LAZY_IDS,
   wdu203c: WDU203C_LAZY_IDS,
+  mln122: EMPTY_ID_SET,
+  wdu202c: EMPTY_ID_SET,
 };
 
 const SUBJECT_PREFIX_MAP: Record<SubjectId, { prefix: string; maxNum: number }> = {
   vnr202: { prefix: 'vnr-', maxNum: 404 },
   mln131: { prefix: 'mln-', maxNum: 432 },
   wdu203c: { prefix: 'wdu-', maxNum: 274 },
+  mln122: { prefix: 'mln12-', maxNum: 396 },
+  wdu202c: { prefix: 'wdu2-', maxNum: 145 },
 };
+
+export function subjectSupportsLazyTiers(subject: SubjectId): boolean {
+  return SUBJECTS[subject].supportsLazyTiers !== false;
+}
+
+export function getEffectiveTier(subject: SubjectId, tier: StudyTier): StudyTier {
+  return subjectSupportsLazyTiers(subject) ? tier : 'hardcore';
+}
+
+export function getQuestionsForExamPaper(
+  questions: readonly QuestionItem[],
+  examCode: string
+): QuestionItem[] {
+  return questions
+    .filter((q) => q.exams?.includes(examCode))
+    .slice()
+    .sort((a, b) => {
+      const idxA =
+        a.examAppearances?.find((ap) => ap.examCode === examCode)?.questionIndex ?? 9999;
+      const idxB =
+        b.examAppearances?.find((ap) => ap.examCode === examCode)?.questionIndex ?? 9999;
+      return idxA - idxB;
+    });
+}
 
 export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
   mln131: {
@@ -221,6 +263,8 @@ export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
     shortName: 'CNXH Khoa học',
     totalQuestions: 432,
     examTotal: 60,
+    supportsLazyTiers: true,
+    chapterUnitLabel: 'Chương',
     examQuotas: {
       1: 5,
       2: 5,
@@ -251,6 +295,8 @@ export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
     shortName: 'Lịch sử Đảng',
     totalQuestions: 404,
     examTotal: 60,
+    supportsLazyTiers: true,
+    chapterUnitLabel: 'Chương',
     examQuotas: {
       1: 20,
       2: 20,
@@ -274,6 +320,112 @@ export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
       },
     ],
   },
+  mln122: {
+    id: 'mln122',
+    code: 'MLN122',
+    name: 'Kinh tế chính trị Mác - Lênin',
+    shortName: 'Kinh tế chính trị',
+    totalQuestions: 396,
+    examTotal: 60,
+    supportsLazyTiers: false,
+    chapterUnitLabel: 'Chương',
+    examQuotas: {
+      1: 5,
+      2: 10,
+      3: 10,
+      4: 10,
+      5: 10,
+      6: 15,
+    },
+    chapters: [
+      {
+        chapter: 1,
+        title: 'Đối tượng, phương pháp nghiên cứu và chức năng của Kinh tế chính trị Mác - Lênin',
+        count: 38,
+      },
+      {
+        chapter: 2,
+        title: 'Hàng hóa, thị trường và vai trò của các chủ thể tham gia thị trường',
+        count: 83,
+      },
+      {
+        chapter: 3,
+        title: 'Giá trị thặng dư trong nền kinh tế thị trường',
+        count: 87,
+      },
+      {
+        chapter: 4,
+        title: 'Cạnh tranh và độc quyền trong nền kinh tế thị trường',
+        count: 72,
+      },
+      {
+        chapter: 5,
+        title: 'Kinh tế thị trường định hướng xã hội chủ nghĩa và các quan hệ lợi ích kinh tế ở Việt Nam',
+        count: 60,
+      },
+      {
+        chapter: 6,
+        title: 'Công nghiệp hóa, hiện đại hóa và hội nhập kinh tế quốc tế của Việt Nam',
+        count: 56,
+      },
+    ],
+    examPapers: [
+      { code: 'FA26-FE', label: 'Đề FA26 - FE', questionCount: 60 },
+      { code: 'FA26-FE-RE', label: 'Đề FA26 - FE (Retake)', questionCount: 60 },
+      { code: 'FA26-FE-C1', label: 'Đề FA26 - FE Ca 1', questionCount: 60 },
+      { code: 'FA26-FE-C2', label: 'Đề FA26 - FE Ca 2', questionCount: 60 },
+      { code: 'SU26-FE-C2', label: 'Đề SU26 - FE Ca 2', questionCount: 60 },
+      { code: 'SP26-B5-FE', label: 'Đề SP26 Block 5 - FE', questionCount: 60 },
+      { code: 'SP26-B5-FE-RE', label: 'Đề SP26 Block 5 - FE (Retake)', questionCount: 60 },
+      { code: 'SP26-C1-FE', label: 'Đề SP26 - FE Ca 1', questionCount: 60 },
+      { code: 'SP26-C2-FE', label: 'Đề SP26 - FE Ca 2', questionCount: 60 },
+    ],
+  },
+  wdu202c: {
+    id: 'wdu202c',
+    code: 'WDU202c',
+    name: 'UI/UX & Web Design Specialization',
+    shortName: 'UI/UX & Web Design',
+    totalQuestions: 145,
+    examTotal: 50,
+    supportsLazyTiers: false,
+    chapterUnitLabel: 'MOOC',
+    hasUnspecifiedChapterQuotas: true,
+    examQuotas: {
+      1: 21,
+      2: 15,
+      3: 10,
+      4: 4,
+    },
+    chapters: [
+      {
+        chapter: 1,
+        title: 'Visual Elements of User Interface Design',
+        count: 62,
+      },
+      {
+        chapter: 2,
+        title: 'UX Design Fundamentals',
+        count: 45,
+      },
+      {
+        chapter: 3,
+        title: 'Web Design: Strategy and Information Architecture',
+        count: 31,
+      },
+      {
+        chapter: 4,
+        title: 'Web Design: Wireframes to Prototypes',
+        count: 7,
+      },
+    ],
+    examPapers: [
+      { code: 'SU26-FE', label: 'Đề SU26 - FE', questionCount: 50 },
+      { code: 'SU26-FE-RE', label: 'Đề SU26 - FE (Retake)', questionCount: 50 },
+      { code: 'SP26-FE', label: 'Đề SP26 - FE', questionCount: 50 },
+      { code: 'SP26-FE-RE', label: 'Đề SP26 - FE (Retake)', questionCount: 50 },
+    ],
+  },
   wdu203c: {
     id: 'wdu203c',
     code: 'WDU203c',
@@ -281,6 +433,8 @@ export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
     shortName: 'UI/UX Design',
     totalQuestions: 274,
     examTotal: 60,
+    supportsLazyTiers: true,
+    chapterUnitLabel: 'MOOC',
     examQuotas: {
       1: 10,
       2: 11,
@@ -322,6 +476,22 @@ const resolvedBundleCache = new Map<SubjectId, SubjectLoadedBundle>();
 const inflightBundleCache = new Map<SubjectId, Promise<SubjectLoadedBundle>>();
 
 function createSubjectBundle(subject: SubjectId, rawQuestions: QuestionItem[]): SubjectLoadedBundle {
+  if (!subjectSupportsLazyTiers(subject)) {
+    const hardcoreChapters = buildChapters(rawQuestions);
+    return {
+      subject,
+      questionsByTier: {
+        lazymax: rawQuestions,
+        lazy: rawQuestions,
+        hardcore: rawQuestions,
+      },
+      chaptersByTier: {
+        lazymax: hardcoreChapters,
+        lazy: hardcoreChapters,
+        hardcore: hardcoreChapters,
+      },
+    };
+  }
   const lazyMaxSet = LAZY_MAX_SETS[subject];
   const lazySet = LAZY_SETS[subject];
   const questionsByTier: Record<StudyTier, QuestionItem[]> = {
@@ -351,9 +521,13 @@ export function loadSubjectData(subject: SubjectId): Promise<SubjectLoadedBundle
   const loader = (
     subject === 'mln131'
       ? import('./mln131.json')
-      : subject === 'wdu203c'
-        ? import('./wdu203c.json')
-        : import('./vnr202.json')
+      : subject === 'mln122'
+        ? import('./mln122.json')
+        : subject === 'wdu202c'
+          ? import('./wdu202c.json')
+          : subject === 'wdu203c'
+            ? import('./wdu203c.json')
+            : import('./vnr202.json')
   ).then((mod) => {
     const bundle = createSubjectBundle(subject, mod.default as QuestionItem[]);
     resolvedBundleCache.set(subject, bundle);
@@ -376,8 +550,9 @@ function parseValidSubjectQuestionNum(prefix: string, maxNum: number, id: string
 }
 
 export function getSubjectTotalCount(subject: SubjectId, tier: StudyTier = 'hardcore'): number {
-  if (tier === 'lazymax') return LAZY_MAX_SETS[subject].size;
-  if (tier === 'lazy') return LAZY_SETS[subject].size;
+  const effTier = getEffectiveTier(subject, tier);
+  if (effTier === 'lazymax') return LAZY_MAX_SETS[subject].size;
+  if (effTier === 'lazy') return LAZY_SETS[subject].size;
   return SUBJECTS[subject].totalQuestions;
 }
 
@@ -386,8 +561,9 @@ export function isQuestionInSubjectTier(
   tier: StudyTier,
   questionId: string
 ): boolean {
-  if (tier === 'lazymax') return LAZY_MAX_SETS[subject].has(questionId);
-  if (tier === 'lazy') return LAZY_SETS[subject].has(questionId);
+  const effTier = getEffectiveTier(subject, tier);
+  if (effTier === 'lazymax') return LAZY_MAX_SETS[subject].has(questionId);
+  if (effTier === 'lazy') return LAZY_SETS[subject].has(questionId);
   const spec = SUBJECT_PREFIX_MAP[subject];
   return parseValidSubjectQuestionNum(spec.prefix, spec.maxNum, questionId) > 0;
 }
@@ -397,9 +573,10 @@ export function countSubjectMastered(
   tier: StudyTier,
   questionsMap: Record<string, QuestionProgress>
 ): number {
+  const effTier = getEffectiveTier(subject, tier);
   let count = 0;
   for (const [qId, qp] of Object.entries(questionsMap)) {
-    if (!qp.flagged && qp.streak >= 2 && isQuestionInSubjectTier(subject, tier, qId)) {
+    if (!qp.flagged && qp.streak >= 2 && isQuestionInSubjectTier(subject, effTier, qId)) {
       count += 1;
     }
   }
@@ -411,10 +588,10 @@ export function countCombinedProgressStats(
 ): { mastered: number; hesitant: number } {
   let mastered = 0;
   let hesitant = 0;
+  const specs = Object.values(SUBJECT_PREFIX_MAP);
   for (const [qId, qp] of Object.entries(questionsMap)) {
-    const inMln = parseValidSubjectQuestionNum('mln-', 432, qId) > 0;
-    const inVnr = !inMln && parseValidSubjectQuestionNum('vnr-', 404, qId) > 0;
-    if (!inMln && !inVnr) continue;
+    const valid = specs.some((s) => parseValidSubjectQuestionNum(s.prefix, s.maxNum, qId) > 0);
+    if (!valid) continue;
     if (qp.flagged) {
       hesitant += 1;
     } else if (qp.streak >= 2) {

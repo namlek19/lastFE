@@ -43,7 +43,7 @@ export const SUBJECT_DROPDOWN_ITEMS: readonly SubjectThemeSpec[] = [
   },
   {
     id: 'mln131',
-    shortCode: 'MLN',
+    shortCode: 'M131',
     fullCode: 'MLN131',
     subtitle: 'CNXH Khoa học',
     accentHex: '#0284C7',
@@ -57,11 +57,45 @@ export const SUBJECT_DROPDOWN_ITEMS: readonly SubjectThemeSpec[] = [
     countPillClass:
       'border-[#7DD3FC] bg-[#E0F2FE] text-[#075985] dark:border-[#38BDF8]/50 dark:bg-[#075985]/50 dark:text-[#BAE6FD]',
   },
+  {
+    id: 'mln122',
+    shortCode: 'M122',
+    fullCode: 'MLN122',
+    subtitle: 'Kinh tế chính trị Mác - Lênin',
+    accentHex: '#059669',
+    triggerClass:
+      'border-[#064E3B] bg-[#059669] text-white shadow-[2px_2px_0_0_#6EE7B7] hover:bg-[#047857] dark:border-[#6EE7B7] dark:bg-[#059669] dark:text-white dark:shadow-[2px_2px_0_0_#065F46] dark:hover:bg-[#047857]',
+    badgeClass:
+      'border-[#064E3B] bg-[#059669] text-white shadow-[2px_2px_0_0_#6EE7B7] dark:border-[#6EE7B7] dark:bg-[#059669] dark:text-white dark:shadow-[2px_2px_0_0_#065F46]',
+    activeRowClass:
+      'border-[#059669] bg-[#ECFDF5] text-[#064E3B] dark:border-[#34D399] dark:bg-[#064E3B]/40 dark:text-[#A7F3D0]',
+    reticleClass: 'border-[#059669] dark:border-[#34D399]',
+    countPillClass:
+      'border-[#6EE7B7] bg-[#D1FAE5] text-[#065F46] dark:border-[#34D399]/50 dark:bg-[#065F46]/50 dark:text-[#A7F3D0]',
+  },
+  {
+    id: 'wdu202c',
+    shortCode: 'W202',
+    fullCode: 'WDU202c',
+    subtitle: 'UI/UX & Web Design',
+    accentHex: '#E11D48',
+    triggerClass:
+      'border-[#881337] bg-[#E11D48] text-white shadow-[2px_2px_0_0_#FDA4AF] hover:bg-[#BE123C] dark:border-[#FDA4AF] dark:bg-[#E11D48] dark:text-white dark:shadow-[2px_2px_0_0_#9F1239] dark:hover:bg-[#BE123C]',
+    badgeClass:
+      'border-[#881337] bg-[#E11D48] text-white shadow-[2px_2px_0_0_#FDA4AF] dark:border-[#FDA4AF] dark:bg-[#E11D48] dark:text-white dark:shadow-[2px_2px_0_0_#9F1239]',
+    activeRowClass:
+      'border-[#E11D48] bg-[#FFE4E6] text-[#881337] dark:border-[#FB7185] dark:bg-[#881337]/40 dark:text-[#FECDD3]',
+    reticleClass: 'border-[#E11D48] dark:border-[#FB7185]',
+    countPillClass:
+      'border-[#FDA4AF] bg-[#FFE4E6] text-[#9F1239] dark:border-[#FB7185]/50 dark:bg-[#9F1239]/50 dark:text-[#FECDD3]',
+  },
 ];
 
 const SUBJECT_SPEC_MAP: Partial<Record<SubjectId, SubjectThemeSpec>> = {
   vnr202: SUBJECT_DROPDOWN_ITEMS[0],
   mln131: SUBJECT_DROPDOWN_ITEMS[1],
+  mln122: SUBJECT_DROPDOWN_ITEMS[2],
+  wdu202c: SUBJECT_DROPDOWN_ITEMS[3],
 };
 
 /** Compact red-and-blue blocky spider icon inside the trigger button */
@@ -490,7 +524,10 @@ const SakugaSubjectDropdownComponent: React.FC<SakugaSubjectDropdownProps> = ({
                           )}
                         </span>
                         <span className="block text-[11px] font-semibold text-[#656058] dark:text-[#9CA39B]">
-                          {chapterCount} phần
+                          {chapterCount} {SUBJECTS[item.id].chapterUnitLabel === 'MOOC' ? 'MOOCs' : 'chương'}
+                          {SUBJECTS[item.id].examPapers?.length
+                            ? ` • ${SUBJECTS[item.id].examPapers!.length} đề cũ`
+                            : ''}
                         </span>
                       </div>
                     </div>

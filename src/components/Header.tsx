@@ -10,7 +10,13 @@ import {
   Moon,
   Sun,
 } from 'lucide-react';
-import { SUBJECTS, countSubjectMastered, getSubjectTotalCount } from '../data/index';
+import {
+  SUBJECTS,
+  countSubjectMastered,
+  getEffectiveTier,
+  getSubjectTotalCount,
+  subjectSupportsLazyTiers,
+} from '../data/index';
 import { StudyMode, StudyTier, SubjectId, UserProgressStore } from '../types/quiz';
 import { ThemeMode } from '../utils/storage';
 import { useIsDesktopLg } from '../utils/useIsDesktopLg';
@@ -168,11 +174,13 @@ const HeaderComponent: React.FC<HeaderProps> = ({
     return () => window.clearTimeout(timer);
   }, [isExamBursting, examBurstSeq]);
 
-  const totalQuestionCount = getSubjectTotalCount(subject, tier);
+  const effectiveTier = getEffectiveTier(subject, tier);
+  const supportsLazy = subjectSupportsLazyTiers(subject);
+  const totalQuestionCount = getSubjectTotalCount(subject, effectiveTier);
 
   const masteredCount = useMemo(
-    () => countSubjectMastered(subject, tier, progress.questions),
-    [subject, tier, progress.questions]
+    () => countSubjectMastered(subject, effectiveTier, progress.questions),
+    [subject, effectiveTier, progress.questions]
   );
 
   const activeSubjectMeta = SUBJECTS[subject];
@@ -189,6 +197,10 @@ const HeaderComponent: React.FC<HeaderProps> = ({
       triggerSaiyan('VNR202!', 'amber');
     } else if (subjId === 'mln131') {
       triggerSaiyan('MLN131!', 'indigo');
+    } else if (subjId === 'mln122') {
+      triggerSaiyan('MLN122!', 'emerald');
+    } else if (subjId === 'wdu202c') {
+      triggerSaiyan('WDU202c!', 'rose');
     } else {
       triggerSaiyan('WDU203c!', 'pink');
     }
@@ -332,9 +344,9 @@ const HeaderComponent: React.FC<HeaderProps> = ({
           )}
 
           {/* Desktop 3-Tier Sakuga Anime Stamp Picker (>= 1024px) */}
-          {isDesktopLg && (
+          {isDesktopLg && supportsLazy && (
             <div className="inline-flex">
-              <SakugaTierPicker tier={tier} subject={subject} onSelectTier={handleTierClick} />
+              <SakugaTierPicker tier={effectiveTier} subject={subject} onSelectTier={handleTierClick} />
             </div>
           )}
 
@@ -358,10 +370,10 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                   : { y: 0, scaleX: 1, scaleY: 1 }
               }
               transition={{ duration: 0.44, times: [0, 0.36, 0.72, 1], ease: [0.22, 1, 0.36, 1] }}
-              className={`inline-flex items-center gap-1 rounded-lg border-2 px-1.5 py-1 text-[10.5px] font-extrabold tabular-nums whitespace-nowrap transition-colors duration-200 min-[420px]:px-2 min-[420px]:text-[11px] sm:gap-1.5 sm:px-2.5 sm:text-xs ${TIER_BADGE_STYLES[tier].pill}`}
+              className={`inline-flex items-center gap-1 rounded-lg border-2 px-1.5 py-1 text-[10.5px] font-extrabold tabular-nums whitespace-nowrap transition-colors duration-200 min-[420px]:px-2 min-[420px]:text-[11px] sm:gap-1.5 sm:px-2.5 sm:text-xs ${TIER_BADGE_STYLES[effectiveTier].pill}`}
               title={`Đã thuộc ${masteredCount} trên ${totalQuestionCount} câu môn ${activeSubjectMeta.code}`}
             >
-              <CheckCircle2 className={`hidden h-3 w-3 shrink-0 min-[375px]:block sm:h-3.5 sm:w-3.5 ${TIER_BADGE_STYLES[tier].icon}`} />
+              <CheckCircle2 className={`hidden h-3 w-3 shrink-0 min-[375px]:block sm:h-3.5 sm:w-3.5 ${TIER_BADGE_STYLES[effectiveTier].icon}`} />
               <span>
                 {masteredCount}/{totalQuestionCount}
               </span>
@@ -443,9 +455,11 @@ const HeaderComponent: React.FC<HeaderProps> = ({
         {/* Rows 2 & 3 (Mobile & Tablet only, < 1024px): mounted strictly when below lg */}
         {!isDesktopLg && (
           <>
-            <div className="border-t border-[#D5CFC2] py-2 dark:border-[#262925]">
-              <SakugaTierPicker tier={tier} subject={subject} onSelectTier={handleTierClick} compact />
-            </div>
+            {supportsLazy && (
+              <div className="border-t border-[#D5CFC2] py-2 dark:border-[#262925]">
+                <SakugaTierPicker tier={effectiveTier} subject={subject} onSelectTier={handleTierClick} compact />
+              </div>
+            )}
 
             <nav
               aria-label="Chế độ học tập"

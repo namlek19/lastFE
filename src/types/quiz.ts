@@ -1,4 +1,4 @@
-export type SubjectId = 'mln131' | 'vnr202' | 'wdu203c';
+export type SubjectId = 'mln131' | 'vnr202' | 'wdu203c' | 'mln122' | 'wdu202c';
 
 export type StudyMode = 'chapter' | 'rolling' | 'flashcard' | 'exam';
 
@@ -7,6 +7,11 @@ export type StudyTier = 'lazymax' | 'lazy' | 'hardcore';
 export interface QuestionOption {
   key: string; // "A" | "B" | "C" | "D" | "E" | "F"
   text: string;
+}
+
+export interface ExamAppearance {
+  examCode: string;
+  questionIndex: number;
 }
 
 export interface QuestionItem {
@@ -20,6 +25,8 @@ export interface QuestionItem {
   isMultiSelect: boolean;
   explanation: string;
   note: string;
+  exams?: string[];
+  examAppearances?: ExamAppearance[];
 }
 
 export type MasteryStatus = 'unlearned' | 'hesitant' | 'wrong' | 'mastered';
@@ -37,12 +44,13 @@ export interface QuestionProgress {
   studied?: boolean;
 }
 
-export type ExamType = 'standard' | 'mastered';
+export type ExamType = 'standard' | 'mastered' | 'past_exam';
 
 export interface ExamHistoryItem {
   id: string;
   subject: SubjectId;
   examType?: ExamType;
+  examCode?: string;
   timestamp: number;
   totalQuestions: number;
   correctCount: number;

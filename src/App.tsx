@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { setBorderFirePaused } from './components/SakugaBorderFire';
 import {
   getCachedSubjectData,
+  getEffectiveTier,
   loadSubjectData,
   SubjectLoadedBundle,
 } from './data/index';
@@ -95,7 +96,8 @@ export const App: React.FC = () => {
   );
   const [ambientEffectsReady, setAmbientEffectsReady] = useState(false);
 
-  const { lastSubject: subject, lastMode: mode, lastTier: tier = 'hardcore' } = store;
+  const { lastSubject: subject, lastMode: mode, lastTier: rawTier = 'hardcore' } = store;
+  const tier = getEffectiveTier(subject, rawTier);
 
   const [subjectData, setSubjectData] = useState<SubjectLoadedBundle | null>(() =>
     getCachedSubjectData(store.lastSubject)

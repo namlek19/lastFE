@@ -9,16 +9,19 @@ import {
 } from '../types/quiz';
 import { isMastered, normalizeSubject, normalizeTier } from './storage';
 
-const CODE_PREFIX_V3 = 'OT3-';
+const CODE_PREFIX_V4 = 'OT4-';
 
 const MAX_SYNC_SLOTS_V2 = 1000; // Legacy V2: 0..499 = vnr, 500..999 = mln
-const MAX_SYNC_SLOTS_V3 = 1500; // V3: 0..499 = vnr, 500..999 = mln, 1000..1499 = wdu
+const MAX_SYNC_SLOTS_V3 = 1500; // Legacy V3: 0..499 = vnr, 500..999 = mln, 1000..1499 = wdu
+const MAX_SYNC_SLOTS_V4 = 2500; // V4: + 1500..1999 = mln12, 2000..2499 = wdu2
 const VNR_SLOT_OFFSET = 0;
 const MLN_SLOT_OFFSET = 500;
 const WDU_SLOT_OFFSET = 1000;
+const MLN12_SLOT_OFFSET = 1500;
+const WDU2_SLOT_OFFSET = 2000;
 const EPOCH_SEC_2025 = Math.floor(Date.UTC(2025, 0, 1) / 1000);
 
-const SUBJECT_LIST: readonly SubjectId[] = ['vnr202', 'mln131', 'wdu203c'];
+const SUBJECT_LIST: readonly SubjectId[] = ['vnr202', 'mln131', 'wdu203c', 'mln122', 'wdu202c'];
 const MODE_LIST: readonly StudyMode[] = ['chapter', 'rolling', 'flashcard', 'exam'];
 const TIER_LIST: readonly StudyTier[] = ['hardcore', 'lazy', 'lazymax'];
 
@@ -37,17 +40,25 @@ interface CompactSyncPayload {
 type SyncQuestionStateCode = 0 | 1 | 2 | 3 | 4 | 5;
 
 function questionIdToSlot(id: string): number {
-  const match = /^(vnr|mln|wdu)-(\d+)$/i.exec(id);
+  const match = /^(vnr|mln12|mln|wdu2|wdu)-(\d+)$/i.exec(id);
   if (!match) return -1;
   const num = Number.parseInt(match[2], 10);
   if (!Number.isFinite(num) || num < 1 || num > 500) return -1;
   const prefix = match[1].toLowerCase();
   const base =
-    prefix === 'vnr' ? VNR_SLOT_OFFSET : prefix === 'mln' ? MLN_SLOT_OFFSET : WDU_SLOT_OFFSET;
+    prefix === 'vnr'
+      ? VNR_SLOT_OFFSET
+      : prefix === 'mln'
+        ? MLN_SLOT_OFFSET
+        : prefix === 'wdu'
+          ? WDU_SLOT_OFFSET
+          : prefix === 'mln12'
+            ? MLN12_SLOT_OFFSET
+            : WDU2_SLOT_OFFSET;
   return base + (num - 1);
 }
 
-function slotToQuestionId(slot: number, maxSlots = MAX_SYNC_SLOTS_V3): string | null {
+function slotToQuestionId(slot: number, maxSlots = MAX_SYNC_SLOTS_V4): string | null {
   if (slot < 0 || slot >= maxSlots) return null;
   if (slot < MLN_SLOT_OFFSET) {
     return `vnr-${String(slot + 1).padStart(3, '0')}`;
@@ -55,7 +66,13 @@ function slotToQuestionId(slot: number, maxSlots = MAX_SYNC_SLOTS_V3): string | 
   if (slot < WDU_SLOT_OFFSET) {
     return `mln-${String(slot - MLN_SLOT_OFFSET + 1).padStart(3, '0')}`;
   }
-  return `wdu-${String(slot - WDU_SLOT_OFFSET + 1).padStart(3, '0')}`;
+  if (slot < MLN12_SLOT_OFFSET) {
+    return `wdu-${String(slot - WDU_SLOT_OFFSET + 1).padStart(3, '0')}`;
+  }
+  if (slot < WDU2_SLOT_OFFSET) {
+    return `mln12-${String(slot - MLN12_SLOT_OFFSET + 1).padStart(3, '0')}`;
+  }
+  return `wdu2-${String(slot - WDU2_SLOT_OFFSET + 1).padStart(3, '0')}`;
 }
 
 function progressToStateCode(p?: QuestionProgress): SyncQuestionStateCode {
@@ -232,7 +249,7 @@ function encodeDenseBitstream(slots: Uint8Array): number[] {
   return out;
 }
 
-function encodeExamHistoryBytesV3(history: ExamHistoryItem[]): number[] {
+function encodeExamHistoryBytesV4(history: ExamHistoryItem[]): number[] {
   const capped = history.slice(0, 30);
   const out: number[] = [capped.length];
 
@@ -244,7 +261,7 @@ function encodeExamHistoryBytesV3(history: ExamHistoryItem[]): number[] {
 
     const subjIdx = Math.max(0, SUBJECT_LIST.indexOf(item.subject));
     const typeBit = item.examType === 'mastered' ? 1 : 0;
-    const metaByte = (subjIdx & 0x03) | (typeBit << 2) | ((entries.length & 0x0f) << 3);
+    const metaByte = (subjIdx & 0x07) | (typeBit << 3) | ((entries.length & 0x0f) << 4);
     out.push(metaByte);
 
     const tsSec = Math.max(0, Math.round(item.timestamp / 1000) - EPOCH_SEC_2025);
@@ -264,7 +281,7 @@ function encodeExamHistoryBytesV3(history: ExamHistoryItem[]): number[] {
 }
 
 export function exportProgressCode(store: UserProgressStore): string {
-  const slots = new Uint8Array(MAX_SYNC_SLOTS_V3);
+  const slots = new Uint8Array(MAX_SYNC_SLOTS_V4);
   for (const [id, p] of Object.entries(store.questions)) {
     const slot = questionIdToSlot(id);
     if (slot >= 0) {
@@ -279,23 +296,23 @@ export function exportProgressCode(store: UserProgressStore): string {
 
   const history = Array.isArray(store.examHistory) ? store.examHistory : [];
   const hasHistory = history.length > 0;
-  const historyBytes = hasHistory ? encodeExamHistoryBytesV3(history) : [];
+  const historyBytes = hasHistory ? encodeExamHistoryBytesV4(history) : [];
 
   const subjIdx = Math.max(0, SUBJECT_LIST.indexOf(store.lastSubject));
   const modeIdx = Math.max(0, MODE_LIST.indexOf(store.lastMode));
   const tierIdx = Math.max(0, TIER_LIST.indexOf(normalizeTier(store.lastTier)));
-  const header =
-    (subjIdx & 0x03) |
-    ((modeIdx & 0x03) << 2) |
-    ((tierIdx & 0x03) << 4) |
-    ((useDense ? 1 : 0) << 6) |
-    ((hasHistory ? 1 : 0) << 7);
+  const header0 = subjIdx & 0x07;
+  const header1 =
+    (modeIdx & 0x03) |
+    ((tierIdx & 0x03) << 2) |
+    ((useDense ? 1 : 0) << 4) |
+    ((hasHistory ? 1 : 0) << 5);
 
-  const payload: number[] = [header, ...questionBytes, ...historyBytes];
+  const payload: number[] = [header0, header1, ...questionBytes, ...historyBytes];
   const crc = computeCrc8(payload, payload.length);
   payload.push(crc);
 
-  return `${CODE_PREFIX_V3}${encodeBase64Url(payload)}`;
+  return `${CODE_PREFIX_V4}${encodeBase64Url(payload)}`;
 }
 
 function decodeSlotsBlock(
@@ -574,11 +591,64 @@ function importV1Code(rawCompressed: string): UserProgressStore | null {
   }
 }
 
+function importV4Code(encodedPart: string): UserProgressStore | null {
+  const body = verifyBinaryEnvelope(encodedPart);
+  if (!body || body.length < 2) return null;
+
+  const subjIdx = body[0] & 0x07;
+  const lastSubject = SUBJECT_LIST[subjIdx];
+  if (!lastSubject) return null;
+
+  const header1 = body[1];
+  const lastMode: StudyMode = MODE_LIST[header1 & 0x03] ?? 'chapter';
+  const lastTier: StudyTier = TIER_LIST[(header1 >> 2) & 0x03] ?? 'hardcore';
+  const useDense = ((header1 >> 4) & 1) === 1;
+  const hasHistory = ((header1 >> 5) & 1) === 1;
+
+  const cursor = { pos: 2 };
+  const questions = decodeSlotsBlock(body, cursor, useDense, MAX_SYNC_SLOTS_V4);
+  if (!questions) return null;
+
+  let examHistory: ExamHistoryItem[] = [];
+  if (hasHistory) {
+    const parsedHistory = decodeExamHistoryBlock(body, cursor, (metaByte) => {
+      const sIdx = metaByte & 0x07;
+      const subject = SUBJECT_LIST[sIdx];
+      if (!subject) return null;
+      return {
+        subject,
+        examType: (metaByte & 8) !== 0 ? 'mastered' : 'standard',
+        breakdownCount: (metaByte >> 4) & 0x0f,
+      };
+    });
+    if (!parsedHistory) return null;
+    examHistory = parsedHistory;
+  }
+
+  if (cursor.pos !== body.length) return null;
+
+  return {
+    version: 1,
+    questions,
+    examHistory,
+    lastSubject,
+    lastMode,
+    lastTier,
+    subjectMigratedVnr: true,
+    tierMigratedHardcore: true,
+  };
+}
+
 export function importProgressCode(code: string): UserProgressStore | null {
   try {
     // Strip all whitespace/line breaks from copy/paste across mobile apps
     const cleaned = code.replace(/\s+/g, '');
     if (!cleaned) return null;
+
+    const v4Match = /^ot4[:\-](.+)$/i.exec(cleaned);
+    if (v4Match) {
+      return importV4Code(v4Match[1]);
+    }
 
     // Match OT3-, OT2-, or OT1: (case-insensitive to resist mobile auto-lowercase)
     const v3Match = /^ot3[:\-](.+)$/i.exec(cleaned);

@@ -9,6 +9,8 @@ dist-ssr/
 # Local AI agent skills & raw source dumps
 .agent/
 raw_docs/
+tools/.cookie.txt
+tools/raw-exams/
 
 # Environment & local files
 .env

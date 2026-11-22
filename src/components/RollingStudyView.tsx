@@ -134,6 +134,7 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
 }) => {
   const isDesktopLg = useIsDesktopLg();
   const subjectMeta = SUBJECTS[subject];
+  const unitLabel = subjectMeta.chapterUnitLabel ?? 'Chương';
 
   const [selectedChapter, setSelectedChapter] = useState<number>(() => chapters[0]?.chapter ?? 1);
   const [activeStageIndex, setActiveStageIndex] = useState<number | null>(null);
@@ -828,6 +829,17 @@ if (activeStage !== null) {
                       Chọn nhiều đáp án
                     </span>
                   )}
+
+                  {currentQuestion.exams && currentQuestion.exams.length > 0 && (
+                    <span
+                      title={`Xuất hiện trong đề: ${currentQuestion.exams.join(', ')}`}
+                      className="inline-flex items-center rounded-full border border-[#F59E0B]/70 bg-[#FEF3C7] px-2.5 py-0.5 text-[11px] font-semibold text-[#92400E] tabular-nums dark:border-[#FBBF24]/50 dark:bg-[#78350F]/45 dark:text-[#FDE68A] sm:py-1 sm:text-xs"
+                    >
+                      {currentQuestion.exams.length > 1
+                        ? `Ra trong ${currentQuestion.exams.length} đề`
+                        : `Đề ${currentQuestion.exams[0]}`}
+                    </span>
+                  )}
                 </div>
 
                 {/* Desktop Flag Button */}
@@ -1295,7 +1307,7 @@ return (
                     : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                   }`}
               >
-                <span className="font-semibold">Chương {ch.chapter}</span>
+                <span className="font-semibold">{unitLabel} {ch.chapter}</span>
                 <span
                   className={`rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
                 >
