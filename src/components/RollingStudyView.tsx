@@ -686,7 +686,7 @@ if (activeStage !== null) {
                 <span className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-[#18181B] dark:text-[#F5F5F4]">
                   <Menu className="h-4 w-4 shrink-0 text-[#4338CA] dark:text-[#818CF8]" />
                   <span className="truncate tabular-nums">
-                    C{selectedChapter} • {activeStage.title}
+                    {selectedExamCode ? selectedExamCode : `${unitLabel} ${selectedChapter}`} • {activeStage.title}
                   </span>
                   {currentQuestion ? (
                     <span className="shrink-0 rounded-full border border-[#A5B4FC] bg-[#EEF2FF] px-1.5 py-0.5 text-[10px] font-bold text-[#3730A3] tabular-nums dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
@@ -725,7 +725,7 @@ if (activeStage !== null) {
                 Hoàn thành chặng!
               </h2>
               <p className="mt-2 text-sm text-[#656058] dark:text-[#9CA39B]">
-                Bạn đã hoàn thành {activeStage.title} (Chương {selectedChapter} —{' '}
+                Bạn đã hoàn thành {activeStage.title} ({activeGroupLabel} —{' '}
                 {activeStage.questions.length} câu hỏi).
               </p>
 
@@ -1201,7 +1201,7 @@ if (activeStage !== null) {
                 <div className="flex w-full items-center justify-between gap-2">
                   <div>
                     <h3 className="text-sm font-bold text-[#18181B] dark:text-[#F5F5F4]">
-                      Chương {selectedChapter} • Chọn chặng
+                      {activeGroupLabel} • Chọn chặng
                     </h3>
                     <p className={`text-xs font-medium tabular-nums transition-colors ${getSakugaProgressTextClass(chapterStats.percent)}`}>
                       {chapterStats.mastered}/{chapterStats.total} câu đã thuộc ({chapterStats.percent}%)
@@ -1261,7 +1261,9 @@ if (activeStage !== null) {
                   className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] px-4 py-2.5 text-xs font-semibold text-[#656058] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  <span>Về tổng quan danh sách chương</span>
+                  <span>
+                    Về tổng quan {selectedExamCode ? 'danh sách đề' : `danh sách ${unitLabel.toLowerCase()}`}
+                  </span>
                 </button>
               </div>
             </motion.div>
@@ -1296,7 +1298,9 @@ return (
 
           <div className="hidden items-center gap-4 text-sm sm:flex">
             <div className="text-right">
-              <div className="text-xs text-[#656058] dark:text-[#9CA39B]">Tiến độ chương đang chọn</div>
+              <div className="text-xs text-[#656058] dark:text-[#9CA39B]">
+                Tiến độ {selectedExamCode ? 'đề' : unitLabel.toLowerCase()} đang chọn
+              </div>
               <div className={`font-bold tabular-nums transition-colors ${getSakugaProgressTextClass(chapterStats.percent)}`}>
                 {chapterStats.mastered}/{chapterStats.total} câu đã thuộc ({chapterStats.percent}%)
               </div>
@@ -1341,7 +1345,7 @@ return (
         )}
 
         {/* Mobile 1-Line Chapter / Exam Picker Button (< 768px) */}
-        <div className="mt-4 md:hidden">
+        <div className="mt-3.5 md:hidden">
           <button
             type="button"
             onClick={() => setIsChapterSheetOpen(true)}
@@ -1350,7 +1354,7 @@ return (
             <span className="flex min-w-0 items-center gap-2">
               <Menu className="h-4 w-4 shrink-0 text-[#4338CA] dark:text-[#818CF8]" />
               <span className="truncate">
-                {activeGroupLabel}: {activeGroupTitle}
+                {activeGroupLabel} — {activeGroupTitle}
               </span>
             </span>
             <span className="flex shrink-0 items-center gap-1.5">
@@ -1364,8 +1368,22 @@ return (
           </button>
         </div>
 
-        {/* Desktop Chapter / Exam Selector (>= 768px) */}
-        <div className="mt-4 hidden flex-wrap items-center justify-between gap-2.5 md:flex">
+        {/* Desktop Chapter / Exam Selector Grid (>= 768px) */}
+        <div
+          className={`mt-4 hidden gap-2.5 md:grid ${
+            listGroupMode === 'exams' && hasExamPapers
+              ? subjectMeta.examPapers!.length <= 4
+                ? 'md:grid-cols-2 lg:grid-cols-4'
+                : 'md:grid-cols-3'
+              : chapters.length === 3
+                ? 'md:grid-cols-3'
+                : chapters.length === 4
+                  ? 'md:grid-cols-2 lg:grid-cols-4'
+                  : chapters.length === 6
+                    ? 'md:grid-cols-3 xl:grid-cols-6'
+                    : 'md:grid-cols-4 xl:grid-cols-7'
+          }`}
+        >
           {listGroupMode === 'exams' && hasExamPapers
             ? subjectMeta.examPapers!.map(paper => {
                 const isSelected = selectedExamCode === paper.code;
@@ -1376,15 +1394,28 @@ return (
                     key={paper.code}
                     type="button"
                     onClick={() => setSelectedExamCode(paper.code)}
-                    className={`flex min-w-[135px] flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3.5 py-2 text-left text-sm transition ${
+                    className={`flex cursor-pointer items-center justify-between gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition ${
                       isSelected
                         ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-sm hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]'
                         : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                     }`}
                   >
-                    <span className="font-semibold">{paper.code}</span>
+                    <div className="min-w-0">
+                      <span className="block whitespace-nowrap text-sm font-bold tracking-tight">
+                        {paper.code}
+                      </span>
+                      <span
+                        className={`block truncate text-[11px] ${
+                          isSelected
+                            ? 'text-white/85'
+                            : 'text-[#656058] dark:text-[#9CA39B]'
+                        }`}
+                      >
+                        {paper.label}
+                      </span>
+                    </div>
                     <span
-                      className={`rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
+                      className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
                     >
                       {stats.percent}%
                     </span>
@@ -1403,14 +1434,16 @@ return (
                       setSelectedExamCode(null);
                       setSelectedChapter(ch.chapter);
                     }}
-                    className={`flex min-w-[135px] flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3.5 py-2 text-left text-sm transition ${isSelected
+                    className={`flex cursor-pointer items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5 text-left text-sm transition ${isSelected
                         ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-sm hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]'
                         : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                       }`}
                   >
-                    <span className="font-semibold">{unitLabel} {ch.chapter}</span>
+                    <span className="whitespace-nowrap font-semibold">
+                      {unitLabel} {ch.chapter}
+                    </span>
                     <span
-                      className={`rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
+                      className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
                     >
                       {stats.percent}%
                     </span>
@@ -1433,7 +1466,7 @@ return (
 
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="hidden text-sm font-semibold text-[#3730A3] dark:text-[#A5B4FC] md:block">
-                {activeGroupLabel}: {activeGroupTitle}
+                {activeGroupLabel} — {activeGroupTitle}
               </div>
               <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
                 <span className="inline-flex items-center gap-1.5 text-[#047857] tabular-nums dark:text-[#34D399]">
@@ -1598,10 +1631,10 @@ return (
               <div className="flex w-full items-center justify-between gap-2">
                 <div>
                   <h3 className="text-sm font-bold text-[#18181B] dark:text-[#F5F5F4]">
-                    {subjectMeta.code} • Chọn chương
+                    {subjectMeta.code} • {listGroupMode === 'exams' && hasExamPapers ? 'Chọn mã đề' : `Chọn ${unitLabel.toLowerCase()}`}
                   </h3>
                   <p className="text-xs text-[#656058] dark:text-[#9CA39B]">
-                    Chạm vào chương để xem các chặng học
+                    Chạm để xem các chặng học cuốn chiếu
                   </p>
                 </div>
                 <button
@@ -1616,37 +1649,75 @@ return (
             </div>
 
             <div className="space-y-2 overflow-y-auto px-4 pb-6 pt-4">
-              {chapters.map(ch => {
-                const isSelected = ch.chapter === selectedChapter;
-                const stats = chapterStatsMap.get(ch.chapter) ?? EMPTY_STAGE_STATS;
-                return (
-                  <button
-                    key={ch.chapter}
-                    type="button"
-                    onClick={() => {
-                      setSelectedChapter(ch.chapter);
-                      setIsChapterSheetOpen(false);
-                    }}
-                    className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left transition ${isSelected
-                        ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
-                        : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
-                      }`}
-                  >
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold">
-                        Chương {ch.chapter}{' '}
-                        <span className="font-normal text-[#656058] dark:text-[#9CA39B]">
-                          ({stats.mastered}/{stats.total} câu)
+              {listGroupMode === 'exams' && hasExamPapers
+                ? subjectMeta.examPapers!.map(paper => {
+                    const isSelected = selectedExamCode === paper.code;
+                    const stats = examStatsMap.get(paper.code) ?? EMPTY_STAGE_STATS;
+                    return (
+                      <button
+                        key={paper.code}
+                        type="button"
+                        onClick={() => {
+                          setSelectedExamCode(paper.code);
+                          setIsChapterSheetOpen(false);
+                        }}
+                        className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
+                          isSelected
+                            ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
+                            : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold">
+                            {paper.code}{' '}
+                            <span className="font-normal text-[#656058] dark:text-[#9CA39B]">
+                              ({stats.mastered}/{stats.total} câu)
+                            </span>
+                          </div>
+                          <div className="truncate text-xs opacity-85">{paper.label}</div>
+                        </div>
+                        <span
+                          className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
+                        >
+                          {stats.percent}%
                         </span>
-                      </div>
-                      <div className="truncate text-xs opacity-85">{ch.title}</div>
-                    </div>
-                    <span className="shrink-0 rounded-full border border-[#10B981] bg-[#D1FAE5] px-2.5 py-0.5 text-xs font-semibold text-[#047857] tabular-nums dark:border-[#10B981] dark:bg-[#059669]/30 dark:text-[#34D399]">
-                      {stats.percent}%
-                    </span>
-                  </button>
-                );
-              })}
+                      </button>
+                    );
+                  })
+                : chapters.map(ch => {
+                    const isSelected = !selectedExamCode && ch.chapter === selectedChapter;
+                    const stats = chapterStatsMap.get(ch.chapter) ?? EMPTY_STAGE_STATS;
+                    return (
+                      <button
+                        key={ch.chapter}
+                        type="button"
+                        onClick={() => {
+                          setSelectedExamCode(null);
+                          setSelectedChapter(ch.chapter);
+                          setIsChapterSheetOpen(false);
+                        }}
+                        className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left transition ${isSelected
+                            ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
+                            : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
+                          }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold">
+                            {unitLabel} {ch.chapter}{' '}
+                            <span className="font-normal text-[#656058] dark:text-[#9CA39B]">
+                              ({stats.mastered}/{stats.total} câu)
+                            </span>
+                          </div>
+                          <div className="truncate text-xs opacity-85">{ch.title}</div>
+                        </div>
+                        <span
+                          className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
+                        >
+                          {stats.percent}%
+                        </span>
+                      </button>
+                    );
+                  })}
             </div>
           </motion.div>
         </>

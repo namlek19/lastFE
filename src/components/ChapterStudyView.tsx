@@ -676,18 +676,20 @@ return (
                           onClick={() => handleSelectExamPaper(paper.code)}
                           className={`relative w-full cursor-pointer rounded-xl border p-4 text-left transition-colors ${
                             active
-                              ? 'border-[#D97706] bg-[#FEF3C7] text-[#18181B] dark:border-[#FBBF24] dark:bg-[#78350F]/35 dark:text-[#F5F5F4]'
+                              ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
                               : stat.pct >= 100
                                 ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35'
-                                : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#D97706] hover:bg-[#FEF3C7]/60 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#FBBF24]'
+                                : stat.pct >= 50
+                                  ? 'border-[#F59E0B]/70 bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                                  : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
                           }`}
                         >
                           <SakugaBorderFire percent={stat.pct} radius={12} compact />
                           <div className="flex items-center justify-between gap-2">
                             <span
-                              className={`text-xs font-black uppercase tracking-wide ${
+                              className={`text-xs font-bold uppercase tracking-wide ${
                                 active
-                                  ? 'text-[#92400E] dark:text-[#FDE68A]'
+                                  ? 'text-[#3730A3] dark:text-[#A5B4FC]'
                                   : 'text-[#656058] dark:text-[#9CA39B]'
                               }`}
                             >
@@ -1571,7 +1573,7 @@ return (
                             }}
                             className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border px-3.5 py-2.5 text-left transition ${
                               active
-                                ? 'border-[#D97706] bg-[#FEF3C7] text-[#18181B] dark:border-[#FBBF24] dark:bg-[#78350F]/35 dark:text-[#F5F5F4]'
+                                ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
                                 : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
                             }`}
                           >
@@ -1651,11 +1653,9 @@ return (
                 <div>
                   <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
                     <span>Bảng số câu ({filteredQuestions.length})</span>
-                    {activeChapterMeta && (
-                      <span className="normal-case text-[#3730A3] dark:text-[#A5B4FC]">
-                        Chương {activeChapterMeta.chapter}
-                      </span>
-                    )}
+                    <span className="normal-case text-[#3730A3] dark:text-[#A5B4FC]">
+                      {activeGroupLabel}
+                    </span>
                   </div>
                   <div className="grid grid-cols-6 gap-2 p-0.5 sm:grid-cols-8">
                     {filteredQuestions.map((q, idx) => {

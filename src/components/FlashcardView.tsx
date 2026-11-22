@@ -660,7 +660,9 @@ return (
               </div>
               <div>
                 <h2 className="text-sm font-bold text-[#18181B] dark:text-[#F5F5F4]">
-                  Bộ thẻ theo chương
+                  {hasExamPapers && listGroupMode === 'exams'
+                    ? 'Bộ thẻ theo đề'
+                    : `Bộ thẻ theo ${unitLabel.toLowerCase()}`}
                 </h2>
                 <p className="tabular-nums text-xs font-semibold text-[#047857] dark:text-[#34D399]">
                   {subjectMasteredCount}/{allSubjectQuestions.length} câu đã thuộc
@@ -1544,7 +1546,7 @@ return (
               {/* Filter & Shuffle */}
               <div>
                 <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
-                  <span>Lọc trạng thái (Chương {selectedChapter})</span>
+                  <span>Lọc trạng thái ({activeGroupLabel})</span>
                   <button
                     type="button"
                     onClick={handleToggleShuffle}

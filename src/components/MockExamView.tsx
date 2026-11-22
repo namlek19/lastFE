@@ -1260,7 +1260,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                     Câu {currentIndex + 1} / {examQuestions.length}
                   </span>
                   <span className="rounded-lg border border-[#D5CFC2] bg-white px-2.5 py-0.5 text-[11px] font-semibold text-[#44403C] dark:border-[#3F3F46] dark:bg-[#27272A] dark:text-[#D4D4D8] sm:py-1 sm:text-xs">
-                    Chương {currentQuestion.chapter}
+                    {subjectMeta.chapterUnitLabel ?? 'Chương'} {currentQuestion.chapter}
                     <span className="hidden sm:inline">: {currentQuestion.chapterTitle}</span>
                   </span>
                   {currentQuestion.isMultiSelect && (
@@ -1596,7 +1596,10 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
   const spentSeconds = lastResult?.durationSeconds ?? elapsedSecondsRef.current;
   const breakdown = lastResult?.chapterBreakdown ?? {};
   const resultExamType = lastResult?.examType ?? activeExamType;
+  const resultExamCode = lastResult?.examCode ?? activeExamCode;
   const isResultMasteredMode = resultExamType === 'mastered';
+  const isResultPastExamMode = resultExamType === 'past_exam';
+  const resultUnitLabel = subjectMeta.chapterUnitLabel ?? 'Chương';
 
   return (
     <>
@@ -1628,10 +1631,16 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                   <span
                     className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold whitespace-nowrap ${isResultMasteredMode
                       ? 'border-[#10B981] bg-[#D1FAE5] text-[#064E3B] dark:border-[#10B981] dark:bg-[#064E3B]/55 dark:text-[#34D399]'
-                      : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
+                      : isResultPastExamMode
+                        ? 'border-[#F59E0B] bg-[#FEF3C7] text-[#92400E] dark:border-[#FBBF24]/60 dark:bg-[#78350F]/55 dark:text-[#FDE68A]'
+                        : 'border-[#A5B4FC] bg-[#EEF2FF] text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]'
                       }`}
                   >
-                    {isResultMasteredMode ? 'Ôn đã thuộc' : 'Đề đề cương'}
+                    {isResultMasteredMode
+                      ? 'Ôn đã thuộc'
+                      : isResultPastExamMode && resultExamCode
+                        ? `Đề ${resultExamCode}`
+                        : 'Đề đề cương'}
                   </span>
                   <SakugaMangaTag
                     label={scoreOn10 >= 5 ? 'COMPLETE! ✓' : 'KEEP GOING!'}
@@ -1704,13 +1713,13 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
             {/* Detailed Score Breakdown Table by Chapter */}
             <div className="min-w-0 flex-1">
               <h3 className="mb-3 text-sm font-bold text-[#18181B] dark:text-[#F5F5F4] sm:mb-3.5">
-                Chi tiết điểm theo từng chương
+                Chi tiết điểm theo từng {resultUnitLabel.toLowerCase()}
               </h3>
               <div className="overflow-hidden rounded-xl border border-[#D5CFC2] dark:border-[#2C302B]">
                 <table className="w-full text-left text-xs sm:text-sm">
                   <thead className="bg-[#FAF9F5] text-[11px] font-semibold uppercase text-[#656058] dark:bg-[#1C1F1C] dark:text-[#9CA39B] sm:text-xs">
                     <tr>
-                      <th className="px-3 py-2.5 sm:px-4 sm:py-3">Chương</th>
+                      <th className="px-3 py-2.5 sm:px-4 sm:py-3">{resultUnitLabel}</th>
                       <th className="px-3 py-2.5 text-right sm:px-4 sm:py-3">Đúng / Tổng</th>
                       <th className="w-28 px-3 py-2.5 sm:w-40 sm:px-4 sm:py-3">Tỷ lệ</th>
                     </tr>
@@ -1725,7 +1734,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                           <tr key={ch.chapter}>
                             <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                               <div className="font-semibold text-[#18181B] dark:text-[#F5F5F4]">
-                                Chương {ch.chapter}
+                                {resultUnitLabel} {ch.chapter}
                               </div>
                               <div className="line-clamp-1 text-[11px] text-[#656058] dark:text-[#9CA39B] sm:text-xs">
                                 {ch.title}
@@ -1905,7 +1914,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                           Câu {index + 1}
                         </span>
                         <span className="rounded-lg border border-[#D5CFC2] bg-white px-2.5 py-0.5 text-[11px] font-semibold text-[#44403C] dark:border-[#3F3F46] dark:bg-[#27272A] dark:text-[#D4D4D8] sm:py-1 sm:text-xs">
-                          Chương {q.chapter}
+                          {resultUnitLabel} {q.chapter}
                           <span className="hidden sm:inline">: {q.chapterTitle}</span>
                         </span>
                         {isCorrect ? (
