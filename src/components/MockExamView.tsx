@@ -227,7 +227,9 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
     const subjectMeta = SUBJECTS[subject];
 
     const [phase, setPhase] = useState<ExamPhase>('lobby');
-    const [examType, setExamType] = useState<ExamType>('standard');
+    const [examType, setExamType] = useState<ExamType>(() =>
+      SUBJECTS[subject].examPapers?.length ? 'past_exam' : 'standard'
+    );
     const [activeExamType, setActiveExamType] = useState<ExamType>('standard');
     const [selectedExamCode, setSelectedExamCode] = useState<string>(
       () => SUBJECTS[subject].examPapers?.[0]?.code ?? ''
@@ -284,7 +286,7 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
       submittedRef.current = false;
       elapsedSecondsRef.current = 0;
       setPhase('lobby');
-      setExamType('standard');
+      setExamType(SUBJECTS[subject].examPapers?.length ? 'past_exam' : 'standard');
       setSelectedExamCode(SUBJECTS[subject].examPapers?.[0]?.code ?? '');
       setActiveExamCode('');
       setExamQuestions([]);
@@ -681,7 +683,45 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
               </div>
 
               <div className={`grid grid-cols-1 gap-3 ${hasPastExams ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
-                {/* Mode 1: Standard Curriculum Exam */}
+                {/* Mode 1 (Default when hasPastExams): Official Past Exam Paper */}
+                {hasPastExams && (
+                  <button
+                    type="button"
+                    onClick={() => setExamType('past_exam')}
+                    className={`flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 text-left transition sm:p-4 ${examType === 'past_exam'
+                      ? 'border-[#4338CA] bg-[#EEF2FF] ring-1 ring-[#4338CA] dark:border-[#818CF8] dark:bg-[#312E81]/35 dark:ring-[#818CF8]'
+                      : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                      }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`text-sm font-bold ${examType === 'past_exam'
+                          ? 'text-[#3730A3] dark:text-[#A5B4FC]'
+                          : 'text-[#18181B] dark:text-[#F5F5F4]'
+                          }`}
+                      >
+                        Thi theo mã đề cũ
+                      </span>
+                      <span
+                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${examType === 'past_exam'
+                          ? 'border-[#4338CA] bg-[#4338CA] text-white dark:border-[#818CF8] dark:bg-[#4338CA] dark:text-white'
+                          : 'border-[#C6BEB0] dark:border-[#323833]'
+                          }`}
+                      >
+                        {examType === 'past_exam' && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                        )}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className="rounded-md border border-[#A5B4FC] bg-[#EEF2FF] px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-[#3730A3] tabular-nums dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
+                        {subjectMeta.examPapers!.length} đề gốc • {subjectMeta.examTotal} câu
+                      </span>
+                    </div>
+                  </button>
+                )}
+
+                {/* Mode 2: Standard Curriculum Exam */}
                 <button
                   type="button"
                   onClick={() => setExamType('standard')}
@@ -716,44 +756,6 @@ function fisherYatesShuffle<T>(items: readonly T[]): T[] {
                     </span>
                   </div>
                 </button>
-
-                {/* Mode 2 (Optional): Official Past Exam Paper */}
-                {hasPastExams && (
-                  <button
-                    type="button"
-                    onClick={() => setExamType('past_exam')}
-                    className={`flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 text-left transition sm:p-4 ${examType === 'past_exam'
-                      ? 'border-[#D97706] bg-[#FEF3C7] ring-1 ring-[#D97706] dark:border-[#FBBF24] dark:bg-[#78350F]/45 dark:ring-[#FBBF24]'
-                      : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#D97706] hover:bg-[#FEF3C7]/65 dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#FBBF24] dark:hover:bg-[#78350F]/30'
-                      }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span
-                        className={`text-sm font-bold ${examType === 'past_exam'
-                          ? 'text-[#92400E] dark:text-[#FDE68A]'
-                          : 'text-[#18181B] dark:text-[#F5F5F4]'
-                          }`}
-                      >
-                        Thi theo mã đề cũ
-                      </span>
-                      <span
-                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${examType === 'past_exam'
-                          ? 'border-[#D97706] bg-[#D97706] text-white dark:border-[#FBBF24] dark:bg-[#FBBF24] dark:text-[#451A03]'
-                          : 'border-[#C6BEB0] dark:border-[#323833]'
-                          }`}
-                      >
-                        {examType === 'past_exam' && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                        )}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <span className="rounded-md border border-[#F59E0B] bg-[#FEF3C7] px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-[#92400E] tabular-nums dark:border-[#FBBF24]/60 dark:bg-[#78350F]/55 dark:text-[#FDE68A]">
-                        {subjectMeta.examPapers!.length} đề gốc • {subjectMeta.examTotal} câu
-                      </span>
-                    </div>
-                  </button>
-                )}
 
                 {/* Mode 3: Mastered Pool Review Exam */}
                 <button

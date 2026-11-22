@@ -176,6 +176,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
 
   const effectiveTier = getEffectiveTier(subject, tier);
   const supportsLazy = subjectSupportsLazyTiers(subject);
+  const hasExamPapers = Boolean(SUBJECTS[subject].examPapers?.length);
   const totalQuestionCount = getSubjectTotalCount(subject, effectiveTier);
 
   const masteredCount = useMemo(
@@ -336,7 +337,9 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                         isActive ? 'text-white' : inactiveIconClass
                       }`}
                     />
-                    <span className="relative z-10">{label}</span>
+                    <span className="relative z-10">
+                      {id === 'chapter' && hasExamPapers ? 'Theo đề' : label}
+                    </span>
                   </button>
                 );
               })}
@@ -512,7 +515,9 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                         isActive ? 'text-white' : inactiveIconClass
                       }`}
                     />
-                    <span className="relative z-10 truncate">{label}</span>
+                    <span className="relative z-10 truncate">
+                      {id === 'chapter' && hasExamPapers ? 'Theo đề' : label}
+                    </span>
                   </button>
                 );
               })}

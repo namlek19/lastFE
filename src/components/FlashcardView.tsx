@@ -16,7 +16,7 @@ import {
   Shuffle,
   X,
 } from 'lucide-react';
-import { ChapterMeta, SUBJECTS } from '../data';
+import { ChapterMeta, getQuestionsForExamPaper, SUBJECTS } from '../data';
 import { QuestionItem, QuestionProgress, StudyTier, SubjectId, UserProgressStore } from '../types/quiz';
 import { getDetailedMasteryState, isMastered } from '../utils/storage';
 import { useIsDesktopLg } from '../utils/useIsDesktopLg';
@@ -89,9 +89,16 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const isDesktopLg = useIsDesktopLg();
   const subjectMeta = SUBJECTS[subject];
   const unitLabel = subjectMeta.chapterUnitLabel ?? 'Chương';
+  const hasExamPapers = Boolean(subjectMeta.examPapers && subjectMeta.examPapers.length > 0);
 
   const [selectedChapter, setSelectedChapter] = useState<number>(
     () => findEarliestUnmasteredTarget(chapters, allSubjectQuestions, progress.questions).chapter
+  );
+  const [selectedExamCode, setSelectedExamCode] = useState<string | null>(
+    () => SUBJECTS[subject].examPapers?.[0]?.code ?? null
+  );
+  const [listGroupMode, setListGroupMode] = useState<'chapters' | 'exams'>(() =>
+    SUBJECTS[subject].examPapers?.length ? 'exams' : 'chapters'
   );
   const [filter, setFilter] = useState<FlashcardFilter>('all');
   const [lockedFilterIds, setLockedFilterIds] = useState<string[] | null>(null);
@@ -137,17 +144,28 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
   // Jump to earliest non-mastered card when switching subject or study tier
   useEffect(() => {
-    const target = findEarliestUnmasteredTarget(
-      chapters,
-      allSubjectQuestions,
-      progressRef.current.questions
-    );
-    setSelectedChapter(target.chapter);
+    const defaultExamCode = SUBJECTS[subject].examPapers?.[0]?.code ?? null;
+    if (defaultExamCode) {
+      const examQs = getQuestionsForExamPaper(allSubjectQuestions, defaultExamCode);
+      setSelectedExamCode(defaultExamCode);
+      setListGroupMode('exams');
+      setSelectedChapter(chapters[0]?.chapter ?? 1);
+      setCurrentIndex(findFirstUnmasteredIndex(examQs, progressRef.current.questions));
+    } else {
+      const target = findEarliestUnmasteredTarget(
+        chapters,
+        allSubjectQuestions,
+        progressRef.current.questions
+      );
+      setSelectedExamCode(null);
+      setListGroupMode('chapters');
+      setSelectedChapter(target.chapter);
+      setCurrentIndex(target.index);
+    }
     setFilter('all');
     setLockedFilterIds(null);
     setIsShuffled(false);
     setShuffledIds(null);
-    setCurrentIndex(target.index);
     setIsFlipped(false);
     setShowExplanation(false);
     setSidebarTab('chapters');
@@ -156,10 +174,12 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     setJustMasteredId(null);
 }, [subject, chapters, allSubjectQuestions]);
 
-const chapterQuestions = useMemo(
-  () => allSubjectQuestions.filter((q) => q.chapter === selectedChapter),
-  [allSubjectQuestions, selectedChapter]
-);
+const chapterQuestions = useMemo(() => {
+  if (selectedExamCode) {
+    return getQuestionsForExamPaper(allSubjectQuestions, selectedExamCode);
+  }
+  return allSubjectQuestions.filter((q) => q.chapter === selectedChapter);
+}, [allSubjectQuestions, selectedChapter, selectedExamCode]);
 
 // Live filter counts for current chapter
 const filterCounts = useMemo(() => {
@@ -217,6 +237,33 @@ const subjectMasteredCount = useMemo(() => {
   return count;
 }, [allSubjectQuestions, progress.questions]);
 
+const examPaperStats = useMemo(() => {
+  const papers = SUBJECTS[subject].examPapers ?? [];
+  const stats = new Map<string, { mastered: number; studied: number; total: number; pct: number }>();
+  for (const p of papers) {
+    const qs = getQuestionsForExamPaper(allSubjectQuestions, p.code);
+    let mastered = 0;
+    let studied = 0;
+    for (const q of qs) {
+      const st = getDetailedMasteryState(progress.questions[q.id]);
+      if (st === 'mastered') {
+        mastered += 1;
+        studied += 1;
+      } else if (st !== 'unlearned') {
+        studied += 1;
+      }
+    }
+    const total = qs.length;
+    stats.set(p.code, {
+      mastered,
+      studied,
+      total,
+      pct: total > 0 ? Math.round((mastered / total) * 100) : 0,
+    });
+  }
+  return stats;
+}, [allSubjectQuestions, progress.questions, subject]);
+
 // Stabilized deck so flipping/marking a card doesn't immediately remove it mid-view
 const deck: QuestionItem[] = useMemo(() => {
   let base = chapterQuestions;
@@ -239,21 +286,46 @@ const currentState = getDetailedMasteryState(currentProgress);
 const isCurrentMastered = currentState === 'mastered';
 const isCurrentFlagged = currentState === 'hesitant';
 const isJustMastered = Boolean(currentQuestion && justMasteredId === currentQuestion.id);
-const activeChapterStat = chapterStats.get(selectedChapter) ?? {
-  mastered: 0,
-  studied: 0,
-  total: chapterQuestions.length,
-  pct: 0,
-};
+const activeGroupLabel = selectedExamCode
+  ? `Đề ${selectedExamCode}`
+  : `${unitLabel} ${selectedChapter}`;
+const activeChapterStat = selectedExamCode
+  ? examPaperStats.get(selectedExamCode) ?? {
+      mastered: 0,
+      studied: 0,
+      total: chapterQuestions.length,
+      pct: 0,
+    }
+  : chapterStats.get(selectedChapter) ?? {
+      mastered: 0,
+      studied: 0,
+      total: chapterQuestions.length,
+      pct: 0,
+    };
 
 const handleSelectChapter = (chapterNum: number) => {
   const nextChapterQuestions = allSubjectQuestions.filter((q) => q.chapter === chapterNum);
+  setSelectedExamCode(null);
   setSelectedChapter(chapterNum);
   setFilter('all');
   setLockedFilterIds(null);
   setIsShuffled(false);
   setShuffledIds(null);
   setCurrentIndex(findFirstUnmasteredIndex(nextChapterQuestions, progress.questions));
+  setIsFlipped(false);
+  setShowExplanation(false);
+  setSakugaEvent(null);
+  setJustMasteredId(null);
+};
+
+const handleSelectExamPaper = (examCode: string) => {
+  const nextExamQuestions = getQuestionsForExamPaper(allSubjectQuestions, examCode);
+  setSelectedExamCode(examCode);
+  setFilter('all');
+  setLockedFilterIds(null);
+  setIsShuffled(false);
+  setShuffledIds(null);
+  setCurrentIndex(findFirstUnmasteredIndex(nextExamQuestions, progress.questions));
   setIsFlipped(false);
   setShowExplanation(false);
   setSakugaEvent(null);
@@ -597,7 +669,7 @@ return (
             </div>
           </div>
 
-          {/* 2-Tab Switcher: Chương | Bảng thẻ */}
+          {/* 2-Tab Switcher: Chương/Đề | Bảng thẻ */}
           <div className="mb-4 grid grid-cols-2 gap-1.5 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
             <button
               type="button"
@@ -608,7 +680,9 @@ return (
                   : 'border-transparent text-[#656058] hover:bg-[#EEF2FF] hover:text-[#3730A3] dark:text-[#9CA39B] dark:hover:bg-[#312E81]/30 dark:hover:text-[#A5B4FC]'
                 }`}
             >
-              Chương ({chapters.length})
+              {hasExamPapers && listGroupMode === 'exams'
+                ? `Danh sách đề (${subjectMeta.examPapers!.length})`
+                : `${unitLabel} (${chapters.length})`}
             </button>
             <button
               type="button"
@@ -624,69 +698,167 @@ return (
           </div>
 
           {sidebarTab === 'chapters' ? (
-            <div className="grid max-h-[calc(100vh-280px)] grid-cols-1 gap-4 overflow-y-auto px-2.5 py-2.5">
-              {chapters.map((ch) => {
-                const stat = chapterStats.get(ch.chapter) ?? {
-                  mastered: 0,
-                  studied: 0,
-                  total: ch.count,
-                  pct: 0,
-                };
-                const active = ch.chapter === selectedChapter;
-
-                return (
+            <>
+              {hasExamPapers && (
+                <div className="mb-3 grid grid-cols-2 gap-1 rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
                   <button
-                    key={ch.chapter}
                     type="button"
                     data-no-keyflip="true"
-                    onClick={() => handleSelectChapter(ch.chapter)}
-                    className={`relative w-full cursor-pointer rounded-xl border p-4 text-left transition-colors ${active
-                        ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] shadow-xs dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
-                        : stat.pct >= 100
-                          ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35 dark:hover:border-[#C4B5FD] dark:hover:bg-[#5B21B6]/20'
-                          : stat.pct >= 50
-                            ? 'border-[#F59E0B]/70 bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30'
-                            : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30'
-                      }`}
+                    onClick={() => {
+                      setListGroupMode('exams');
+                      if (!selectedExamCode && subjectMeta.examPapers?.[0]) {
+                        handleSelectExamPaper(subjectMeta.examPapers[0].code);
+                      }
+                    }}
+                    className={`cursor-pointer rounded-lg px-2 py-1.5 text-[11px] font-bold transition-colors ${
+                      listGroupMode === 'exams'
+                        ? 'bg-[#4338CA] text-white dark:bg-[#4338CA] dark:text-white'
+                        : 'text-[#656058] hover:bg-[#EEF2FF] hover:text-[#18181B] dark:text-[#9CA39B] dark:hover:bg-[#312E81]/25'
+                    }`}
                   >
-                    <SakugaBorderFire percent={stat.pct} radius={12} compact />
-                    <div className="flex items-center justify-between gap-2">
-                      <span
-                        className={`text-xs font-bold uppercase tracking-wide ${active
-                            ? 'text-[#3730A3] dark:text-[#A5B4FC]'
-                            : 'text-[#656058] dark:text-[#9CA39B]'
-                          }`}
-                      >
-                        {unitLabel} {ch.chapter}
-                      </span>
-                      <span
-                        className={`tabular-nums rounded-full border px-2 py-0.5 text-[11px] font-semibold transition-colors ${getSakugaProgressBadgeClass(stat.pct)}`}
-                      >
-                        {stat.pct}% Đã thuộc
-                      </span>
-                    </div>
-
-                    <p
-                      className={`mt-1.5 line-clamp-2 text-sm font-semibold leading-snug ${active
-                          ? 'text-[#18181B] dark:text-[#F5F5F4]'
-                          : 'text-[#292524] dark:text-[#E7E5E4]'
-                        }`}
-                    >
-                      {ch.title}
-                    </p>
-
-                    <div className="mt-3 flex items-center justify-between text-[11px] text-[#656058] dark:text-[#9CA39B]">
-                      <span className="tabular-nums">Đã học {stat.studied}/{ch.count}</span>
-                      <span className="tabular-nums font-medium text-[#292524] dark:text-[#E7E5E4]">
-                        Thuộc {stat.mastered}/{stat.total}
-                      </span>
-                    </div>
-
-                    <SakugaProgressBar percent={stat.pct} className="mt-2 h-1.5 w-full" />
+                    Theo đề ({subjectMeta.examPapers!.length} đề)
                   </button>
-                );
-              })}
-            </div>
+                  <button
+                    type="button"
+                    data-no-keyflip="true"
+                    onClick={() => {
+                      setListGroupMode('chapters');
+                      if (selectedExamCode) {
+                        handleSelectChapter(selectedChapter);
+                      }
+                    }}
+                    className={`cursor-pointer rounded-lg px-2 py-1.5 text-[11px] font-bold transition-colors ${
+                      listGroupMode === 'chapters'
+                        ? 'bg-[#4338CA] text-white dark:bg-[#4338CA] dark:text-white'
+                        : 'text-[#656058] hover:bg-[#EEF2FF] hover:text-[#18181B] dark:text-[#9CA39B] dark:hover:bg-[#312E81]/25'
+                    }`}
+                  >
+                    Theo {unitLabel.toLowerCase()} ({chapters.length})
+                  </button>
+                </div>
+              )}
+
+              <div className="grid max-h-[calc(100vh-300px)] grid-cols-1 gap-4 overflow-y-auto px-2.5 py-2.5">
+                {listGroupMode === 'exams' && hasExamPapers
+                  ? subjectMeta.examPapers!.map((paper) => {
+                      const stat = examPaperStats.get(paper.code) ?? {
+                        mastered: 0,
+                        studied: 0,
+                        total: paper.questionCount,
+                        pct: 0,
+                      };
+                      const active = selectedExamCode === paper.code;
+
+                      return (
+                        <button
+                          key={paper.code}
+                          type="button"
+                          data-no-keyflip="true"
+                          onClick={() => handleSelectExamPaper(paper.code)}
+                          className={`relative w-full cursor-pointer rounded-xl border p-4 text-left transition-colors ${
+                            active
+                              ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] shadow-xs dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
+                              : stat.pct >= 100
+                                ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35'
+                                : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#818CF8]'
+                          }`}
+                        >
+                          <SakugaBorderFire percent={stat.pct} radius={12} compact />
+                          <div className="flex items-center justify-between gap-2">
+                            <span
+                              className={`text-xs font-bold uppercase tracking-wide ${
+                                active
+                                  ? 'text-[#3730A3] dark:text-[#A5B4FC]'
+                                  : 'text-[#656058] dark:text-[#9CA39B]'
+                              }`}
+                            >
+                              {paper.code}
+                            </span>
+                            <span
+                              className={`tabular-nums rounded-full border px-2 py-0.5 text-[11px] font-semibold transition-colors ${getSakugaProgressBadgeClass(stat.pct)}`}
+                            >
+                              {stat.pct}% Đã thuộc
+                            </span>
+                          </div>
+
+                          <p className="mt-1.5 line-clamp-2 text-sm font-semibold leading-snug text-[#18181B] dark:text-[#F5F5F4]">
+                            {paper.label}
+                          </p>
+
+                          <div className="mt-3 flex items-center justify-between text-[11px] text-[#656058] dark:text-[#9CA39B]">
+                            <span className="tabular-nums">Đã học {stat.studied}/{stat.total}</span>
+                            <span className="tabular-nums font-medium text-[#292524] dark:text-[#E7E5E4]">
+                              Thuộc {stat.mastered}/{stat.total}
+                            </span>
+                          </div>
+
+                          <SakugaProgressBar percent={stat.pct} className="mt-2 h-1.5 w-full" />
+                        </button>
+                      );
+                    })
+                  : chapters.map((ch) => {
+                      const stat = chapterStats.get(ch.chapter) ?? {
+                        mastered: 0,
+                        studied: 0,
+                        total: ch.count,
+                        pct: 0,
+                      };
+                      const active = !selectedExamCode && ch.chapter === selectedChapter;
+
+                      return (
+                        <button
+                          key={ch.chapter}
+                          type="button"
+                          data-no-keyflip="true"
+                          onClick={() => handleSelectChapter(ch.chapter)}
+                          className={`relative w-full cursor-pointer rounded-xl border p-4 text-left transition-colors ${active
+                              ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] shadow-xs dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
+                              : stat.pct >= 100
+                                ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35 dark:hover:border-[#C4B5FD] dark:hover:bg-[#5B21B6]/20'
+                                : stat.pct >= 50
+                                  ? 'border-[#F59E0B]/70 bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30'
+                                  : 'border-[#D5CFC2] bg-[#FAF9F5] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30'
+                            }`}
+                        >
+                          <SakugaBorderFire percent={stat.pct} radius={12} compact />
+                          <div className="flex items-center justify-between gap-2">
+                            <span
+                              className={`text-xs font-bold uppercase tracking-wide ${active
+                                  ? 'text-[#3730A3] dark:text-[#A5B4FC]'
+                                  : 'text-[#656058] dark:text-[#9CA39B]'
+                                }`}
+                            >
+                              {unitLabel} {ch.chapter}
+                            </span>
+                            <span
+                              className={`tabular-nums rounded-full border px-2 py-0.5 text-[11px] font-semibold transition-colors ${getSakugaProgressBadgeClass(stat.pct)}`}
+                            >
+                              {stat.pct}% Đã thuộc
+                            </span>
+                          </div>
+
+                          <p
+                            className={`mt-1.5 line-clamp-2 text-sm font-semibold leading-snug ${active
+                                ? 'text-[#18181B] dark:text-[#F5F5F4]'
+                                : 'text-[#292524] dark:text-[#E7E5E4]'
+                              }`}
+                          >
+                            {ch.title}
+                          </p>
+
+                          <div className="mt-3 flex items-center justify-between text-[11px] text-[#656058] dark:text-[#9CA39B]">
+                            <span className="tabular-nums">Đã học {stat.studied}/{ch.count}</span>
+                            <span className="tabular-nums font-medium text-[#292524] dark:text-[#E7E5E4]">
+                              Thuộc {stat.mastered}/{stat.total}
+                            </span>
+                          </div>
+
+                          <SakugaProgressBar percent={stat.pct} className="mt-2 h-1.5 w-full" />
+                        </button>
+                      );
+                    })}
+              </div>
+            </>
           ) : (
             <div>
               {/* Compact Legend */}
@@ -780,7 +952,7 @@ return (
               <span className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-[#18181B] dark:text-[#F5F5F4]">
                 <Menu className="h-4 w-4 shrink-0 text-[#4338CA] dark:text-[#818CF8]" />
                 <span className="truncate tabular-nums">
-                  Chương {selectedChapter} • Thẻ {deck.length > 0 ? safeIndex + 1 : 0}/{deck.length}
+                  {activeGroupLabel} • Thẻ {deck.length > 0 ? safeIndex + 1 : 0}/{deck.length}
                 </span>
                 {filter !== 'all' && (
                   <span className="shrink-0 rounded-full border border-[#A5B4FC] bg-[#EEF2FF] px-1.5 py-0.5 text-[10px] font-bold text-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#312E81]/30 dark:text-[#A5B4FC]">
@@ -1416,60 +1588,142 @@ return (
                 </div>
               </div>
 
-              {/* Chapter List */}
+              {/* Chapter / Exam List */}
               <div>
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
-                  Chọn chương
-                </div>
-                <div className="space-y-3.5 px-1.5 py-1.5">
-                  {chapters.map((ch) => {
-                    const stat = chapterStats.get(ch.chapter) ?? {
-                      mastered: 0,
-                      studied: 0,
-                      total: ch.count,
-                      pct: 0,
-                    };
-                    const active = ch.chapter === selectedChapter;
-                    return (
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-[#656058] dark:text-[#9CA39B]">
+                    {listGroupMode === 'exams' && hasExamPapers
+                      ? 'Chọn mã đề'
+                      : `Chọn ${unitLabel.toLowerCase()}`}
+                  </span>
+                  {hasExamPapers && (
+                    <div className="inline-flex rounded-lg border border-[#D5CFC2] bg-[#FAF9F5] p-0.5 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
                       <button
-                        key={ch.chapter}
                         type="button"
                         onClick={() => {
-                          handleSelectChapter(ch.chapter);
-                          setIsMobileSheetOpen(false);
+                          setListGroupMode('exams');
+                          if (!selectedExamCode && subjectMeta.examPapers?.[0]) {
+                            handleSelectExamPaper(subjectMeta.examPapers[0].code);
+                          }
                         }}
-                        className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border px-3.5 py-2.5 text-left transition ${active
-                            ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
-                            : stat.pct >= 100
-                              ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 text-[#292524] hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35 dark:text-[#E7E5E4] dark:hover:border-[#C4B5FD] dark:hover:bg-[#5B21B6]/20'
-                              : stat.pct >= 50
-                                ? 'border-[#F59E0B]/70 bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30'
-                                : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30'
-                          }`}
+                        className={`cursor-pointer rounded-md px-2 py-1 text-[11px] font-bold transition ${
+                          listGroupMode === 'exams'
+                            ? 'bg-[#4338CA] text-white'
+                            : 'text-[#656058] dark:text-[#9CA39B]'
+                        }`}
                       >
-                        <SakugaBorderFire percent={stat.pct} radius={12} compact />
-
-                        <div className="flex w-full items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className={`text-xs font-bold ${active ? 'text-[#3730A3] dark:text-[#A5B4FC]' : ''}`}>
-                              Chương {ch.chapter}{' '}
-                              <span className="font-normal text-[#656058] dark:text-[#9CA39B]">
-                                (Thuộc {stat.mastered}/{stat.total})
+                        Theo đề ({subjectMeta.examPapers!.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setListGroupMode('chapters');
+                          if (selectedExamCode) handleSelectChapter(selectedChapter);
+                        }}
+                        className={`cursor-pointer rounded-md px-2 py-1 text-[11px] font-bold transition ${
+                          listGroupMode === 'chapters'
+                            ? 'bg-[#4338CA] text-white'
+                            : 'text-[#656058] dark:text-[#9CA39B]'
+                        }`}
+                      >
+                        Theo {unitLabel.toLowerCase()}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-3.5 px-1.5 py-1.5">
+                  {listGroupMode === 'exams' && hasExamPapers
+                    ? subjectMeta.examPapers!.map((paper) => {
+                        const stat = examPaperStats.get(paper.code) ?? {
+                          mastered: 0,
+                          studied: 0,
+                          total: paper.questionCount,
+                          pct: 0,
+                        };
+                        const active = selectedExamCode === paper.code;
+                        return (
+                          <button
+                            key={paper.code}
+                            type="button"
+                            onClick={() => {
+                              handleSelectExamPaper(paper.code);
+                              setIsMobileSheetOpen(false);
+                            }}
+                            className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border px-3.5 py-2.5 text-left transition ${
+                              active
+                                ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
+                                : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4]'
+                            }`}
+                          >
+                            <SakugaBorderFire percent={stat.pct} radius={12} compact />
+                            <div className="flex w-full items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className={`text-xs font-bold ${active ? 'text-[#3730A3] dark:text-[#A5B4FC]' : ''}`}>
+                                  {paper.code}{' '}
+                                  <span className="font-normal text-[#656058] dark:text-[#9CA39B]">
+                                    (Thuộc {stat.mastered}/{stat.total})
+                                  </span>
+                                </div>
+                                <div className="truncate text-xs opacity-85">{paper.label}</div>
+                              </div>
+                              <span
+                                className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stat.pct)}`}
+                              >
+                                {stat.pct}%
                               </span>
                             </div>
-                            <div className="truncate text-xs opacity-85">{ch.title}</div>
-                          </div>
-                          <span
-                            className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stat.pct)}`}
+                            <SakugaProgressBar percent={stat.pct} className="h-1.5 w-full" />
+                          </button>
+                        );
+                      })
+                    : chapters.map((ch) => {
+                        const stat = chapterStats.get(ch.chapter) ?? {
+                          mastered: 0,
+                          studied: 0,
+                          total: ch.count,
+                          pct: 0,
+                        };
+                        const active = !selectedExamCode && ch.chapter === selectedChapter;
+                        return (
+                          <button
+                            key={ch.chapter}
+                            type="button"
+                            onClick={() => {
+                              handleSelectChapter(ch.chapter);
+                              setIsMobileSheetOpen(false);
+                            }}
+                            className={`relative flex w-full cursor-pointer flex-col gap-2 rounded-xl border px-3.5 py-2.5 text-left transition ${active
+                                ? 'border-[#4338CA] bg-[#EEF2FF] text-[#18181B] dark:border-[#818CF8] dark:bg-[#312E81]/30 dark:text-[#F5F5F4]'
+                                : stat.pct >= 100
+                                  ? 'border-[#7C3AED] bg-[#FAF9F5] ring-2 ring-[#A78BFA]/45 text-[#292524] hover:border-[#6D28D9] hover:bg-[#F5F3FF] dark:border-[#A78BFA]/85 dark:bg-[#1C1F1C] dark:ring-[#C4B5FD]/35 dark:text-[#E7E5E4] dark:hover:border-[#C4B5FD] dark:hover:bg-[#5B21B6]/20'
+                                  : stat.pct >= 50
+                                    ? 'border-[#F59E0B]/70 bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#F59E0B]/55 dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30'
+                                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/30'
+                              }`}
                           >
-                            {stat.pct}%
-                          </span>
-                        </div>
+                            <SakugaBorderFire percent={stat.pct} radius={12} compact />
 
-                        <SakugaProgressBar percent={stat.pct} className="h-1.5 w-full" />
-                      </button>
-                    );
-                  })}
+                            <div className="flex w-full items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className={`text-xs font-bold ${active ? 'text-[#3730A3] dark:text-[#A5B4FC]' : ''}`}>
+                                  {unitLabel} {ch.chapter}{' '}
+                                  <span className="font-normal text-[#656058] dark:text-[#9CA39B]">
+                                    (Thuộc {stat.mastered}/{stat.total})
+                                  </span>
+                                </div>
+                                <div className="truncate text-xs opacity-85">{ch.title}</div>
+                              </div>
+                              <span
+                                className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stat.pct)}`}
+                              >
+                                {stat.pct}%
+                              </span>
+                            </div>
+
+                            <SakugaProgressBar percent={stat.pct} className="h-1.5 w-full" />
+                          </button>
+                        );
+                      })}
                 </div>
               </div>
 

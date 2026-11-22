@@ -17,7 +17,7 @@ import {
   Trophy,
   X,
 } from 'lucide-react';
-import { ChapterMeta, isAnswerCorrect, SUBJECTS } from '../data';
+import { ChapterMeta, getQuestionsForExamPaper, isAnswerCorrect, SUBJECTS } from '../data';
 import { QuestionItem, QuestionProgress, StudyTier, SubjectId, UserProgressStore } from '../types/quiz';
 import { getMasteryState, isMastered } from '../utils/storage';
 import { useIsDesktopLg } from '../utils/useIsDesktopLg';
@@ -135,8 +135,15 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
   const isDesktopLg = useIsDesktopLg();
   const subjectMeta = SUBJECTS[subject];
   const unitLabel = subjectMeta.chapterUnitLabel ?? 'Chương';
+  const hasExamPapers = Boolean(subjectMeta.examPapers && subjectMeta.examPapers.length > 0);
 
   const [selectedChapter, setSelectedChapter] = useState<number>(() => chapters[0]?.chapter ?? 1);
+  const [selectedExamCode, setSelectedExamCode] = useState<string | null>(
+    () => SUBJECTS[subject].examPapers?.[0]?.code ?? null
+  );
+  const [listGroupMode, setListGroupMode] = useState<'chapters' | 'exams'>(() =>
+    SUBJECTS[subject].examPapers?.length ? 'exams' : 'chapters'
+  );
   const [activeStageIndex, setActiveStageIndex] = useState<number | null>(null);
   const [queue, setQueue] = useState<QuestionItem[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
@@ -230,9 +237,12 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
   useEffect(() => {
     const subjectChanged = prevSubjectRef.current !== subject;
     prevSubjectRef.current = subject;
+    const defaultExamCode = SUBJECTS[subject].examPapers?.[0]?.code ?? null;
 
     if (subjectChanged) {
       setSelectedChapter(chapters[0]?.chapter ?? 1);
+      setSelectedExamCode(defaultExamCode);
+      setListGroupMode(defaultExamCode ? 'exams' : 'chapters');
     } else {
       setSelectedChapter(prev =>
         chapters.some(c => c.chapter === prev) ? prev : (chapters[0]?.chapter ?? 1)
@@ -249,10 +259,12 @@ export const RollingStudyView: React.FC<RollingStudyViewProps> = ({
     setIsStageSheetOpen(false);
 }, [subject, chapters, clearShake]);
 
-const chapterQuestions = useMemo(
-  () => allSubjectQuestions.filter(q => q.chapter === selectedChapter),
-  [allSubjectQuestions, selectedChapter]
-);
+const chapterQuestions = useMemo(() => {
+  if (selectedExamCode) {
+    return getQuestionsForExamPaper(allSubjectQuestions, selectedExamCode);
+  }
+  return allSubjectQuestions.filter(q => q.chapter === selectedChapter);
+}, [allSubjectQuestions, selectedChapter, selectedExamCode]);
 
 const stages = useMemo(() => splitIntoStages(chapterQuestions), [chapterQuestions]);
 
@@ -282,7 +294,22 @@ const chapterStatsMap = useMemo(() => {
   return stats;
 }, [chapters, allSubjectQuestions, progress.questions]);
 
-const chapterStats = chapterStatsMap.get(selectedChapter) ?? EMPTY_STAGE_STATS;
+const examStatsMap = useMemo(() => {
+  const papers = SUBJECTS[subject].examPapers ?? [];
+  const stats = new Map<
+    string,
+    { mastered: number; hesitant: number; unlearned: number; total: number; percent: number }
+  >();
+  for (const p of papers) {
+    const qs = getQuestionsForExamPaper(allSubjectQuestions, p.code);
+    stats.set(p.code, getStageStats(qs, progress.questions));
+  }
+  return stats;
+}, [allSubjectQuestions, progress.questions, subject]);
+
+const chapterStats = selectedExamCode
+  ? examStatsMap.get(selectedExamCode) ?? EMPTY_STAGE_STATS
+  : chapterStatsMap.get(selectedChapter) ?? EMPTY_STAGE_STATS;
 
 const stageStatsList = useMemo(
   () => stages.map(stage => getStageStats(stage.questions, progress.questions)),
@@ -293,6 +320,16 @@ const currentChapterMeta = useMemo(
   () => chapters.find(c => c.chapter === selectedChapter),
   [chapters, selectedChapter]
 );
+const currentExamPaperMeta = useMemo(
+  () => (selectedExamCode ? subjectMeta.examPapers?.find(p => p.code === selectedExamCode) : undefined),
+  [selectedExamCode, subjectMeta.examPapers]
+);
+const activeGroupLabel = selectedExamCode
+  ? `Đề ${selectedExamCode}`
+  : `${unitLabel} ${selectedChapter}`;
+const activeGroupTitle = selectedExamCode
+  ? currentExamPaperMeta?.label ?? selectedExamCode
+  : currentChapterMeta?.title ?? '';
 
 const activeStage = activeStageIndex !== null ? stages[activeStageIndex] ?? null : null;
 const currentQuestion = queue[0] ?? null;
@@ -539,7 +576,7 @@ if (activeStage !== null) {
             <div className="mt-4">
               <div className="flex items-center justify-between gap-2">
                 <span className="rounded-md border border-[#D5CFC2] bg-white px-2 py-0.5 text-xs font-semibold text-[#44403C] dark:border-[#3F3F46] dark:bg-[#27272A] dark:text-[#D4D4D8]">
-                  Chương {selectedChapter}
+                  {activeGroupLabel}
                 </span>
                 <span className="text-xs font-medium text-[#656058] tabular-nums dark:text-[#9CA39B]">
                   {activeStage.questions.length} câu · Câu {activeStage.startIndex}–{activeStage.endIndex}
@@ -548,9 +585,9 @@ if (activeStage !== null) {
               <h2 className="mt-2 text-sm font-bold text-[#18181B] dark:text-[#F5F5F4]">
                 {activeStage.title}
               </h2>
-              {currentChapterMeta && (
+              {activeGroupTitle && (
                 <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-[#656058] dark:text-[#9CA39B]">
-                  {currentChapterMeta.title}
+                  {activeGroupTitle}
                 </p>
               )}
             </div>
@@ -1267,7 +1304,43 @@ return (
           </div>
         </div>
 
-        {/* Mobile 1-Line Chapter Picker Button (< 768px) */}
+        {/* Mode Toggle: Theo đề (default) | Theo chương/MOOC */}
+        {hasExamPapers && (
+          <div className="mt-4 inline-flex rounded-xl border border-[#D5CFC2] bg-[#FAF9F5] p-1 dark:border-[#2C302B] dark:bg-[#1C1F1C]">
+            <button
+              type="button"
+              onClick={() => {
+                setListGroupMode('exams');
+                if (!selectedExamCode && subjectMeta.examPapers?.[0]) {
+                  setSelectedExamCode(subjectMeta.examPapers[0].code);
+                }
+              }}
+              className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+                listGroupMode === 'exams'
+                  ? 'bg-[#4338CA] text-white dark:bg-[#4338CA] dark:text-white'
+                  : 'text-[#656058] hover:bg-[#EEF2FF] hover:text-[#18181B] dark:text-[#9CA39B] dark:hover:bg-[#312E81]/25'
+              }`}
+            >
+              Theo đề ({subjectMeta.examPapers!.length} đề)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setListGroupMode('chapters');
+                setSelectedExamCode(null);
+              }}
+              className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+                listGroupMode === 'chapters'
+                  ? 'bg-[#4338CA] text-white dark:bg-[#4338CA] dark:text-white'
+                  : 'text-[#656058] hover:bg-[#EEF2FF] hover:text-[#18181B] dark:text-[#9CA39B] dark:hover:bg-[#312E81]/25'
+              }`}
+            >
+              Theo {unitLabel.toLowerCase()} ({chapters.length})
+            </button>
+          </div>
+        )}
+
+        {/* Mobile 1-Line Chapter / Exam Picker Button (< 768px) */}
         <div className="mt-4 md:hidden">
           <button
             type="button"
@@ -1277,7 +1350,7 @@ return (
             <span className="flex min-w-0 items-center gap-2">
               <Menu className="h-4 w-4 shrink-0 text-[#4338CA] dark:text-[#818CF8]" />
               <span className="truncate">
-                Chương {selectedChapter}: {currentChapterMeta?.title}
+                {activeGroupLabel}: {activeGroupTitle}
               </span>
             </span>
             <span className="flex shrink-0 items-center gap-1.5">
@@ -1291,35 +1364,63 @@ return (
           </button>
         </div>
 
-        {/* Desktop Chapter Selector (>= 768px) */}
-        <div className="mt-5 hidden flex-wrap items-center justify-between gap-2.5 md:flex">
-          {chapters.map(ch => {
-            const isSelected = ch.chapter === selectedChapter;
-            const stats = chapterStatsMap.get(ch.chapter) ?? EMPTY_STAGE_STATS;
+        {/* Desktop Chapter / Exam Selector (>= 768px) */}
+        <div className="mt-4 hidden flex-wrap items-center justify-between gap-2.5 md:flex">
+          {listGroupMode === 'exams' && hasExamPapers
+            ? subjectMeta.examPapers!.map(paper => {
+                const isSelected = selectedExamCode === paper.code;
+                const stats = examStatsMap.get(paper.code) ?? EMPTY_STAGE_STATS;
 
-            return (
-              <button
-                key={ch.chapter}
-                type="button"
-                onClick={() => setSelectedChapter(ch.chapter)}
-                className={`flex min-w-[135px] flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3.5 py-2 text-left text-sm transition ${isSelected
-                    ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-sm hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]'
-                    : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
-                  }`}
-              >
-                <span className="font-semibold">{unitLabel} {ch.chapter}</span>
-                <span
-                  className={`rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
-                >
-                  {stats.percent}%
-                </span>
-              </button>
-            );
-          })}
+                return (
+                  <button
+                    key={paper.code}
+                    type="button"
+                    onClick={() => setSelectedExamCode(paper.code)}
+                    className={`flex min-w-[135px] flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3.5 py-2 text-left text-sm transition ${
+                      isSelected
+                        ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-sm hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]'
+                        : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                    }`}
+                  >
+                    <span className="font-semibold">{paper.code}</span>
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
+                    >
+                      {stats.percent}%
+                    </span>
+                  </button>
+                );
+              })
+            : chapters.map(ch => {
+                const isSelected = !selectedExamCode && ch.chapter === selectedChapter;
+                const stats = chapterStatsMap.get(ch.chapter) ?? EMPTY_STAGE_STATS;
+
+                return (
+                  <button
+                    key={ch.chapter}
+                    type="button"
+                    onClick={() => {
+                      setSelectedExamCode(null);
+                      setSelectedChapter(ch.chapter);
+                    }}
+                    className={`flex min-w-[135px] flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl border px-3.5 py-2 text-left text-sm transition ${isSelected
+                        ? 'border-[#4338CA] bg-[#4338CA] text-white shadow-sm hover:border-[#3730A3] hover:bg-[#3730A3] dark:border-[#818CF8]/50 dark:bg-[#4338CA] dark:text-white dark:hover:bg-[#3730A3]'
+                        : 'border-[#D5CFC2] bg-[#FAF9F5] text-[#292524] hover:border-[#4338CA] hover:bg-[#EEF2FF] dark:border-[#2C302B] dark:bg-[#1C1F1C] dark:text-[#E7E5E4] dark:hover:border-[#818CF8] dark:hover:bg-[#312E81]/25'
+                      }`}
+                  >
+                    <span className="font-semibold">{unitLabel} {ch.chapter}</span>
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-xs font-semibold tabular-nums transition-colors ${getSakugaProgressBadgeClass(stats.percent)}`}
+                    >
+                      {stats.percent}%
+                    </span>
+                  </button>
+                );
+              })}
         </div>
 
-        {/* Overall Chapter Progress Bar */}
-        {currentChapterMeta && (
+        {/* Overall Chapter / Exam Progress Bar */}
+        {(currentChapterMeta || currentExamPaperMeta) && (
           <div
             className={`relative mt-3.5 rounded-xl border bg-[#FAF9F5] p-3.5 dark:bg-[#1C1F1C] sm:mt-5 sm:p-4 ${chapterStats.percent >= 100
                 ? 'border-[#7C3AED] ring-2 ring-[#A78BFA]/45 dark:border-[#A78BFA]/85 dark:ring-[#C4B5FD]/35'
@@ -1332,7 +1433,7 @@ return (
 
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="hidden text-sm font-semibold text-[#3730A3] dark:text-[#A5B4FC] md:block">
-                Chương {currentChapterMeta.chapter}: {currentChapterMeta.title}
+                {activeGroupLabel}: {activeGroupTitle}
               </div>
               <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
                 <span className="inline-flex items-center gap-1.5 text-[#047857] tabular-nums dark:text-[#34D399]">

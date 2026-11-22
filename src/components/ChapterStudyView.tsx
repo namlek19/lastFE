@@ -88,8 +88,12 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
   const isDesktopLg = useIsDesktopLg();
 
   const [selectedChapter, setSelectedChapter] = useState<number>(() => chapters[0]?.chapter ?? 1);
-  const [selectedExamCode, setSelectedExamCode] = useState<string | null>(null);
-  const [listGroupMode, setListGroupMode] = useState<'chapters' | 'exams'>('chapters');
+  const [selectedExamCode, setSelectedExamCode] = useState<string | null>(
+    () => SUBJECTS[subject].examPapers?.[0]?.code ?? null
+  );
+  const [listGroupMode, setListGroupMode] = useState<'chapters' | 'exams'>(() =>
+    SUBJECTS[subject].examPapers?.length ? 'exams' : 'chapters'
+  );
   const [filter, setFilter] = useState<QuestionFilter>('all');
   const [lockedFilterIds, setLockedFilterIds] = useState<string[] | null>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -184,10 +188,12 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
         ? selectedChapterRef.current
         : chapters[0]?.chapter ?? 1;
 
+    const defaultExamCode = SUBJECTS[subject].examPapers?.[0]?.code ?? null;
+
     if (subjectChanged) {
       setSelectedChapter(targetChapter);
-      setSelectedExamCode(null);
-      setListGroupMode('chapters');
+      setSelectedExamCode(defaultExamCode);
+      setListGroupMode(defaultExamCode ? 'exams' : 'chapters');
       setSessionAttempts({});
       setSidebarTab('chapters');
       setCurrentIndex(0);
@@ -195,7 +201,9 @@ export const ChapterStudyView: React.FC<ChapterStudyViewProps> = ({
       if (targetChapter !== selectedChapterRef.current) {
         setSelectedChapter(targetChapter);
       }
-      const targetQuestions = allSubjectQuestions.filter((q) => q.chapter === targetChapter);
+      const targetQuestions = defaultExamCode
+        ? getQuestionsForExamPaper(allSubjectQuestions, defaultExamCode)
+        : allSubjectQuestions.filter((q) => q.chapter === targetChapter);
       const firstUnmastered = targetQuestions.findIndex(
         (q) => !isMastered(progressRef.current.questions[q.id])
       );
@@ -566,7 +574,9 @@ return (
                   : 'text-[#656058] hover:bg-[#EEF2FF] hover:text-[#18181B] dark:text-[#9CA39B] dark:hover:bg-[#312E81]/25 dark:hover:text-[#F5F5F4]'
                 }`}
             >
-              Danh sách chương ({chapters.length})
+              {hasExamPapers && listGroupMode === 'exams'
+                ? `Danh sách đề (${subjectMeta.examPapers!.length})`
+                : `Danh sách ${unitLabel.toLowerCase()} (${chapters.length})`}
             </button>
             <button
               type="button"
@@ -615,23 +625,6 @@ return (
                     type="button"
                     data-native-enter="true"
                     onClick={() => {
-                      setListGroupMode('chapters');
-                      if (selectedExamCode) {
-                        handleSelectChapter(selectedChapter);
-                      }
-                    }}
-                    className={`cursor-pointer rounded-lg px-2 py-1.5 text-[11px] font-bold transition-colors ${
-                      listGroupMode === 'chapters'
-                        ? 'bg-[#3730A3] text-white dark:bg-[#4338CA] dark:text-white'
-                        : 'text-[#656058] hover:bg-[#EEF2FF] hover:text-[#18181B] dark:text-[#9CA39B] dark:hover:bg-[#312E81]/25'
-                    }`}
-                  >
-                    Theo {unitLabel} ({chapters.length})
-                  </button>
-                  <button
-                    type="button"
-                    data-native-enter="true"
-                    onClick={() => {
                       setListGroupMode('exams');
                       if (!selectedExamCode && subjectMeta.examPapers?.[0]) {
                         handleSelectExamPaper(subjectMeta.examPapers[0].code);
@@ -639,11 +632,28 @@ return (
                     }}
                     className={`cursor-pointer rounded-lg px-2 py-1.5 text-[11px] font-bold transition-colors ${
                       listGroupMode === 'exams'
-                        ? 'bg-[#D97706] text-white dark:bg-[#D97706] dark:text-white'
-                        : 'text-[#656058] hover:bg-[#FEF3C7] hover:text-[#92400E] dark:text-[#9CA39B] dark:hover:bg-[#78350F]/30'
+                        ? 'bg-[#4338CA] text-white dark:bg-[#4338CA] dark:text-white'
+                        : 'text-[#656058] hover:bg-[#EEF2FF] hover:text-[#18181B] dark:text-[#9CA39B] dark:hover:bg-[#312E81]/25'
                     }`}
                   >
-                    Theo đề cũ ({subjectMeta.examPapers!.length} đề)
+                    Theo đề ({subjectMeta.examPapers!.length} đề)
+                  </button>
+                  <button
+                    type="button"
+                    data-native-enter="true"
+                    onClick={() => {
+                      setListGroupMode('chapters');
+                      if (selectedExamCode) {
+                        handleSelectChapter(selectedChapter);
+                      }
+                    }}
+                    className={`cursor-pointer rounded-lg px-2 py-1.5 text-[11px] font-bold transition-colors ${
+                      listGroupMode === 'chapters'
+                        ? 'bg-[#4338CA] text-white dark:bg-[#4338CA] dark:text-white'
+                        : 'text-[#656058] hover:bg-[#EEF2FF] hover:text-[#18181B] dark:text-[#9CA39B] dark:hover:bg-[#312E81]/25'
+                    }`}
+                  >
+                    Theo {unitLabel.toLowerCase()} ({chapters.length})
                   </button>
                 </div>
               )}
@@ -1512,6 +1522,22 @@ return (
                       <button
                         type="button"
                         onClick={() => {
+                          setListGroupMode('exams');
+                          if (!selectedExamCode && subjectMeta.examPapers?.[0]) {
+                            handleSelectExamPaper(subjectMeta.examPapers[0].code);
+                          }
+                        }}
+                        className={`cursor-pointer rounded-md px-2 py-1 text-[11px] font-bold transition ${
+                          listGroupMode === 'exams'
+                            ? 'bg-[#4338CA] text-white'
+                            : 'text-[#656058] dark:text-[#9CA39B]'
+                        }`}
+                      >
+                        Theo đề ({subjectMeta.examPapers!.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
                           setListGroupMode('chapters');
                           if (selectedExamCode) handleSelectChapter(selectedChapter);
                         }}
@@ -1521,23 +1547,7 @@ return (
                             : 'text-[#656058] dark:text-[#9CA39B]'
                         }`}
                       >
-                        Theo {unitLabel}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setListGroupMode('exams');
-                          if (!selectedExamCode && subjectMeta.examPapers?.[0]) {
-                            handleSelectExamPaper(subjectMeta.examPapers[0].code);
-                          }
-                        }}
-                        className={`cursor-pointer rounded-md px-2 py-1 text-[11px] font-bold transition ${
-                          listGroupMode === 'exams'
-                            ? 'bg-[#D97706] text-white'
-                            : 'text-[#656058] dark:text-[#9CA39B]'
-                        }`}
-                      >
-                        Theo đề cũ ({subjectMeta.examPapers!.length})
+                        Theo {unitLabel.toLowerCase()}
                       </button>
                     </div>
                   )}
