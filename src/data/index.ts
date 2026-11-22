@@ -205,13 +205,75 @@ const WDU203C_LAZY_EXTRA_IDS = [
 
 const WDU203C_LAZY_IDS = new Set<string>([...WDU203C_LAZY_MAX_IDS, ...WDU203C_LAZY_EXTRA_IDS]);
 
+const MLN122_LAZY_MAX_IDS = new Set<string>([
+  // Chương 1 (16 câu)
+  'mln12-001', 'mln12-002', 'mln12-003', 'mln12-004', 'mln12-005', 'mln12-006', 'mln12-007', 'mln12-008',
+  'mln12-009', 'mln12-010', 'mln12-011', 'mln12-012', 'mln12-013', 'mln12-014', 'mln12-015', 'mln12-016',
+  // Chương 2 (29 câu)
+  'mln12-039', 'mln12-040', 'mln12-041', 'mln12-042', 'mln12-043', 'mln12-044', 'mln12-045', 'mln12-046',
+  'mln12-047', 'mln12-048', 'mln12-049', 'mln12-050', 'mln12-051', 'mln12-052', 'mln12-053', 'mln12-054',
+  'mln12-055', 'mln12-056', 'mln12-057', 'mln12-058', 'mln12-059', 'mln12-060', 'mln12-061', 'mln12-062',
+  'mln12-063', 'mln12-073', 'mln12-089', 'mln12-098', 'mln12-103',
+  // Chương 3 (28 câu)
+  'mln12-122', 'mln12-123', 'mln12-124', 'mln12-125', 'mln12-126', 'mln12-127', 'mln12-128', 'mln12-129',
+  'mln12-130', 'mln12-131', 'mln12-132', 'mln12-133', 'mln12-134', 'mln12-137', 'mln12-139', 'mln12-145',
+  'mln12-151', 'mln12-153', 'mln12-161', 'mln12-168', 'mln12-174', 'mln12-183', 'mln12-190', 'mln12-192',
+  'mln12-199', 'mln12-200', 'mln12-205', 'mln12-206',
+  // Chương 4 (24 câu)
+  'mln12-209', 'mln12-210', 'mln12-211', 'mln12-212', 'mln12-213', 'mln12-214', 'mln12-215', 'mln12-216',
+  'mln12-217', 'mln12-218', 'mln12-219', 'mln12-220', 'mln12-221', 'mln12-222', 'mln12-223', 'mln12-224',
+  'mln12-225', 'mln12-246', 'mln12-250', 'mln12-257', 'mln12-259', 'mln12-260', 'mln12-265', 'mln12-280',
+  // Chương 5 (27 câu)
+  'mln12-281', 'mln12-282', 'mln12-283', 'mln12-284', 'mln12-285', 'mln12-286', 'mln12-287', 'mln12-288',
+  'mln12-289', 'mln12-290', 'mln12-291', 'mln12-292', 'mln12-293', 'mln12-294', 'mln12-295', 'mln12-296',
+  'mln12-297', 'mln12-298', 'mln12-299', 'mln12-300', 'mln12-301', 'mln12-302', 'mln12-303', 'mln12-304',
+  'mln12-305', 'mln12-306', 'mln12-307',
+  // Chương 6 (34 câu)
+  'mln12-341', 'mln12-342', 'mln12-343', 'mln12-344', 'mln12-345', 'mln12-346', 'mln12-347', 'mln12-348',
+  'mln12-349', 'mln12-350', 'mln12-351', 'mln12-352', 'mln12-353', 'mln12-354', 'mln12-355', 'mln12-356',
+  'mln12-357', 'mln12-358', 'mln12-359', 'mln12-360', 'mln12-361', 'mln12-362', 'mln12-363', 'mln12-364',
+  'mln12-365', 'mln12-366', 'mln12-367', 'mln12-368', 'mln12-369', 'mln12-370', 'mln12-371', 'mln12-372',
+  'mln12-373', 'mln12-374',
+]);
+
+const MLN122_LAZY_EXTRA_IDS = [
+  // Chương 1 (12 câu)
+  'mln12-017', 'mln12-019', 'mln12-021', 'mln12-023', 'mln12-025', 'mln12-026', 'mln12-030', 'mln12-031',
+  'mln12-033', 'mln12-034', 'mln12-035', 'mln12-036',
+  // Chương 2 (31 câu)
+  'mln12-064', 'mln12-065', 'mln12-066', 'mln12-069', 'mln12-070', 'mln12-071', 'mln12-078', 'mln12-080',
+  'mln12-082', 'mln12-086', 'mln12-087', 'mln12-090', 'mln12-092', 'mln12-093', 'mln12-094', 'mln12-095',
+  'mln12-099', 'mln12-102', 'mln12-104', 'mln12-105', 'mln12-106', 'mln12-108', 'mln12-109', 'mln12-110',
+  'mln12-112', 'mln12-113', 'mln12-114', 'mln12-115', 'mln12-117', 'mln12-119', 'mln12-121',
+  // Chương 3 (34 câu)
+  'mln12-136', 'mln12-140', 'mln12-141', 'mln12-144', 'mln12-146', 'mln12-148', 'mln12-149', 'mln12-152',
+  'mln12-155', 'mln12-157', 'mln12-159', 'mln12-162', 'mln12-164', 'mln12-165', 'mln12-166', 'mln12-167',
+  'mln12-169', 'mln12-170', 'mln12-172', 'mln12-173', 'mln12-178', 'mln12-180', 'mln12-181', 'mln12-182',
+  'mln12-184', 'mln12-187', 'mln12-188', 'mln12-196', 'mln12-198', 'mln12-201', 'mln12-202', 'mln12-203',
+  'mln12-207', 'mln12-208',
+  // Chương 4 (28 câu)
+  'mln12-229', 'mln12-230', 'mln12-231', 'mln12-232', 'mln12-234', 'mln12-236', 'mln12-238', 'mln12-239',
+  'mln12-241', 'mln12-242', 'mln12-243', 'mln12-244', 'mln12-245', 'mln12-248', 'mln12-249', 'mln12-251',
+  'mln12-256', 'mln12-258', 'mln12-261', 'mln12-262', 'mln12-263', 'mln12-267', 'mln12-269', 'mln12-270',
+  'mln12-271', 'mln12-272', 'mln12-276', 'mln12-279',
+  // Chương 5 (20 câu)
+  'mln12-308', 'mln12-309', 'mln12-312', 'mln12-313', 'mln12-316', 'mln12-319', 'mln12-320', 'mln12-321',
+  'mln12-322', 'mln12-323', 'mln12-324', 'mln12-325', 'mln12-326', 'mln12-327', 'mln12-328', 'mln12-329',
+  'mln12-331', 'mln12-334', 'mln12-335', 'mln12-337',
+  // Chương 6 (13 câu)
+  'mln12-375', 'mln12-376', 'mln12-378', 'mln12-380', 'mln12-383', 'mln12-384', 'mln12-385', 'mln12-386',
+  'mln12-387', 'mln12-388', 'mln12-389', 'mln12-390', 'mln12-395',
+];
+
+const MLN122_LAZY_IDS = new Set<string>([...MLN122_LAZY_MAX_IDS, ...MLN122_LAZY_EXTRA_IDS]);
+
 const EMPTY_ID_SET = new Set<string>();
 
 const LAZY_MAX_SETS: Record<SubjectId, Set<string>> = {
   mln131: MLN131_LAZY_MAX_IDS,
   vnr202: VNR202_LAZY_MAX_IDS,
   wdu203c: WDU203C_LAZY_MAX_IDS,
-  mln122: EMPTY_ID_SET,
+  mln122: MLN122_LAZY_MAX_IDS,
   wdu202c: EMPTY_ID_SET,
 };
 
@@ -219,7 +281,7 @@ const LAZY_SETS: Record<SubjectId, Set<string>> = {
   mln131: MLN131_LAZY_IDS,
   vnr202: VNR202_LAZY_IDS,
   wdu203c: WDU203C_LAZY_IDS,
-  mln122: EMPTY_ID_SET,
+  mln122: MLN122_LAZY_IDS,
   wdu202c: EMPTY_ID_SET,
 };
 
@@ -327,7 +389,7 @@ export const SUBJECTS: Record<SubjectId, SubjectMeta> = {
     shortName: 'Kinh tế chính trị',
     totalQuestions: 396,
     examTotal: 60,
-    supportsLazyTiers: false,
+    supportsLazyTiers: true,
     chapterUnitLabel: 'Chương',
     examQuotas: {
       1: 5,

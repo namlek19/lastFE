@@ -31,7 +31,7 @@ interface SubjectPredictionSpec {
   tiers: readonly TierPredictionSpec[];
 }
 
-type LazyCapableSubjectId = 'vnr202' | 'mln131' | 'wdu203c';
+type LazyCapableSubjectId = 'vnr202' | 'mln131' | 'mln122' | 'wdu203c';
 
 const TIER_SCORE_PREDICTIONS: Record<LazyCapableSubjectId, SubjectPredictionSpec> = {
   vnr202: {
@@ -88,6 +88,35 @@ const TIER_SCORE_PREDICTIONS: Record<LazyCapableSubjectId, SubjectPredictionSpec
           { method: 'Học vẹt', avg: '8.20', range: '7.50–8.83', p5: '100%', p7: '99.3%', p8: '72.4%', p9: '6.3%' },
           { method: 'Kỹ giải thích', avg: '9.51', range: '9.17–9.83', p5: '100%', p7: '100%', p8: '100%', p9: '97.2%', featured: true },
           { method: 'Hiểu sâu', avg: '9.75', range: '9.50–10.0', p5: '100%', p7: '100%', p8: '100%', p9: '99.9%' },
+        ],
+      },
+    ],
+  },
+  mln122: {
+    code: 'MLN122',
+    examRule: '5-10-10-10-10-15',
+    totalQuestions: 396,
+    tiers: [
+      {
+        tier: 'lazymax',
+        label: 'LAZY MAX',
+        tone: 'emerald',
+        countText: '158 / 396 câu',
+        rows: [
+          { method: 'Học vẹt', avg: '6.48', range: '5.67–7.33', p5: '99.1%', p7: '24.6%', p8: '0.8%', p9: '0%' },
+          { method: 'Kỹ giải thích', avg: '8.68', range: '8.00–9.17', p5: '100%', p7: '100%', p8: '95.4%', p9: '31.2%', featured: true },
+          { method: 'Hiểu sâu', avg: '9.28', range: '8.83–9.67', p5: '100%', p7: '100%', p8: '100%', p9: '86.4%' },
+        ],
+      },
+      {
+        tier: 'lazy',
+        label: 'LAZY',
+        tone: 'amber',
+        countText: '296 / 396 câu',
+        rows: [
+          { method: 'Học vẹt', avg: '8.35', range: '7.67–8.83', p5: '100%', p7: '99.6%', p8: '81.5%', p9: '11.4%' },
+          { method: 'Kỹ giải thích', avg: '9.54', range: '9.17–9.83', p5: '100%', p7: '100%', p8: '100%', p9: '98.1%', featured: true },
+          { method: 'Hiểu sâu', avg: '9.78', range: '9.50–10.0', p5: '100%', p7: '100%', p8: '100%', p9: '100%' },
         ],
       },
     ],
@@ -173,7 +202,8 @@ export const TierInfoModal: React.FC<TierInfoModalProps> = ({
   onSelectTier,
   onClose,
 }) => {
-  const safeSubject: LazyCapableSubjectId = subject === 'mln131' ? 'mln131' : 'vnr202';
+  const safeSubject: LazyCapableSubjectId =
+    subject === 'mln131' ? 'mln131' : subject === 'mln122' ? 'mln122' : 'vnr202';
   const [previewSubject, setPreviewSubject] = useState<LazyCapableSubjectId>(safeSubject);
 
   useEffect(() => {
@@ -393,7 +423,20 @@ export const TierInfoModal: React.FC<TierInfoModalProps> = ({
                           : 'border-transparent text-[#075985] hover:bg-[#E0F2FE] dark:text-[#7DD3FC]/85 dark:hover:bg-[#0C4A6E]/40'
                       }`}
                     >
-                      <span className="skew-x-12">MLN</span>
+                      <span className="skew-x-12">M131</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={previewSubject === 'mln122'}
+                      onClick={() => setPreviewSubject('mln122')}
+                      className={`inline-flex -skew-x-12 cursor-pointer items-center rounded-md border-2 px-2.5 py-0.5 text-[11px] font-black italic tracking-wider transition ${
+                        previewSubject === 'mln122'
+                          ? 'border-[#064E3B] bg-[#059669] text-white shadow-[2px_2px_0_0_#6EE7B7] dark:border-[#6EE7B7]'
+                          : 'border-transparent text-[#065F46] hover:bg-[#D1FAE5] dark:text-[#6EE7B7]/85 dark:hover:bg-[#064E3B]/40'
+                      }`}
+                    >
+                      <span className="skew-x-12">M122</span>
                     </button>
                   </div>
                 </div>
